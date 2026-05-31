@@ -3,17 +3,17 @@
 ## Arquivos encontrados
 
 - README.md: documentação original do projeto.
-- projeto.py: versão inicial do código.
-- projeto2.0.py: evolução intermediária.
-- projeto2.1.py: evolução intermediária.
-- projeto3.0.py: aparente versão mais completa do projeto.
+- legacy/projeto.py: versão inicial do código.
+- legacy/projeto2.0.py: evolução intermediária.
+- legacy/projeto2.1.py: evolução intermediária.
+- legacy/projeto3.0.py: aparente versão mais completa do projeto acadêmico.
 - docs/academic_context.md: contexto do fork e objetivo da refatoração.
 
 ## Versão principal identificada
 
 A versão principal inicial do projeto será tratada como:
 
-projeto3.0.py
+legacy/projeto3.0.py
 
 ## Próximo objetivo técnico
 
@@ -30,4 +30,4 @@ Possível estrutura futura:
 
 ## Observação
 
-Os arquivos antigos serão preservados inicialmente para manter rastreabilidade do projeto acadêmico original.
+Os arquivos antigos foram preservados em `legacy/` para manter rastreabilidade do projeto acadêmico original.
