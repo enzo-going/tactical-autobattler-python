@@ -20,6 +20,7 @@ original.
 - Bots para simulação automática.
 - CLI com modo automático e modo interativo.
 - Relatório JSON para análise posterior.
+- Modo torneio para comparar estratégias em várias simulações.
 - Testes automatizados com `unittest`.
 
 ## Como executar
@@ -34,6 +35,12 @@ Gerar relatório JSON:
 
 ```bash
 python -m battle_simulator --mode auto --rounds 30 --quiet --report-json reports/battle.json
+```
+
+Rodar várias simulações para comparar estratégias:
+
+```bash
+python -m battle_simulator --mode tournament --simulations 100 --rounds 30 --report-json reports/tournament.json
 ```
 
 Modo interativo:
@@ -57,6 +64,7 @@ battle_simulator/
   engine.py
   models.py
   strategies.py
+  tournament.py
 tests/
   test_engine.py
 docs/

@@ -4,6 +4,7 @@ from battle_simulator.cli import _build_report
 from battle_simulator.engine import BattleEngine, Player, RecruitOrder, TurnPlan
 from battle_simulator.models import Base, TroopKind
 from battle_simulator.strategies import BalancedBot
+from battle_simulator.tournament import run_tournament
 
 
 class BaseTest(unittest.TestCase):
@@ -59,6 +60,15 @@ class BattleEngineTest(unittest.TestCase):
         self.assertIn("bases", report)
         self.assertIn("troops_remaining", report)
         self.assertEqual(report["rounds_played"], result.rounds_played)
+
+
+class TournamentTest(unittest.TestCase):
+    def test_tournament_aggregates_all_simulations(self):
+        summary = run_tournament(simulations=3, max_rounds=4, seed=10)
+
+        total_outcomes = summary.player_one_wins + summary.player_two_wins + summary.draws
+        self.assertEqual(total_outcomes, 3)
+        self.assertEqual(summary.simulations, 3)
 
 
 if __name__ == "__main__":

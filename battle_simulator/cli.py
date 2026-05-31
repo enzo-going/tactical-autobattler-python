@@ -7,18 +7,25 @@ from pathlib import Path
 from battle_simulator.engine import AttackOrder, BattleEngine, Player, RecruitOrder, TurnPlan
 from battle_simulator.models import TroopKind
 from battle_simulator.strategies import BalancedBot, RandomBot
+from battle_simulator.tournament import run_tournament
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Run the Battle Simulator.")
     parser.add_argument(
         "--mode",
-        choices=("auto", "interactive"),
+        choices=("auto", "interactive", "tournament"),
         default="auto",
         help="Simulation mode. Defaults to auto.",
     )
     parser.add_argument("--rounds", type=int, default=30, help="Maximum number of rounds.")
     parser.add_argument("--seed", type=int, default=7, help="Seed for random mode.")
+    parser.add_argument(
+        "--simulations",
+        type=int,
+        default=100,
+        help="Number of simulations for tournament mode.",
+    )
     parser.add_argument("--quiet", action="store_true", help="Print only the final result.")
     parser.add_argument(
         "--report-json",
@@ -26,6 +33,23 @@ def main(argv: list[str] | None = None) -> int:
         help="Write a machine-readable battle report to this path.",
     )
     args = parser.parse_args(argv)
+
+    if args.mode == "tournament":
+        summary = run_tournament(args.simulations, args.rounds, seed=args.seed)
+        print(
+            "Tournament: "
+            f"{summary.player_one_wins} player-one wins, "
+            f"{summary.player_two_wins} player-two wins, "
+            f"{summary.draws} draws, "
+            f"{summary.average_rounds} average rounds."
+        )
+        if args.report_json:
+            args.report_json.parent.mkdir(parents=True, exist_ok=True)
+            args.report_json.write_text(
+                json.dumps(summary.to_dict(), indent=2),
+                encoding="utf-8",
+            )
+        return 0
 
     engine = BattleEngine()
     if args.mode == "interactive":

@@ -10,13 +10,14 @@ melhorando a qualidade de engenharia.
 - Testes automatizados para regras essenciais.
 - Simulação automática com bots.
 - Relatório JSON opcional.
+- Modo torneio para comparação inicial de estratégias.
 - README reescrito com instruções atuais.
 
 ## Próximos ciclos
 
 1. Balanceamento de jogo
    - Definir métricas: taxa de vitória, duração média e recursos não usados.
-   - Rodar várias simulações com seeds diferentes.
+   - Expandir o modo torneio com mais estratégias.
    - Ajustar custo, vida, dano e renda com base nessas métricas.
 
 2. Novas unidades
