@@ -37,12 +37,16 @@ def main(argv: list[str] | None = None) -> int:
     if args.mode == "tournament":
         summary = run_tournament(args.simulations, args.rounds, seed=args.seed)
         print(
-            "Tournament: "
-            f"{summary.player_one_wins} player-one wins, "
-            f"{summary.player_two_wins} player-two wins, "
-            f"{summary.draws} draws, "
-            f"{summary.average_rounds} average rounds."
+            f"Tournament: {summary.simulations} simulations "
+            f"across {len(summary.matchups)} matchups."
         )
+        for matchup in summary.matchups:
+            print(
+                f"- {matchup.strategy_one} vs {matchup.strategy_two}: "
+                f"{matchup.strategy_one_wins}-{matchup.strategy_two_wins}, "
+                f"{matchup.draws} draws, "
+                f"{matchup.average_rounds} average rounds."
+            )
         if args.report_json:
             args.report_json.parent.mkdir(parents=True, exist_ok=True)
             args.report_json.write_text(
@@ -103,14 +107,26 @@ def _read_plan(player: Player, engine: BattleEngine) -> TurnPlan:
 
     print(f"\n{base.name} resources: {budget}")
     while True:
-        choice = input("Recruit [s]oldier, [t]ank or [enter] to stop: ").strip().lower()
+        choice = input(
+            "Recruit [s]oldier, [a]rcher, [g]uardian, [t]ank or [enter] to stop: "
+        ).strip().lower()
         if not choice:
             break
-        troop_kind = {"s": TroopKind.SOLDIER, "t": TroopKind.TANK}.get(choice)
+        troop_kind = {
+            "s": TroopKind.SOLDIER,
+            "a": TroopKind.ARCHER,
+            "g": TroopKind.GUARDIAN,
+            "t": TroopKind.TANK,
+        }.get(choice)
         if troop_kind is None:
             print("Invalid option.")
             continue
-        cost = 2 if troop_kind == TroopKind.SOLDIER else 5
+        cost = {
+            TroopKind.SOLDIER: 2,
+            TroopKind.ARCHER: 3,
+            TroopKind.GUARDIAN: 4,
+            TroopKind.TANK: 5,
+        }[troop_kind]
         if budget < cost:
             print("Not enough resources.")
             continue

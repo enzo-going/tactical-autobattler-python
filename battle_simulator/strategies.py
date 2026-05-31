@@ -21,14 +21,38 @@ class BalancedBot(Strategy):
         budget = base.resources
 
         while budget >= TROOP_COSTS[TroopKind.SOLDIER]:
-            if budget >= TROOP_COSTS[TroopKind.TANK] and len(troops) + len(recruits) >= 2:
-                recruits.append(RecruitOrder(TroopKind.TANK))
-                budget -= TROOP_COSTS[TroopKind.TANK]
+            army_size = len(troops) + len(recruits)
+            if budget >= TROOP_COSTS[TroopKind.TANK] and army_size >= 3:
+                troop_kind = TroopKind.TANK
+            elif budget >= TROOP_COSTS[TroopKind.GUARDIAN] and army_size == 1:
+                troop_kind = TroopKind.GUARDIAN
+            elif budget >= TROOP_COSTS[TroopKind.ARCHER]:
+                troop_kind = TroopKind.ARCHER
             else:
-                recruits.append(RecruitOrder(TroopKind.SOLDIER))
-                budget -= TROOP_COSTS[TroopKind.SOLDIER]
+                troop_kind = TroopKind.SOLDIER
+
+            recruits.append(RecruitOrder(troop_kind))
+            budget -= TROOP_COSTS[troop_kind]
 
         attacks = tuple(AttackOrder(index, 0) for index, _ in enumerate(troops))
+        return TurnPlan(recruits=tuple(recruits), attacks=attacks)
+
+
+class AggressiveBot(Strategy):
+    def choose_plan(self, player: Player, battlefield: Battlefield) -> TurnPlan:
+        base = battlefield.base_for(player)
+        troops = battlefield.troops_for(player)
+        enemies = battlefield.troops_for(player.opponent)
+        budget = base.resources
+        recruits: list[RecruitOrder] = []
+
+        for troop_kind in (TroopKind.TANK, TroopKind.ARCHER, TroopKind.SOLDIER):
+            while budget >= TROOP_COSTS[troop_kind]:
+                recruits.append(RecruitOrder(troop_kind))
+                budget -= TROOP_COSTS[troop_kind]
+
+        target_index = _weakest_target_index(enemies)
+        attacks = tuple(AttackOrder(index, target_index) for index, _ in enumerate(troops))
         return TurnPlan(recruits=tuple(recruits), attacks=attacks)
 
 
@@ -61,3 +85,12 @@ class RandomBot(Strategy):
             attacks.append(AttackOrder(attacker_index, target_index))
 
         return TurnPlan(recruits=tuple(recruits), attacks=tuple(attacks))
+
+
+def _weakest_target_index(enemies) -> int | None:
+    if not enemies:
+        return None
+    living = [(index, troop) for index, troop in enumerate(enemies) if troop.is_alive]
+    if not living:
+        return None
+    return min(living, key=lambda item: item[1].health)[0]
