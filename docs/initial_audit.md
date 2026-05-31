@@ -1,4 +1,4 @@
-﻿# Auditoria inicial do projeto
+# Auditoria inicial do projeto
 
 ## Arquivos encontrados
 
@@ -17,7 +17,9 @@ legacy/projeto3.0.py
 
 ## Próximo objetivo técnico
 
-Antes de alterar regras de jogo ou funcionalidades, o projeto será reorganizado para uma estrutura Python mais limpa, separando responsabilidades em módulos e classes.
+Antes de alterar regras de jogo ou funcionalidades, o projeto será reorganizado
+para uma estrutura Python mais limpa, separando responsabilidades em módulos e
+classes.
 
 Possível estrutura futura:
 
@@ -30,4 +32,5 @@ Possível estrutura futura:
 
 ## Observação
 
-Os arquivos antigos foram preservados em `legacy/` para manter rastreabilidade do projeto acadêmico original.
+Os arquivos antigos foram preservados em `legacy/` para manter rastreabilidade
+do projeto acadêmico original.
