@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 from battle_simulator.engine import AttackOrder, BattleEngine, Player, RecruitOrder, TurnPlan
-from battle_simulator.models import TroopKind
+from battle_simulator.models import Lane, TROOP_COSTS, TroopKind
 from battle_simulator.strategies import BalancedBot, RandomBot
 from battle_simulator.tournament import run_tournament
 
@@ -46,6 +46,12 @@ def main(argv: list[str] | None = None) -> int:
                 f"{matchup.strategy_one_wins}-{matchup.strategy_two_wins}, "
                 f"{matchup.draws} draws, "
                 f"{matchup.average_rounds} average rounds."
+            )
+        print("Standings:")
+        for row in summary.standings:
+            print(
+                f"- {row.name}: {row.wins}W/{row.losses}L/{row.draws}D, "
+                f"{row.win_rate:.3f} win rate."
             )
         if args.report_json:
             args.report_json.parent.mkdir(parents=True, exist_ok=True)
@@ -108,7 +114,7 @@ def _read_plan(player: Player, engine: BattleEngine) -> TurnPlan:
     print(f"\n{base.name} resources: {budget}")
     while True:
         choice = input(
-            "Recruit [s]oldier, [a]rcher, [g]uardian, [t]ank or [enter] to stop: "
+            "Recruit [s]oldier, [a]rcher, [g]uardian, [m]edic, [t]ank or [enter] to stop: "
         ).strip().lower()
         if not choice:
             break
@@ -116,26 +122,23 @@ def _read_plan(player: Player, engine: BattleEngine) -> TurnPlan:
             "s": TroopKind.SOLDIER,
             "a": TroopKind.ARCHER,
             "g": TroopKind.GUARDIAN,
+            "m": TroopKind.MEDIC,
             "t": TroopKind.TANK,
         }.get(choice)
         if troop_kind is None:
             print("Invalid option.")
             continue
-        cost = {
-            TroopKind.SOLDIER: 2,
-            TroopKind.ARCHER: 3,
-            TroopKind.GUARDIAN: 4,
-            TroopKind.TANK: 5,
-        }[troop_kind]
+        cost = TROOP_COSTS[troop_kind]
         if budget < cost:
             print("Not enough resources.")
             continue
         budget -= cost
-        recruits.append(RecruitOrder(troop_kind))
+        lane = Lane.BACK if troop_kind in {TroopKind.ARCHER, TroopKind.MEDIC} else Lane.FRONT
+        recruits.append(RecruitOrder(troop_kind, lane=lane))
 
     attacks = []
     for index, troop in enumerate(troops):
-        print(f"{index}: {troop.name} ({troop.health} HP)")
+        print(f"{index}: {troop.name} ({troop.health}/{troop.max_hp} HP, {troop.lane.value})")
         attacks.append(AttackOrder(index, None))
 
     return TurnPlan(recruits=tuple(recruits), attacks=tuple(attacks))
@@ -148,7 +151,10 @@ def _print_state(engine: BattleEngine) -> None:
         base = battlefield.base_for(player)
         print(f"{base.name}: {base.health} HP, {base.resources} resources")
         for troop in battlefield.troops_for(player):
-            print(f"  - {troop.name}: {troop.health} HP, {troop.damage} damage")
+            print(
+                f"  - {troop.name}: {troop.health}/{troop.max_hp} HP, "
+                f"{troop.attack} attack, {troop.defense} defense, {troop.lane.value}"
+            )
 
 
 def _build_report(engine: BattleEngine, result) -> dict:
@@ -156,6 +162,24 @@ def _build_report(engine: BattleEngine, result) -> dict:
     return {
         "winner": None if result.winner is None else battlefield.base_for(result.winner).name,
         "rounds_played": result.rounds_played,
+        "strategies": {
+            "player_one": result.strategies.get(Player.ONE),
+            "player_two": result.strategies.get(Player.TWO),
+        },
+        "units_recruited": {
+            "player_one": result.stats.units_recruited[Player.ONE],
+            "player_two": result.stats.units_recruited[Player.TWO],
+        },
+        "damage": {
+            "player_one": {
+                "dealt": result.stats.damage_dealt[Player.ONE],
+                "received": result.stats.damage_taken[Player.ONE],
+            },
+            "player_two": {
+                "dealt": result.stats.damage_dealt[Player.TWO],
+                "received": result.stats.damage_taken[Player.TWO],
+            },
+        },
         "bases": {
             "player_one": _base_snapshot(battlefield.base_for(Player.ONE)),
             "player_two": _base_snapshot(battlefield.base_for(Player.TWO)),
@@ -165,6 +189,7 @@ def _build_report(engine: BattleEngine, result) -> dict:
             "player_two": [_troop_snapshot(troop) for troop in battlefield.troops_for(Player.TWO)],
         },
         "event_count": len(result.events),
+        "events": [event.to_dict() for event in result.events],
     }
 
 
@@ -179,9 +204,18 @@ def _base_snapshot(base) -> dict:
 def _troop_snapshot(troop) -> dict:
     return {
         "name": troop.name,
-        "health": troop.health,
-        "damage": troop.damage,
+        "role": troop.role.value,
+        "lane": troop.lane.value,
+        "max_hp": troop.max_hp,
+        "current_hp": troop.health,
+        "attack": troop.attack,
+        "defense": troop.defense,
+        "speed": troop.speed,
+        "range": troop.range,
         "cost": troop.cost,
+        "effects": {effect.value: duration for effect, duration in troop.effects.items()},
+        "damage_dealt": troop.damage_dealt,
+        "damage_received": troop.damage_received,
     }
 
 
