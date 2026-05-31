@@ -1,8 +1,8 @@
 # Roadmap técnico
 
-Este fork deve evoluir em microblocos, preservando o histórico acadêmico e
-melhorando a qualidade de engenharia sem transformar o simulador em algo
-desnecessariamente complexo.
+Este fork evoluiu de um script acadêmico de POO para um mini tactical
+auto-battler simulator. A prioridade continua sendo clareza de arquitetura,
+testabilidade e simplicidade suficiente para portfólio.
 
 ## Concluído
 
@@ -11,33 +11,34 @@ desnecessariamente complexo.
 - Preservação dos scripts acadêmicos originais em `legacy/`.
 - Testes automatizados para regras essenciais.
 - GitHub Actions para testes e compilação.
-- Simulação automática com bots.
-- Tropas adicionais: `Archer` e `Guardian`.
-- Estratégia adicional: `AggressiveBot`.
-- Relatório JSON opcional.
-- Modo torneio com métricas por confronto.
-- README reescrito com foco de portfólio.
+- Modelo tático com ataque, defesa, vida, velocidade, alcance, custo e papel.
+- Campo simples com `front` e `back lane`.
+- Efeitos de combate: `shield`, `bleed`, `stun` e `heal`.
+- Estratégias com estilos distintos: agressiva, balanceada, defensiva,
+  econômica e aleatória.
+- Relatório JSON estruturado com eventos e estatísticas.
+- Torneio round-robin com métricas por estratégia.
+- README reescrito com a nova identidade do projeto.
 
 ## Próximos ciclos
 
 1. Balanceamento de jogo
    - Rodar torneios com mais seeds.
-   - Observar taxa de vitória, duração média e empates.
-   - Ajustar custo, vida, dano e renda com base nessas métricas.
+   - Observar taxa de vitória, duração média, dano e empates.
+   - Ajustar custo, vida, dano, defesa e renda com base nessas métricas.
 
-2. Estratégias
-   - Permitir seleção de estratégias via CLI.
-   - Adicionar uma estratégia defensiva explícita.
-   - Comparar estratégias contra a mesma ordem de seeds.
+2. CLI
+   - Permitir selecionar estratégias por argumento.
+   - Permitir selecionar lista de estratégias para torneio.
+   - Melhorar o modo interativo sem misturar lógica de regra na CLI.
 
 3. Persistência e análise
    - Exportar eventos completos em JSON Lines.
-   - Criar relatório agregado com mais métricas.
-   - Medir recursos finais e tropas sobreviventes.
+   - Criar relatório agregado com recursos finais e tropas sobreviventes.
+   - Adicionar snapshots por rodada.
 
 4. Interface
-   - Melhorar prompts do modo interativo.
-   - Criar uma interface textual mais organizada.
+   - Criar uma visualização textual mais clara do campo.
    - Avaliar interface visual simples no futuro.
 
 ## Critério de qualidade
