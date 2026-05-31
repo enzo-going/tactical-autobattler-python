@@ -30,3 +30,6 @@ dist/
 
 # Local files
 .env
+
+# Generated battle reports
+reports/*.json

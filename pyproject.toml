@@ -1,0 +1,15 @@
+[project]
+name = "battle-simulator-python-poo"
+version = "0.1.0"
+description = "Object-oriented battle simulator written in Python."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    { name = "Enzo Liutkus Going" }
+]
+
+[project.scripts]
+battle-simulator = "battle_simulator.cli:main"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

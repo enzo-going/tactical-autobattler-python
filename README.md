@@ -1,70 +1,85 @@
-DESENVOLVIMENTO PROJETO DE SOFTWARE
+# Battle Simulator Python POO
 
-Integrantes do Grupo:
+Simulador de batalha em Python com foco em Programação Orientada a Objetos.
 
-BRUNO AMARAL GONZALEZ - bruno.amaral@unisantos.br 
+O projeto nasceu como um trabalho acadêmico simples e este fork está sendo
+evoluído para uma base mais organizada, testável e apresentável como portfólio.
+Os arquivos `projeto*.py` foram preservados como histórico da implementação
+original.
 
-EMANUEL RODRIGUES SOARES - emanuel.soares@unisantos.br
+## O que existe agora
 
-ENZO LIUTKUS GOING - enzogoing@unisantos.br 
-
-
-# Sistema de Batalha em Python
-
-Este projeto implementa um simulador simples de batalha entre duas
-bases, onde cada base pode recrutar tropas e atacar o inimigo até que
-uma delas seja destruída.
-
-## Descrição
-
-O programa cria duas bases e permite, a cada rodada, que o jogador
-adicione tropas e execute ataques. As tropas podem atacar outras tropas
-inimigas ou diretamente a base adversária, caso não haja tropas
-disponíveis.
-
-## Funcionalidades
-
--   Criação de duas bases (Base 1 e Base 2)\
--   Recrutamento de tropas:
-    -   **Soldado** --- vida 3, dano 1\
-    -   **Tanque** --- vida 8, dano 3\
--   Ataques entre tropas ou diretamente à base inimiga\
--   Remoção automática de tropas derrotadas\
--   Exibição do estado atual do campo de batalha\
--   Fim do jogo quando uma das bases chega a 0 de vida
+- Pacote Python em `battle_simulator/`.
+- Modelo de domínio separado da interface de console.
+- Bases com vida, recursos e renda por rodada.
+- Tropas com custo, vida e dano.
+- Dois tipos de tropa:
+  - `Soldier`: barato, frágil e com baixo dano.
+  - `Tank`: caro, resistente e com dano maior.
+- Engine de batalha por turnos.
+- Bots para simulação automática.
+- CLI com modo automático e modo interativo.
+- Relatório JSON para análise posterior.
+- Testes automatizados com `unittest`.
 
 ## Como executar
 
-1.  Salve o código em um arquivo, por exemplo:
+Modo automático:
 
-    main.py
-
-2.  Execute no terminal:
-
-``` bash
-python main.py
+```bash
+python -m battle_simulator --mode auto --rounds 30 --seed 7
 ```
 
-3.  Siga as instruções exibidas no console.
+Gerar relatório JSON:
 
-## Estrutura do Código
+```bash
+python -m battle_simulator --mode auto --rounds 30 --quiet --report-json reports/battle.json
+```
 
--   **Base**: representa uma base, com vida e nome.\
--   **Tropas (classe abstrata)**: classe base para qualquer tropa.\
--   **Soldado**: tropa leve com baixo dano e pouca vida.\
--   **Tanque**: tropa pesada com alto dano e mais vida.\
--   **Campo_de_batalha**: gerencia tropas, ataques e andamento da
-    batalha.
+Modo interativo:
 
-## Exemplo de uso
+```bash
+python -m battle_simulator --mode interactive --rounds 30
+```
 
-Durante a execução, o programa solicitará:
+Rodar testes:
 
--   Se deseja adicionar tropas\
--   O tipo de tropa\
--   O alvo do ataque
+```bash
+python -m unittest discover -s tests
+```
 
-Exemplo:
+## Estrutura
 
-    ===== RODADA 1 =====
-    Base 1 quer adicionar tropas? (s/n)
+```text
+battle_simulator/
+  __main__.py
+  cli.py
+  engine.py
+  models.py
+  strategies.py
+tests/
+  test_engine.py
+docs/
+  academic_context.md
+  initial_audit.md
+projeto*.py
+```
+
+## Direção técnica
+
+O objetivo deste fork é transformar o script original em um simulador real,
+mantendo o valor didático de POO:
+
+- classes pequenas e com responsabilidade clara;
+- regras de jogo testáveis sem depender de `input()` e `print()`;
+- interface de console desacoplada da engine;
+- espaço para novas tropas, estratégias, mapas e balanceamento;
+- evolução incremental com commits pequenos.
+
+## Próximos passos sugeridos
+
+- Adicionar novas unidades com papéis diferentes.
+- Criar sistema de habilidades especiais.
+- Persistir histórico das batalhas em JSON.
+- Criar relatório de estatísticas por simulação.
+- Adicionar interface visual simples.
