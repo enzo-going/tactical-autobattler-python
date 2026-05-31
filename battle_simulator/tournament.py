@@ -88,6 +88,12 @@ class StrategySummary:
         return round(self.wins / self.matches, 3)
 
     @property
+    def draw_rate(self) -> float:
+        if self.matches == 0:
+            return 0.0
+        return round(self.draws / self.matches, 3)
+
+    @property
     def average_rounds(self) -> float:
         if self.matches == 0:
             return 0.0
@@ -112,6 +118,7 @@ class StrategySummary:
             "losses": self.losses,
             "draws": self.draws,
             "win_rate": self.win_rate,
+            "draw_rate": self.draw_rate,
             "average_rounds": self.average_rounds,
             "average_damage_dealt": self.average_damage_dealt,
             "average_damage_taken": self.average_damage_taken,

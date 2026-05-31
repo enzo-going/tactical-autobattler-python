@@ -1,129 +1,129 @@
 # Tactical Auto-Battler Simulator
 
-Mini simulador tático de batalhas automáticas em Python.
+Mini tactical auto-battler simulator written in Python.
 
-O projeto nasceu como fork de um trabalho acadêmico de Programação Orientada a
-Objetos. A versão original foi preservada em `legacy/`; a implementação atual
-foi redesenhada como uma pequena engine de simulação com unidades, lanes,
-efeitos de combate, estratégias automatizadas e torneios comparativos.
+This repository is a standalone portfolio project. It started from a small
+academic OOP exercise and was redesigned into a compact simulation engine with
+tactical units, front/back lanes, combat effects, automated strategies and
+round-robin tournament reports.
 
-O objetivo não é criar um jogo completo, mas demonstrar arquitetura Python/POO
-limpa em um projeto de portfólio.
+The goal is not to be a full game. The goal is to show clean Python/OOP
+architecture, deterministic simulations, test coverage and readable project
+structure without external runtime dependencies.
 
-## Conceitos usados
+## Concepts
 
 - Python 3.10+.
-- Programação Orientada a Objetos.
-- `dataclasses`, `Enum` e classes especializadas.
-- Engine desacoplada da interface de console.
-- Unidades com atributos táticos: ataque, defesa, vida, velocidade, alcance,
-  custo e papel.
-- Campo simples com `front` e `back lane`.
-- Efeitos de combate: `shield`, `bleed`, `stun` e `heal`.
-- Estratégias automatizadas.
-- Torneio round-robin.
-- Relatórios JSON estruturados.
-- Testes com `unittest`.
-- GitHub Actions para validação contínua.
+- Object-oriented design.
+- `dataclasses`, `Enum` and small domain classes.
+- Battle engine separated from CLI output.
+- Tactical unit attributes: attack, defense, HP, speed, range, cost and role.
+- Simple `front` / `back` lane model.
+- Combat effects: `shield`, `bleed`, `stun` and `heal`.
+- Automated bot strategies.
+- Round-robin tournaments.
+- Structured JSON reports.
+- Tests with `unittest`.
+- GitHub Actions validation.
 
-O projeto não exige dependências externas obrigatórias.
+## Usage
 
-## Como rodar
+Run commands from the repository root.
 
-Execute os comandos a partir da raiz do repositório.
-
-Simulação automática:
+Automatic simulation:
 
 ```bash
 python -m battle_simulator --mode auto --rounds 20 --seed 11
 ```
 
-Simulação automática com saída curta:
+Short automatic simulation:
 
 ```bash
 python -m battle_simulator --mode auto --rounds 20 --seed 11 --quiet
 ```
 
-Simulação automática com relatório JSON:
+Automatic simulation with JSON report:
 
 ```bash
 python -m battle_simulator --mode auto --rounds 20 --seed 11 --quiet --report-json reports/battle.json
 ```
 
-Torneio round-robin:
+Round-robin tournament:
 
 ```bash
-python -m battle_simulator --mode tournament --simulations 10 --rounds 20 --seed 11 --report-json reports/tournament.json
+python -m battle_simulator --mode tournament --simulations 20 --rounds 30 --seed 11 --report-json reports/tournament-balance.json
 ```
 
-Modo interativo:
+Interactive mode:
 
 ```bash
 python -m battle_simulator --mode interactive --rounds 20
 ```
 
-Rodar testes:
+Run tests:
 
 ```bash
 python -m unittest discover -s tests
 ```
 
-Compilar módulos Python:
+Compile modules:
 
 ```bash
 python -m compileall battle_simulator tests
 ```
 
-## Modelo de batalha
+## Battle Model
 
-Cada unidade possui:
+Each unit has:
 
-- `attack`: dano base.
-- `defense`: redução de dano recebido, com dano mínimo.
-- `max_hp` e `current_hp`: vida máxima e vida atual.
-- `speed`: prioridade de ação dentro da rodada.
-- `range`: alcance para atingir `front` ou `back lane`.
-- `cost`: custo de recrutamento.
-- `role`: função tática da unidade.
+- `attack`: base damage.
+- `defense`: damage reduction, with minimum damage preserved.
+- `max_hp` and `current_hp`: maximum and current health.
+- `speed`: action priority inside each round.
+- `range`: whether the unit can reach the front or back lane.
+- `cost`: recruitment cost.
+- `role`: tactical role used by the engine and strategies.
 
-O campo usa duas posições simples:
+The battlefield intentionally uses only two lanes:
 
-- `front`: linha de frente, mais fácil de alcançar.
-- `back`: retaguarda, exige maior alcance.
+- `front`: easier to reach and usually occupied by durable units.
+- `back`: safer position for ranged and support units.
 
-Essa escolha evita um grid 2D complexo, mas já permite testar alcance,
-posicionamento e papéis diferentes.
+This keeps the project small while still demonstrating positioning, targeting
+and range rules.
 
-## Unidades
+## Units
 
-- `Soldier`: unidade barata de linha de frente.
-- `Archer`: atacante de retaguarda com alcance maior e efeito de `bleed`.
-- `Guardian`: defensor resistente que aplica `shield`.
-- `Medic`: suporte de retaguarda que cura aliados feridos.
-- `Tank`: unidade cara de linha de frente, com ataque forte e `stun`.
+- `Soldier`: cheap frontline unit.
+- `Archer`: ranged backline attacker that applies `bleed`.
+- `Guardian`: defensive frontline unit that can apply `shield`.
+- `Medic`: support unit that heals damaged allies.
+- `Tank`: expensive frontline unit with strong attack and `stun`.
 
-## Estratégias
+## Strategies
 
-- `AggressiveBot`: prioriza dano, tanques e arqueiros.
-- `BalancedBot`: tenta montar uma composição mista.
-- `DefensiveBot`: prioriza guardiões, suporte e sobrevivência.
-- `EconomyBot`: economiza recursos antes de comprar unidades mais caras.
-- `RandomBot`: usa aleatoriedade controlada por seed.
+- `AggressiveBot`: buys fewer units per round, focuses reachable weak targets
+  and tries to end fights quickly.
+- `BalancedBot`: builds a mixed composition with frontline and backline units.
+- `DefensiveBot`: favors durable units and protection.
+- `EconomyBot`: delays some spending to buy stronger turns later.
+- `RandomBot`: uses seeded randomness.
 
-O modo `tournament` executa confrontos round-robin entre estratégias e calcula:
+Tournament output includes:
 
-- vitórias;
-- derrotas;
-- empates;
-- taxa de vitória;
-- média de rounds;
-- dano médio causado;
-- dano médio recebido.
+- wins;
+- losses;
+- draws;
+- win rate;
+- draw rate;
+- average rounds;
+- average damage dealt;
+- average damage taken.
 
-## Exemplo de JSON
+## JSON Example
 
-Relatórios de batalha incluem metadados da partida, estratégias, unidades
-recrutadas, dano e eventos relevantes:
+Battle reports include match metadata, strategies, recruitment counts, damage
+and structured events:
 
 ```json
 {
@@ -155,10 +155,10 @@ recrutadas, dano e eventos relevantes:
 }
 ```
 
-Relatórios de torneio incluem `standings` por estratégia e resultados por
-confronto.
+Tournament reports include `standings` per strategy and detailed matchup
+results.
 
-## Arquitetura
+## Architecture
 
 ```text
 .github/workflows/
@@ -184,40 +184,34 @@ tests/
 pyproject.toml
 ```
 
-Responsabilidades principais:
+Main responsibilities:
 
-- `models.py`: unidades, bases, lanes, papéis e efeitos.
-- `engine.py`: regras de batalha, turnos, alcance, efeitos e eventos.
-- `strategies.py`: bots automatizados.
-- `tournament.py`: round-robin e métricas agregadas.
-- `cli.py`: interface de linha de comando e exportação JSON.
-- `tests/`: validação das regras principais.
+- `models.py`: bases, units, lanes, roles and effects.
+- `engine.py`: battle rules, turns, targeting, range, effects and events.
+- `strategies.py`: automated bot strategies.
+- `tournament.py`: round-robin matchups and aggregate metrics.
+- `cli.py`: command-line interface and JSON export.
+- `tests/`: regression coverage for the core rules.
 
-## Relação com a versão original
+## History
 
-A versão acadêmica original era composta por scripts interativos na raiz do
-repositório. Ela continua em `legacy/` para preservar o histórico do fork.
+The original version was a small academic OOP exercise with interactive scripts.
+Those files are preserved in `legacy/` as historical reference. The current
+standalone repository is a redesigned simulator with a proper package structure,
+automated tests, CI and richer battle rules.
 
-A versão atual refatora o projeto para:
+## Current Limitations
 
-- separar domínio, engine, CLI, estratégias e torneios;
-- remover a dependência de `input()` e `print()` nas regras centrais;
-- permitir simulações automatizadas e reproduzíveis;
-- gerar relatórios estruturados;
-- validar regras com testes;
-- manter o projeto simples o suficiente para estudo e portfólio.
+- Balance is intentionally lightweight and still heuristic.
+- The battlefield has two lanes, not a full grid.
+- Bot strategies are deterministic heuristics, not machine learning agents.
+- Strategy selection via CLI is still a planned improvement.
+- Interactive mode is secondary to automated simulations.
 
-## Limitações
+## Next Steps
 
-- O balanceamento ainda é experimental.
-- O campo usa apenas duas lanes, não um mapa completo.
-- Estratégias são heurísticas simples, não IA avançada.
-- O modo interativo ainda é secundário em relação ao modo automático.
-
-## Próximos passos
-
-- Permitir escolher estratégias pela CLI.
-- Exportar eventos completos em JSON Lines.
-- Adicionar métricas de sobrevivência e uso de recursos.
-- Melhorar a ergonomia do modo interativo.
-- Criar uma visualização simples sem adicionar dependências obrigatórias.
+- Allow choosing strategies from CLI arguments.
+- Export complete event logs as JSON Lines.
+- Add resource-efficiency and survivor metrics.
+- Improve interactive mode ergonomics.
+- Add a simple visualization without mandatory external dependencies.

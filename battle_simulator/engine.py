@@ -210,13 +210,41 @@ class BattleEngine:
             }
             self.play_round(plans)
 
+        winner = self.battlefield.winner()
+        if winner is None and self.round_number >= max_rounds:
+            winner = self._tiebreak_winner()
+            if winner is not None:
+                self.events.append(
+                    BattleEvent(
+                        event_type="tiebreak",
+                        round_number=self.round_number,
+                        player=winner,
+                        message=f"Player {winner.value} wins by tiebreak after round limit.",
+                    )
+                )
+
         return BattleResult(
-            winner=self.battlefield.winner(),
+            winner=winner,
             rounds_played=self.round_number,
             events=self.events,
             stats=self.stats,
             strategies=self.strategy_names,
         )
+
+    def _tiebreak_winner(self) -> Player | None:
+        health_one = self.battlefield.base_for(Player.ONE).health
+        health_two = self.battlefield.base_for(Player.TWO).health
+        if health_one > health_two:
+            return Player.ONE
+        if health_two > health_one:
+            return Player.TWO
+        damage_one = self.stats.damage_dealt[Player.ONE]
+        damage_two = self.stats.damage_dealt[Player.TWO]
+        if damage_one > damage_two:
+            return Player.ONE
+        if damage_two > damage_one:
+            return Player.TWO
+        return None
 
     def _apply_start_of_round_effects(self) -> list[BattleEvent]:
         events: list[BattleEvent] = []
@@ -333,7 +361,7 @@ class BattleEngine:
         if not allies:
             return []
         target = min(allies, key=lambda troop: troop.health / troop.max_hp)
-        healed = target.heal(3)
+        healed = target.heal(2)
         if healed <= 0:
             return []
         return [
@@ -353,7 +381,12 @@ class BattleEngine:
         shield_targets = [
             troop
             for troop in allies
-            if troop.lane == Lane.FRONT and not troop.has_effect(StatusEffect.SHIELD)
+            if (
+                troop is not attacker
+                and troop.lane == Lane.FRONT
+                and not troop.has_effect(StatusEffect.SHIELD)
+                and troop.health / troop.max_hp <= 0.75
+            )
         ]
         if not shield_targets:
             return []
@@ -470,7 +503,7 @@ class BattleEngine:
     ) -> list[BattleEvent]:
         events: list[BattleEvent] = []
         if attacker.role == Role.RANGED:
-            target.add_effect(StatusEffect.BLEED, duration=2)
+            target.add_effect(StatusEffect.BLEED, duration=3)
             events.append(
                 BattleEvent(
                     event_type="effect_applied",

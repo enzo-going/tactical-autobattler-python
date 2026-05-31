@@ -51,7 +51,10 @@ def main(argv: list[str] | None = None) -> int:
         for row in summary.standings:
             print(
                 f"- {row.name}: {row.wins}W/{row.losses}L/{row.draws}D, "
-                f"{row.win_rate:.3f} win rate."
+                f"{row.win_rate:.3f} win rate, "
+                f"{row.draw_rate:.3f} draw rate, "
+                f"{row.average_rounds} avg rounds, "
+                f"{row.average_damage_dealt}/{row.average_damage_taken} avg damage."
             )
         if args.report_json:
             args.report_json.parent.mkdir(parents=True, exist_ok=True)

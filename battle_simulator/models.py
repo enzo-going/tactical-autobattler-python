@@ -33,9 +33,9 @@ class TroopKind(str, Enum):
 @dataclass
 class Base:
     name: str
-    health: int = 35
+    health: int = 28
     resources: int = 10
-    resource_income: int = 7
+    resource_income: int = 6
 
     @property
     def is_destroyed(self) -> bool:
@@ -112,7 +112,7 @@ class Troop:
             raise ValueError("Damage cannot be negative.")
         mitigated = amount if ignore_defense else max(1, amount - self.defense)
         if self.effects.pop(StatusEffect.SHIELD, 0) > 0:
-            mitigated = max(0, mitigated - 2)
+            mitigated = max(0, mitigated - 1)
         applied = min(self.health, mitigated)
         self.current_hp = self.health - applied
         self.damage_received += applied
@@ -151,7 +151,7 @@ class Soldier(Troop):
     def __init__(self, name: str, lane: Lane = Lane.FRONT):
         super().__init__(
             name=name,
-            max_hp=5,
+            max_hp=4,
             attack=2,
             defense=1,
             speed=4,
@@ -181,9 +181,9 @@ class Guardian(Troop):
     def __init__(self, name: str, lane: Lane = Lane.FRONT):
         super().__init__(
             name=name,
-            max_hp=11,
-            attack=1,
-            defense=3,
+            max_hp=9,
+            attack=2,
+            defense=2,
             speed=2,
             range=1,
             cost=4,
@@ -201,7 +201,7 @@ class Medic(Troop):
             defense=0,
             speed=3,
             range=2,
-            cost=4,
+            cost=5,
             role=Role.SUPPORT,
             lane=lane,
         )
@@ -211,8 +211,8 @@ class Tank(Troop):
     def __init__(self, name: str, lane: Lane = Lane.FRONT):
         super().__init__(
             name=name,
-            max_hp=9,
-            attack=4,
+            max_hp=8,
+            attack=5,
             defense=2,
             speed=1,
             range=1,

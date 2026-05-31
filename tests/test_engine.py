@@ -42,7 +42,7 @@ class TroopTest(unittest.TestCase):
         self.assertEqual(archer.range, 2)
         self.assertEqual(archer.lane, Lane.BACK)
         self.assertIsInstance(guardian, Guardian)
-        self.assertEqual(guardian.defense, 3)
+        self.assertEqual(guardian.defense, 2)
         self.assertEqual(guardian.cost, 4)
         self.assertIsInstance(medic, Medic)
         self.assertEqual(medic.role.value, "support")
@@ -69,7 +69,7 @@ class TroopTest(unittest.TestCase):
 
         applied = Tank("Tank").attack_troop(guardian)
 
-        self.assertEqual(applied, 0)
+        self.assertEqual(applied, 2)
 
 
 class BattleEngineTest(unittest.TestCase):
@@ -84,7 +84,7 @@ class BattleEngineTest(unittest.TestCase):
         )
 
         self.assertEqual(len(engine.battlefield.troops_one), 1)
-        self.assertEqual(engine.battlefield.base_one.resources, 12)
+        self.assertEqual(engine.battlefield.base_one.resources, 11)
         self.assertEqual(engine.stats.units_recruited[Player.ONE], 1)
 
     def test_recruitment_cost_uses_selected_troop(self):
@@ -97,7 +97,7 @@ class BattleEngineTest(unittest.TestCase):
             }
         )
 
-        self.assertEqual(engine.battlefield.base_one.resources, 14)
+        self.assertEqual(engine.battlefield.base_one.resources, 13)
         self.assertIsInstance(engine.battlefield.troops_one[0], Archer)
 
     def test_insufficient_resources_does_not_add_troop(self):
@@ -167,7 +167,7 @@ class BattleEngineTest(unittest.TestCase):
     def test_tank_stuns_target_next_action(self):
         battlefield = Battlefield(
             troops_one=[Tank("Tank")],
-            troops_two=[Soldier("Soldier")],
+            troops_two=[Guardian("Guardian")],
         )
         engine = BattleEngine(battlefield)
 
@@ -213,7 +213,7 @@ class BattleEngineTest(unittest.TestCase):
             }
         )
 
-        self.assertEqual(engine.battlefield.troops_two[0].health, 11)
+        self.assertEqual(engine.battlefield.troops_two[0].health, 9)
         self.assertTrue(any(event.event_type == "invalid_target" for event in events))
 
     def test_troops_attack_enemy_base_when_no_defenders_exist(self):
@@ -233,6 +233,18 @@ class BattleEngineTest(unittest.TestCase):
         self.assertEqual(engine.battlefield.winner(), Player.ONE)
         self.assertEqual(engine.battlefield.base_two.health, 0)
 
+    def test_round_limit_uses_tiebreaker(self):
+        battlefield = Battlefield(
+            base_one=Base("Blue", health=20),
+            base_two=Base("Red", health=15),
+        )
+        engine = BattleEngine(battlefield)
+
+        result = engine.run(BalancedBot(), BalancedBot(), max_rounds=1)
+
+        self.assertEqual(result.winner, Player.ONE)
+        self.assertTrue(any(event.event_type == "tiebreak" for event in result.events))
+
     def test_report_contains_structured_battle_state(self):
         engine = BattleEngine()
         result = engine.run(BalancedBot(), DefensiveBot(), max_rounds=2)
@@ -251,7 +263,7 @@ class StrategyTest(unittest.TestCase):
 
         plan = AggressiveBot().choose_plan(Player.ONE, battlefield)
 
-        self.assertEqual(plan.recruits[0].troop_kind, TroopKind.TANK)
+        self.assertEqual(plan.recruits[0].troop_kind, TroopKind.ARCHER)
 
     def test_defensive_bot_recruits_guardian_first(self):
         battlefield = Battlefield(base_one=Base("Blue", resources=10))

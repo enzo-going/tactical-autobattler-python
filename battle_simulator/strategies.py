@@ -30,7 +30,15 @@ class BalancedBot(Strategy):
                 budget -= TROOP_COSTS[troop_kind]
 
         while budget >= TROOP_COSTS[TroopKind.SOLDIER]:
-            troop_kind = TroopKind.ARCHER if budget >= TROOP_COSTS[TroopKind.ARCHER] else TroopKind.SOLDIER
+            front_count = sum(
+                1 for troop in troops if troop.lane == Lane.FRONT
+            ) + sum(
+                1 for recruit in recruits if recruit.lane == Lane.FRONT
+            )
+            if front_count < 2:
+                troop_kind = TroopKind.SOLDIER
+            else:
+                troop_kind = TroopKind.ARCHER if budget >= TROOP_COSTS[TroopKind.ARCHER] else TroopKind.SOLDIER
             lane = Lane.BACK if troop_kind == TroopKind.ARCHER else Lane.FRONT
             recruits.append(RecruitOrder(troop_kind, lane=lane))
             budget -= TROOP_COSTS[troop_kind]
@@ -49,17 +57,17 @@ class AggressiveBot(Strategy):
         budget = base.resources
         recruits: list[RecruitOrder] = []
 
-        for troop_kind, lane in (
-            (TroopKind.TANK, Lane.FRONT),
-            (TroopKind.ARCHER, Lane.BACK),
-            (TroopKind.SOLDIER, Lane.FRONT),
-        ):
-            while budget >= TROOP_COSTS[troop_kind]:
-                recruits.append(RecruitOrder(troop_kind, lane=lane))
-                budget -= TROOP_COSTS[troop_kind]
+        if len(troops) >= 3 and budget >= TROOP_COSTS[TroopKind.TANK]:
+            recruits.append(RecruitOrder(TroopKind.TANK, lane=Lane.FRONT))
+        elif budget >= TROOP_COSTS[TroopKind.ARCHER]:
+            recruits.append(RecruitOrder(TroopKind.ARCHER, lane=Lane.BACK))
+        elif budget >= TROOP_COSTS[TroopKind.SOLDIER]:
+            recruits.append(RecruitOrder(TroopKind.SOLDIER, lane=Lane.FRONT))
 
-        target_index = _weakest_target_index(enemies)
-        attacks = tuple(AttackOrder(index, target_index) for index, _ in enumerate(troops))
+        attacks = tuple(
+            AttackOrder(index, _weakest_reachable_target_index(troop, enemies))
+            for index, troop in enumerate(troops)
+        )
         return TurnPlan(recruits=tuple(recruits), attacks=attacks)
 
 
@@ -74,8 +82,9 @@ class DefensiveBot(Strategy):
 
         for troop_kind, lane in (
             (TroopKind.GUARDIAN, Lane.FRONT),
-            (TroopKind.MEDIC, Lane.BACK),
             (TroopKind.ARCHER, Lane.BACK),
+            (TroopKind.ARCHER, Lane.BACK),
+            (TroopKind.MEDIC, Lane.BACK),
             (TroopKind.SOLDIER, Lane.FRONT),
         ):
             if budget >= TROOP_COSTS[troop_kind]:
@@ -95,11 +104,15 @@ class EconomyBot(Strategy):
         enemies = battlefield.living_troops_for(player.opponent)
         recruits: list[RecruitOrder] = []
 
-        if base.resources >= 12:
+        if not troops and base.resources >= 9:
+            recruits.append(RecruitOrder(TroopKind.GUARDIAN, lane=Lane.FRONT))
+            recruits.append(RecruitOrder(TroopKind.SOLDIER, lane=Lane.FRONT))
+        elif base.resources >= 11:
             recruits.append(RecruitOrder(TroopKind.TANK, lane=Lane.FRONT))
             recruits.append(RecruitOrder(TroopKind.ARCHER, lane=Lane.BACK))
-        elif base.resources >= 8:
-            recruits.append(RecruitOrder(TroopKind.GUARDIAN, lane=Lane.FRONT))
+        elif base.resources >= 7 and troops:
+            recruits.append(RecruitOrder(TroopKind.ARCHER, lane=Lane.BACK))
+            recruits.append(RecruitOrder(TroopKind.SOLDIER, lane=Lane.FRONT))
         elif not troops and base.resources >= TROOP_COSTS[TroopKind.SOLDIER]:
             recruits.append(RecruitOrder(TroopKind.SOLDIER, lane=Lane.FRONT))
 
@@ -170,7 +183,7 @@ def _best_target_index(troop: Troop, enemies: list[Troop]) -> int | None:
     reachable = _reachable_enemies(troop, enemies)
     if not reachable:
         return None
-    target = min(reachable, key=lambda enemy: (enemy.lane != Lane.FRONT, enemy.health))
+    target = min(reachable, key=lambda enemy: (enemy.health, enemy.lane != Lane.FRONT))
     return enemies.index(target)
 
 
@@ -179,6 +192,13 @@ def _weakest_target_index(enemies: list[Troop]) -> int | None:
     if not living:
         return None
     return enemies.index(min(living, key=lambda troop: troop.health))
+
+
+def _weakest_reachable_target_index(troop: Troop, enemies: list[Troop]) -> int | None:
+    reachable = _reachable_enemies(troop, enemies)
+    if not reachable:
+        return None
+    return enemies.index(min(reachable, key=lambda enemy: enemy.health))
 
 
 def _reachable_enemies(troop: Troop, enemies: list[Troop]) -> list[Troop]:
