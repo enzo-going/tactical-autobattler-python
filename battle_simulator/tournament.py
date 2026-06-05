@@ -161,7 +161,7 @@ def run_tournament(
     if len(strategies) < 2:
         raise ValueError("at least two strategies are required.")
 
-    matchups = tuple(combinations(strategies, 2))
+    matchups = _round_robin_matchups(strategies)
     matchup_summaries = tuple(
         run_matchup(
             strategy_one=strategy_one,
@@ -237,6 +237,14 @@ def run_matchup(
         strategy_one_damage_taken=round(strategy_one_damage_taken / simulations, 2),
         strategy_two_damage_taken=round(strategy_two_damage_taken / simulations, 2),
     )
+
+
+def _round_robin_matchups(strategies: tuple[str, ...]) -> tuple[tuple[str, str], ...]:
+    matchups: list[tuple[str, str]] = []
+    for strategy_one, strategy_two in combinations(strategies, 2):
+        matchups.append((strategy_one, strategy_two))
+        matchups.append((strategy_two, strategy_one))
+    return tuple(matchups)
 
 
 def _build_standings(

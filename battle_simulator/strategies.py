@@ -57,12 +57,15 @@ class AggressiveBot(Strategy):
         budget = base.resources
         recruits: list[RecruitOrder] = []
 
-        if len(troops) >= 3 and budget >= TROOP_COSTS[TroopKind.TANK]:
+        if len(troops) >= 4 and budget >= TROOP_COSTS[TroopKind.TANK]:
             recruits.append(RecruitOrder(TroopKind.TANK, lane=Lane.FRONT))
-        elif budget >= TROOP_COSTS[TroopKind.ARCHER]:
+            budget -= TROOP_COSTS[TroopKind.TANK]
+        if budget >= TROOP_COSTS[TroopKind.ARCHER]:
             recruits.append(RecruitOrder(TroopKind.ARCHER, lane=Lane.BACK))
-        elif budget >= TROOP_COSTS[TroopKind.SOLDIER]:
+            budget -= TROOP_COSTS[TroopKind.ARCHER]
+        if budget >= TROOP_COSTS[TroopKind.SOLDIER]:
             recruits.append(RecruitOrder(TroopKind.SOLDIER, lane=Lane.FRONT))
+            budget -= TROOP_COSTS[TroopKind.SOLDIER]
 
         attacks = tuple(
             AttackOrder(index, _weakest_reachable_target_index(troop, enemies))

@@ -1,6 +1,6 @@
 import unittest
 
-from battle_simulator.cli import _build_report
+from battle_simulator.cli import _build_report, _parse_strategies
 from battle_simulator.engine import AttackOrder, BattleEngine, Battlefield, Player, RecruitOrder, TurnPlan
 from battle_simulator.models import (
     Archer,
@@ -277,9 +277,21 @@ class TournamentTest(unittest.TestCase):
     def test_tournament_uses_round_robin_matchups(self):
         summary = run_tournament(simulations=2, max_rounds=4, seed=10)
 
-        self.assertEqual(len(summary.matchups), 6)
-        self.assertEqual(summary.simulations, 12)
+        self.assertEqual(len(summary.matchups), 12)
+        self.assertEqual(summary.simulations, 24)
         self.assertEqual(len(summary.standings), 4)
+
+    def test_tournament_accepts_custom_strategy_list(self):
+        summary = run_tournament(
+            simulations=2,
+            max_rounds=4,
+            seed=10,
+            strategies=("aggressive", "defensive"),
+        )
+
+        self.assertEqual(len(summary.matchups), 2)
+        self.assertEqual(summary.simulations, 4)
+        self.assertEqual(summary.strategies, ("aggressive", "defensive"))
 
     def test_matchup_reports_wins_losses_draws_and_damage(self):
         summary = run_matchup("aggressive", "balanced", simulations=2, max_rounds=3, seed=2)
@@ -289,6 +301,18 @@ class TournamentTest(unittest.TestCase):
         self.assertEqual(summary.losses_for_strategy_one, summary.strategy_two_wins)
         self.assertLessEqual(summary.average_rounds, 3)
         self.assertGreaterEqual(summary.strategy_one_damage_dealt, 0)
+
+
+class CliTest(unittest.TestCase):
+    def test_parse_strategies_from_comma_separated_value(self):
+        self.assertEqual(
+            _parse_strategies("aggressive, balanced, economy"),
+            ("aggressive", "balanced", "economy"),
+        )
+
+    def test_parse_strategies_rejects_unknown_names(self):
+        with self.assertRaises(ValueError):
+            _parse_strategies("balanced,unknown")
 
 
 if __name__ == "__main__":

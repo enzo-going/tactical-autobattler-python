@@ -6,8 +6,7 @@ from pathlib import Path
 
 from battle_simulator.engine import AttackOrder, BattleEngine, Player, RecruitOrder, TurnPlan
 from battle_simulator.models import Lane, TROOP_COSTS, TroopKind
-from battle_simulator.strategies import BalancedBot, RandomBot
-from battle_simulator.tournament import run_tournament
+from battle_simulator.tournament import DEFAULT_STRATEGIES, STRATEGIES, run_tournament
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -20,6 +19,28 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--rounds", type=int, default=30, help="Maximum number of rounds.")
     parser.add_argument("--seed", type=int, default=7, help="Seed for random mode.")
+    parser.add_argument(
+        "--strategy-one",
+        choices=tuple(STRATEGIES),
+        default="balanced",
+        help="Player one strategy for auto mode.",
+    )
+    parser.add_argument(
+        "--strategy-two",
+        choices=tuple(STRATEGIES),
+        default="random",
+        help="Player two strategy for auto mode.",
+    )
+    parser.add_argument(
+        "--strategies",
+        default=",".join(DEFAULT_STRATEGIES),
+        help="Comma-separated strategy names for tournament mode.",
+    )
+    parser.add_argument(
+        "--list-strategies",
+        action="store_true",
+        help="Print available strategy names and exit.",
+    )
     parser.add_argument(
         "--simulations",
         type=int,
@@ -34,8 +55,23 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
+    if args.list_strategies:
+        print("Available strategies:")
+        for strategy_name in sorted(STRATEGIES):
+            print(f"- {strategy_name}")
+        return 0
+
     if args.mode == "tournament":
-        summary = run_tournament(args.simulations, args.rounds, seed=args.seed)
+        try:
+            selected_strategies = _parse_strategies(args.strategies)
+        except ValueError as exc:
+            parser.error(str(exc))
+        summary = run_tournament(
+            args.simulations,
+            args.rounds,
+            seed=args.seed,
+            strategies=selected_strategies,
+        )
         print(
             f"Tournament: {summary.simulations} simulations "
             f"across {len(summary.matchups)} matchups."
@@ -68,7 +104,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.mode == "interactive":
         result = _run_interactive(engine, args.rounds)
     else:
-        result = engine.run(BalancedBot(), RandomBot(seed=args.seed), max_rounds=args.rounds)
+        result = engine.run(
+            STRATEGIES[args.strategy_one](args.seed),
+            STRATEGIES[args.strategy_two](args.seed),
+            max_rounds=args.rounds,
+        )
 
     if not args.quiet:
         for event in result.events:
@@ -90,12 +130,22 @@ def main(argv: list[str] | None = None) -> int:
     return 0
 
 
+def _parse_strategies(value: str) -> tuple[str, ...]:
+    strategies = tuple(strategy.strip() for strategy in value.split(",") if strategy.strip())
+    if len(strategies) < 2:
+        raise ValueError("At least two strategies are required.")
+    unknown = [strategy for strategy in strategies if strategy not in STRATEGIES]
+    if unknown:
+        raise ValueError(f"Unknown strategies: {', '.join(unknown)}")
+    return strategies
+
+
 def _run_interactive(engine: BattleEngine, max_rounds: int):
     while engine.battlefield.winner() is None and engine.round_number < max_rounds:
         _print_state(engine)
         plans = {
             Player.ONE: _read_plan(Player.ONE, engine),
-            Player.TWO: BalancedBot().choose_plan(Player.TWO, engine.battlefield),
+            Player.TWO: STRATEGIES["balanced"](0).choose_plan(Player.TWO, engine.battlefield),
         }
         engine.play_round(plans)
 

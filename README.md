@@ -48,10 +48,28 @@ Automatic simulation with JSON report:
 python -m battle_simulator --mode auto --rounds 20 --seed 11 --quiet --report-json reports/battle.json
 ```
 
+Choose strategies for automatic simulation:
+
+```bash
+python -m battle_simulator --mode auto --strategy-one aggressive --strategy-two defensive --rounds 30
+```
+
 Round-robin tournament:
 
 ```bash
 python -m battle_simulator --mode tournament --simulations 20 --rounds 30 --seed 11 --report-json reports/tournament-balance.json
+```
+
+Tournament with selected strategies:
+
+```bash
+python -m battle_simulator --mode tournament --strategies aggressive,balanced,economy --simulations 20 --rounds 30
+```
+
+List available strategies:
+
+```bash
+python -m battle_simulator --list-strategies
 ```
 
 Interactive mode:
@@ -108,6 +126,9 @@ and range rules.
 - `DefensiveBot`: favors durable units and protection.
 - `EconomyBot`: delays some spending to buy stronger turns later.
 - `RandomBot`: uses seeded randomness.
+
+Tournament mode runs mirrored round-robin matchups, so each pair plays both
+orders. This reduces player-order bias when comparing deterministic strategies.
 
 Tournament output includes:
 
@@ -205,12 +226,10 @@ automated tests, CI and richer battle rules.
 - Balance is intentionally lightweight and still heuristic.
 - The battlefield has two lanes, not a full grid.
 - Bot strategies are deterministic heuristics, not machine learning agents.
-- Strategy selection via CLI is still a planned improvement.
 - Interactive mode is secondary to automated simulations.
 
 ## Next Steps
 
-- Allow choosing strategies from CLI arguments.
 - Export complete event logs as JSON Lines.
 - Add resource-efficiency and survivor metrics.
 - Improve interactive mode ergonomics.
