@@ -82,17 +82,21 @@ class DefensiveBot(Strategy):
         troops = battlefield.troops_for(player)
         budget = base.resources
         recruits: list[RecruitOrder] = []
+        has_damaged_troops = any(troop.health < troop.max_hp for troop in troops)
 
         for troop_kind, lane in (
             (TroopKind.GUARDIAN, Lane.FRONT),
             (TroopKind.ARCHER, Lane.BACK),
             (TroopKind.ARCHER, Lane.BACK),
-            (TroopKind.MEDIC, Lane.BACK),
             (TroopKind.SOLDIER, Lane.FRONT),
         ):
             if budget >= TROOP_COSTS[troop_kind]:
                 recruits.append(RecruitOrder(troop_kind, lane=lane))
                 budget -= TROOP_COSTS[troop_kind]
+
+        if has_damaged_troops and budget >= TROOP_COSTS[TroopKind.MEDIC]:
+            recruits.append(RecruitOrder(TroopKind.MEDIC, lane=Lane.BACK))
+            budget -= TROOP_COSTS[TroopKind.MEDIC]
 
         attacks = _attack_orders(troops, battlefield.living_troops_for(player.opponent))
         return TurnPlan(recruits=tuple(recruits), attacks=attacks)
@@ -107,17 +111,13 @@ class EconomyBot(Strategy):
         enemies = battlefield.living_troops_for(player.opponent)
         recruits: list[RecruitOrder] = []
 
-        if not troops and base.resources >= 9:
-            recruits.append(RecruitOrder(TroopKind.GUARDIAN, lane=Lane.FRONT))
+        if not troops and base.resources >= TROOP_COSTS[TroopKind.SOLDIER]:
             recruits.append(RecruitOrder(TroopKind.SOLDIER, lane=Lane.FRONT))
-        elif base.resources >= 11:
+        elif base.resources >= 14:
             recruits.append(RecruitOrder(TroopKind.TANK, lane=Lane.FRONT))
             recruits.append(RecruitOrder(TroopKind.ARCHER, lane=Lane.BACK))
-        elif base.resources >= 7 and troops:
+        elif base.resources >= 8 and troops:
             recruits.append(RecruitOrder(TroopKind.ARCHER, lane=Lane.BACK))
-            recruits.append(RecruitOrder(TroopKind.SOLDIER, lane=Lane.FRONT))
-        elif not troops and base.resources >= TROOP_COSTS[TroopKind.SOLDIER]:
-            recruits.append(RecruitOrder(TroopKind.SOLDIER, lane=Lane.FRONT))
 
         return TurnPlan(recruits=tuple(recruits), attacks=_attack_orders(troops, enemies))
 
