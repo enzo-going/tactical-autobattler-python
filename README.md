@@ -30,10 +30,22 @@ structure without external runtime dependencies.
 
 Run commands from the repository root.
 
+Install in editable mode if you want the console scripts:
+
+```bash
+python -m pip install -e .
+```
+
 Automatic simulation:
 
 ```bash
 python -m battle_simulator --mode auto --rounds 20 --seed 11
+```
+
+The installed console command is equivalent:
+
+```bash
+tactical-autobattler --mode auto --rounds 20 --seed 11
 ```
 
 Short automatic simulation:
@@ -193,6 +205,7 @@ battle_simulator/
   tournament.py
 docs/
   academic_context.md
+  balance_notes.md
   initial_audit.md
   roadmap.md
 legacy/
@@ -213,6 +226,9 @@ Main responsibilities:
 - `tournament.py`: round-robin matchups and aggregate metrics.
 - `cli.py`: command-line interface and JSON export.
 - `tests/`: regression coverage for the core rules.
+
+Additional project notes live in `docs/`, including a balance summary and
+technical roadmap.
 
 ## History
 

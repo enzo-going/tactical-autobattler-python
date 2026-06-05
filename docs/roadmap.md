@@ -1,52 +1,51 @@
-# Roadmap técnico
+# Technical Roadmap
 
-Este fork evoluiu de um script acadêmico de POO para um mini tactical
-auto-battler simulator. A prioridade continua sendo clareza de arquitetura,
-testabilidade e simplicidade suficiente para portfólio.
+This project has evolved from a small academic OOP exercise into a standalone
+tactical auto-battler simulator. The current priority is to keep the project
+small, readable and useful as a Python portfolio piece.
 
-## Concluído
+## Completed
 
-- Separação entre domínio, engine, estratégias, torneios e CLI.
-- Criação de pacote Python executável com `python -m battle_simulator`.
-- Preservação dos scripts acadêmicos originais em `legacy/`.
-- Testes automatizados para regras essenciais.
-- GitHub Actions para testes e compilação.
-- Modelo tático com ataque, defesa, vida, velocidade, alcance, custo e papel.
-- Campo simples com `front` e `back lane`.
-- Efeitos de combate: `shield`, `bleed`, `stun` e `heal`.
-- Estratégias com estilos distintos: agressiva, balanceada, defensiva,
-  econômica e aleatória.
-- Relatório JSON estruturado com eventos e estatísticas.
-- Torneio round-robin com métricas por estratégia.
-- README reescrito com a nova identidade do projeto.
+- Package structure with `python -m battle_simulator`.
+- CLI for automatic simulations, interactive play and tournaments.
+- Strategy selection through CLI arguments.
+- Tactical model with attack, defense, HP, speed, range, cost and role.
+- Simple front/back lane system.
+- Combat effects: `shield`, `bleed`, `stun` and `heal`.
+- Automated strategies with distinct styles.
+- Mirrored round-robin tournament to reduce player-order bias.
+- Structured JSON reports.
+- Unit tests for core rules, strategies, reports and tournament behavior.
+- GitHub Actions workflow for tests and compilation.
+- Standalone README and project metadata.
 
-## Próximos ciclos
+## Current Quality Bar
 
-1. Balanceamento de jogo
-   - Rodar torneios com mais seeds.
-   - Observar taxa de vitória, duração média, dano e empates.
-   - Ajustar custo, vida, dano, defesa e renda com base nessas métricas.
+Every meaningful change should keep:
 
-2. CLI
-   - Permitir selecionar estratégias por argumento.
-   - Permitir selecionar lista de estratégias para torneio.
-   - Melhorar o modo interativo sem misturar lógica de regra na CLI.
+- unit tests passing;
+- `compileall` passing;
+- no mandatory external runtime dependencies;
+- CLI commands documented;
+- battle rules isolated from presentation code;
+- generated reports ignored by Git.
 
-3. Persistência e análise
-   - Exportar eventos completos em JSON Lines.
-   - Criar relatório agregado com recursos finais e tropas sobreviventes.
-   - Adicionar snapshots por rodada.
+## Next Improvements
 
-4. Interface
-   - Criar uma visualização textual mais clara do campo.
-   - Avaliar interface visual simples no futuro.
+1. Balance analysis
+   - Run tournaments across several seed groups.
+   - Track whether a strategy becomes dominant over time.
+   - Tune strategy heuristics before changing unit stats.
 
-## Critério de qualidade
+2. Reporting
+   - Add optional JSON Lines event export.
+   - Add per-round snapshots.
+   - Track resource efficiency and surviving unit value.
 
-Cada ciclo deve manter:
+3. CLI polish
+   - Add a compact `--summary-only` report option.
+   - Improve interactive prompts and target selection.
 
-- testes passando;
-- regras de jogo isoladas da interface;
-- comandos documentados;
-- sem dependências externas obrigatórias;
-- commits pequenos e descritivos.
+4. Presentation
+   - Add a small docs page explaining the battle loop.
+   - Add example report files under a versioned `examples/` directory.
