@@ -1,7 +1,7 @@
-# Code of Conduct
+# Código de conduta
 
-This project adopts the [Contributor Covenant](https://www.contributor-covenant.org/version/2/1/code_of_conduct/)
-as its code of conduct. By participating, you are expected to uphold a welcoming,
-respectful and harassment-free environment.
+Este projeto adota o [Contributor Covenant](https://www.contributor-covenant.org/pt-br/version/2/1/code_of_conduct/)
+como seu código de conduta. Ao participar, espera-se que você mantenha um
+ambiente acolhedor, respeitoso e livre de assédio.
 
-Report unacceptable behavior to **enzogoingpro@gmail.com**.
+Reporte comportamentos inaceitáveis para **enzogoingpro@gmail.com**.

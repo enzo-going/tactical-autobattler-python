@@ -33,3 +33,6 @@ dist/
 
 # Generated battle reports
 reports/*.json
+
+# Locally assembled GitHub Pages site
+_site/
