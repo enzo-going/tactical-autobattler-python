@@ -1,8 +1,7 @@
 # Tactical Auto-Battler Simulator
 
+[![Tests](https://github.com/enzo-going/tactical-autobattler-python/actions/workflows/tests.yml/badge.svg)](https://github.com/enzo-going/tactical-autobattler-python/actions/workflows/tests.yml)
 ![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python&logoColor=white)
-![Tests](https://img.shields.io/badge/Tests-unittest-brightgreen?style=flat)
-![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?style=flat&logo=githubactions&logoColor=white)
 ![Dependencies](https://img.shields.io/badge/Dependencies-none-brightgreen?style=flat)
 
 Mini tactical auto-battler simulator written in Python.
