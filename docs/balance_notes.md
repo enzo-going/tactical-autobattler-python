@@ -1,37 +1,49 @@
-# Balance Notes
+# Notas de balanceamento
 
-The current tournament format uses mirrored round-robin matchups. Each pair of
-strategies plays in both player orders, which makes deterministic strategy
-comparison less sensitive to first-player advantage.
+O formato atual de torneio usa confrontos round-robin espelhados. Cada par de
+estratégias joga nas duas ordens de jogador, o que torna a comparação entre
+estratégias determinísticas menos sensível à vantagem de quem começa.
 
-## Current Strategy Identity
+## Identidade atual das estratégias
 
-- `AggressiveBot`: early pressure, reachable weak targets, fast games.
-- `BalancedBot`: mixed frontline/backline composition.
-- `DefensiveBot`: durable opener, ranged follow-up, healing only after damage.
-- `EconomyBot`: slower opening, later power turns.
-- `RandomBot`: seeded stochastic baseline.
+- `AggressiveBot`: pressão inicial, alvos fracos ao alcance, partidas rápidas.
+- `BalancedBot`: composição mista entre linha de frente e fundo.
+- `DefensiveBot`: abertura resistente, complemento de alcance, cura só depois de
+  levar dano.
+- `EconomyBot`: abertura mais lenta, turnos fortes mais tarde.
+- `RandomBot`: baseline estocástico com seed.
 
-## Latest Reference Run
+## Última execução de referência
 
-Command:
+Comando:
 
 ```bash
 python -m battle_simulator --mode tournament --simulations 20 --rounds 30 --seed 11 --report-json reports/tournament-final-balanced.json
 ```
 
-Observed standings:
+Classificação observada:
 
 ```text
-aggressive: 80W/40L/0D, win rate 0.667
-balanced:   60W/60L/0D, win rate 0.500
-economy:    60W/60L/0D, win rate 0.500
-defensive:  40W/80L/0D, win rate 0.333
+aggressive: 80V/40D/0E, taxa de vitória 0.667
+balanced:   60V/60D/0E, taxa de vitória 0.500
+economy:    60V/60D/0E, taxa de vitória 0.500
+defensive:  40V/80D/0E, taxa de vitória 0.333
 ```
 
-## Interpretation
+O mesmo resultado pode ser reproduzido na
+[interface web](https://enzo-going.github.io/tactical-autobattler-python/), aba
+**Torneio**, com 20 simulações, 30 rodadas e seed 11.
 
-The balance is not perfectly symmetrical, but each deterministic strategy now
-has at least one meaningful winning matchup and tournaments avoid long draw
-patterns. This is a reasonable portfolio-level balance target for the current
-scope.
+## Interpretação
+
+O balanceamento não é perfeitamente simétrico, mas cada estratégia
+determinística tem ao menos um confronto favorável relevante e os torneios
+evitam sequências longas de empate. É um alvo razoável de balanceamento para o
+escopo atual de portfólio.
+
+## Ponto em aberto
+
+Na tabela de confrontos, o lado que age primeiro vence a grande maioria dos
+pares. O round-robin espelhado compensa isso na classificação agregada, mas a
+vantagem de iniciativa em si ainda não foi tratada nas regras — é o próximo item
+natural da análise de balanceamento.

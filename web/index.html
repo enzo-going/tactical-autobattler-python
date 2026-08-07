@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tactical Auto-Battler — Simulador no navegador</title>
+<meta name="description" content="Simulador tatico auto-battler em Python rodando direto no navegador via Pyodide. Escolha estrategias, rode batalhas e torneios round-robin sem instalar nada.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>⚔️</text></svg>">
+<style>
+  :root {
+    --bg: #0c1017;
+    --bg-soft: #131a25;
+    --panel: #172032;
+    --panel-2: #1d2839;
+    --line: #27354b;
+    --text: #e6edf7;
+    --muted: #8fa0b8;
+    --blue: #4c8dff;
+    --red: #ff5f6d;
+    --green: #37d399;
+    --amber: #f5b73d;
+    --radius: 12px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background:
+      radial-gradient(1100px 500px at 15% -10%, #17233a 0%, transparent 60%),
+      radial-gradient(900px 450px at 90% 0%, #2a1622 0%, transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+    min-height: 100vh;
+  }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  header.top { margin-bottom: 28px; }
+
+  h1 {
+    font-size: clamp(1.6rem, 4vw, 2.3rem);
+    margin: 0 0 6px;
+    letter-spacing: -0.5px;
+  }
+
+  h1 .swords { margin-right: 8px; }
+
+  .sub { color: var(--muted); margin: 0 0 14px; max-width: 70ch; }
+
+  .top-links { display: flex; flex-wrap: wrap; gap: 10px; }
+
+  .top-links a {
+    color: var(--text);
+    text-decoration: none;
+    font-size: .86rem;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    padding: 6px 12px;
+    border-radius: 999px;
+    transition: border-color .15s, background .15s;
+  }
+
+  .top-links a:hover { border-color: var(--blue); background: var(--panel-2); }
+
+  /* ---------- boot ---------- */
+  #boot {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    margin-bottom: 22px;
+    font-size: .92rem;
+  }
+
+  #boot.error { border-color: var(--red); color: #ffd7da; }
+  #boot.done { display: none; }
+
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid var(--line);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+    flex: none;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- tabs ---------- */
+  .tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--line); margin-bottom: 22px; flex-wrap: wrap; }
+
+  .tab {
+    background: none;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    font: inherit;
+    font-weight: 600;
+    padding: 10px 16px;
+    cursor: pointer;
+    margin-bottom: -1px;
+  }
+
+  .tab:hover { color: var(--text); }
+  .tab[aria-selected="true"] { color: var(--text); border-bottom-color: var(--blue); }
+
+  .panel[hidden] { display: none; }
+
+  /* ---------- controls ---------- */
+  .controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 20px;
+    align-items: end;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+
+  label { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; }
+
+  select, input[type="number"] {
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 9px 10px;
+    font: inherit;
+    width: 100%;
+  }
+
+  select:focus, input:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
+
+  button.run {
+    background: var(--blue);
+    color: #07101f;
+    border: 0;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  button.run:hover { filter: brightness(1.08); }
+  button.run:disabled { opacity: .5; cursor: not-allowed; }
+
+  button.ghost {
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font: inherit;
+    font-size: .85rem;
+    cursor: pointer;
+  }
+
+  button.ghost:hover { border-color: var(--blue); }
+
+  .checks { display: flex; flex-wrap: wrap; gap: 8px; grid-column: 1 / -1; }
+
+  .checks label {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--bg-soft);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 14px 6px 10px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: .88rem;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+  }
+
+  .checks label:has(input:checked) { border-color: var(--blue); background: #16263f; }
+
+  /* ---------- results ---------- */
+  .result-banner {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    flex-wrap: wrap;
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--muted);
+    background: var(--panel);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 18px;
+  }
+
+  .result-banner.blue { border-left-color: var(--blue); }
+  .result-banner.red { border-left-color: var(--red); }
+  .result-banner strong { font-size: 1.15rem; }
+  .result-banner .meta { color: var(--muted); font-size: .88rem; }
+
+  .teams { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px; }
+
+  .team {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--muted);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+
+  .team.blue { border-top-color: var(--blue); }
+  .team.red { border-top-color: var(--red); }
+
+  .team h3 { margin: 0 0 2px; font-size: 1.05rem; }
+  .team .strat { color: var(--muted); font-size: .84rem; margin-bottom: 12px; }
+
+  .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 14px; margin-bottom: 14px; }
+  .stat { background: var(--bg-soft); border-radius: 8px; padding: 8px 10px; }
+  .stat .k { color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; }
+  .stat .v { font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  .hpbar { height: 8px; background: var(--bg-soft); border-radius: 999px; overflow: hidden; margin-top: 4px; }
+  .hpbar > span { display: block; height: 100%; border-radius: 999px; background: var(--green); }
+  .hpbar.low > span { background: var(--amber); }
+  .hpbar.critical > span { background: var(--red); }
+
+  .troop { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); font-size: .88rem; }
+  .troop .nm { flex: 1; min-width: 0; }
+  .troop .hp { color: var(--muted); font-variant-numeric: tabular-nums; font-size: .82rem; white-space: nowrap; }
+  .troop .bar { width: 70px; flex: none; }
+  .empty { color: var(--muted); font-size: .86rem; font-style: italic; padding-top: 8px; border-top: 1px solid var(--line); }
+
+  h2.section { font-size: 1.05rem; margin: 26px 0 12px; }
+
+  /* ---------- log ---------- */
+  .log {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    max-height: 460px;
+    overflow-y: auto;
+    padding: 6px 0;
+  }
+
+  .round-head {
+    position: sticky; top: 0;
+    background: var(--panel-2);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 6px 18px;
+    font-size: .76rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  .line { display: flex; gap: 10px; padding: 4px 18px; font-size: .89rem; align-items: baseline; }
+  .line:hover { background: var(--bg-soft); }
+  .line .icon { flex: none; width: 1.2em; text-align: center; }
+  .line.p1 { border-left: 3px solid var(--blue); }
+  .line.p2 { border-left: 3px solid var(--red); }
+  .line.neutral { border-left: 3px solid transparent; }
+  .line .amt { color: var(--amber); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* ---------- tables ---------- */
+  .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; min-width: 560px; }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { color: var(--muted); font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: var(--bg-soft); }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .rank { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .first td { background: #16263f; }
+
+  .winbar { display: flex; align-items: center; gap: 8px; min-width: 150px; }
+  .winbar .track { flex: 1; height: 7px; background: var(--bg-soft); border-radius: 999px; overflow: hidden; }
+  .winbar .track > span { display: block; height: 100%; background: var(--blue); border-radius: 999px; }
+  .winbar .pct { font-variant-numeric: tabular-nums; font-weight: 700; width: 3.4em; text-align: right; }
+
+  /* ---------- json ---------- */
+  .json-actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 14px 0; }
+
+  pre.json {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+    overflow: auto;
+    max-height: 400px;
+    font-size: .82rem;
+    margin: 0;
+    font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  }
+
+  .hint { color: var(--muted); font-size: .84rem; margin: 8px 0 0; }
+  .placeholder { color: var(--muted); text-align: center; padding: 40px 20px; border: 1px dashed var(--line); border-radius: var(--radius); }
+  .busy { color: var(--amber); font-size: .88rem; }
+
+  code { background: var(--bg-soft); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; font-size: .86em; }
+
+  footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: .84rem; }
+  footer a { color: var(--blue); }
+
+  @media (max-width: 640px) {
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+    .wrap { padding: 20px 14px 60px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <h1><span class="swords">⚔️</span>Tactical Auto-Battler</h1>
+    <p class="sub">
+      Simulador tático em Python rodando <strong>direto no seu navegador</strong>. É o mesmo
+      pacote <code>battle_simulator</code> do repositório, carregado via Pyodide — nada é
+      reimplementado em JavaScript e nada roda em servidor.
+    </p>
+    <nav class="top-links">
+      <a href="https://github.com/enzo-going/tactical-autobattler-python">📦 Repositório</a>
+      <a href="https://github.com/enzo-going/tactical-autobattler-python#readme">📖 README</a>
+      <a href="https://github.com/enzo-going/tactical-autobattler-python/tree/main/battle_simulator">🐍 Código do motor</a>
+    </nav>
+  </header>
+
+  <div id="boot"><div class="spinner"></div><span id="boot-msg">Carregando o interpretador Python…</span></div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-panel="p-battle">Batalha</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="p-tournament">Torneio</button>
+    <button class="tab" role="tab" aria-selected="false" data-panel="p-units">Unidades</button>
+  </div>
+
+  <!-- ============ BATALHA ============ -->
+  <section class="panel" id="p-battle" role="tabpanel">
+    <div class="controls">
+      <div class="field">
+        <label for="b-s1">Estratégia · Azul</label>
+        <select id="b-s1"></select>
+      </div>
+      <div class="field">
+        <label for="b-s2">Estratégia · Vermelho</label>
+        <select id="b-s2"></select>
+      </div>
+      <div class="field">
+        <label for="b-rounds">Rodadas (máx.)</label>
+        <input type="number" id="b-rounds" value="30" min="1" max="200">
+      </div>
+      <div class="field">
+        <label for="b-seed">Seed</label>
+        <input type="number" id="b-seed" value="11" min="0" max="999999">
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <button class="run" id="b-run" disabled>Simular batalha</button>
+      </div>
+    </div>
+    <p class="hint">
+      A <em>seed</em> só afeta a estratégia <strong>Aleatória</strong>; as demais são determinísticas —
+      mesmos parâmetros, mesmo resultado, sempre. Equivale a
+      <code>python -m battle_simulator --mode auto</code>.
+    </p>
+
+    <div id="b-out"><div class="placeholder">Escolha as estratégias e clique em <strong>Simular batalha</strong>.</div></div>
+  </section>
+
+  <!-- ============ TORNEIO ============ -->
+  <section class="panel" id="p-tournament" role="tabpanel" hidden>
+    <div class="controls">
+      <div class="checks" id="t-strats"></div>
+      <div class="field">
+        <label for="t-sims">Simulações por confronto</label>
+        <input type="number" id="t-sims" value="20" min="1" max="50">
+      </div>
+      <div class="field">
+        <label for="t-rounds">Rodadas (máx.)</label>
+        <input type="number" id="t-rounds" value="30" min="1" max="200">
+      </div>
+      <div class="field">
+        <label for="t-seed">Seed</label>
+        <input type="number" id="t-seed" value="11" min="0" max="999999">
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <button class="run" id="t-run" disabled>Rodar torneio</button>
+      </div>
+    </div>
+    <p class="hint">
+      Round-robin espelhado: cada par joga nas duas ordens, o que remove o viés de quem
+      começa. Valores altos de simulação levam alguns segundos — o Python roda na sua máquina.
+    </p>
+
+    <div id="t-out"><div class="placeholder">Selecione ao menos duas estratégias e clique em <strong>Rodar torneio</strong>.</div></div>
+  </section>
+
+  <!-- ============ UNIDADES ============ -->
+  <section class="panel" id="p-units" role="tabpanel" hidden>
+    <p class="hint" style="margin-bottom:14px">
+      Ficha técnica lida diretamente de <code>battle_simulator/models.py</code> quando a página carrega.
+      Alcance 1 atinge só a linha de frente; alcance 2 atinge também o fundo.
+    </p>
+    <div class="table-wrap"><table id="u-table"></table></div>
+
+    <h2 class="section">Efeitos de combate</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Efeito</th><th>Origem</th><th>O que faz</th></tr></thead>
+        <tbody>
+          <tr><td>🩸 Sangramento</td><td>Ataque de unidade de alcance (Arqueiro)</td><td>1 de dano por rodada, ignorando defesa, por 3 rodadas.</td></tr>
+          <tr><td>🛡️ Escudo</td><td>Guardião, sobre aliado da frente ferido</td><td>Absorve 1 de dano do próximo golpe recebido.</td></tr>
+          <tr><td>💫 Atordoamento</td><td>Ataque do Tanque</td><td>O alvo perde a próxima ação.</td></tr>
+          <tr><td>➕ Cura</td><td>Médico, sobre o aliado mais ferido</td><td>Recupera 2 de HP em vez de atacar.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 class="section">Estratégias</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Estratégia</th><th>Classe</th><th>Comportamento</th></tr></thead>
+        <tbody>
+          <tr><td>Agressiva</td><td><code>AggressiveBot</code></td><td>Compra menos unidades por rodada, foca alvos fracos ao alcance e tenta encerrar rápido.</td></tr>
+          <tr><td>Equilibrada</td><td><code>BalancedBot</code></td><td>Monta composição mista entre linha de frente e fundo.</td></tr>
+          <tr><td>Defensiva</td><td><code>DefensiveBot</code></td><td>Prioriza unidades resistentes e proteção.</td></tr>
+          <tr><td>Econômica</td><td><code>EconomyBot</code></td><td>Segura gastos para comprar turnos mais fortes depois.</td></tr>
+          <tr><td>Aleatória</td><td><code>RandomBot</code></td><td>Decisões pseudoaleatórias com seed — o único bot afetado pela seed.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    Python executado no navegador com <a href="https://pyodide.org/">Pyodide</a>.
+    Projeto de portfólio de <a href="https://github.com/enzo-going">Enzo Liutkus Going</a> ·
+    licença MIT.
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
