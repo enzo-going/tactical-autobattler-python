@@ -1,7 +1,8 @@
-# Security Policy
+# Política de segurança
 
-## Reporting a Vulnerability
+## Reportando uma vulnerabilidade
 
-If you discover a security issue in this project, please report it privately by
-emailing **enzogoingpro@gmail.com** instead of opening a public issue. Include
-steps to reproduce if possible. You can expect an initial response within a few days.
+Se você encontrar um problema de segurança neste projeto, reporte de forma
+privada por e-mail para **enzogoingpro@gmail.com** em vez de abrir uma issue
+pública. Inclua os passos para reproduzir, se possível. Você pode esperar uma
+resposta inicial em poucos dias.

@@ -21,3 +21,4 @@ battle-simulator = "battle_simulator.cli:main"
 
 [project.urls]
 Repository = "https://github.com/enzo-going/tactical-autobattler-python"
+Playground = "https://enzo-going.github.io/tactical-autobattler-python/"
