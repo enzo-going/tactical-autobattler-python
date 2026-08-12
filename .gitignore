@@ -36,3 +36,7 @@ reports/*.json
 
 # Locally assembled GitHub Pages site
 _site/
+
+# Configuracao local de ferramentas de desenvolvimento
+AGENTS.md
+.mcp.json
