@@ -49,6 +49,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--quiet", action="store_true", help="Print only the final result.")
     parser.add_argument(
+        "--summary-only",
+        action="store_true",
+        help="In tournament mode, print standings without per-matchup lines.",
+    )
+    parser.add_argument(
         "--report-json",
         type=Path,
         help="Write a machine-readable battle report to this path.",
@@ -76,13 +81,14 @@ def main(argv: list[str] | None = None) -> int:
             f"Tournament: {summary.simulations} simulations "
             f"across {len(summary.matchups)} matchups."
         )
-        for matchup in summary.matchups:
-            print(
-                f"- {matchup.strategy_one} vs {matchup.strategy_two}: "
-                f"{matchup.strategy_one_wins}-{matchup.strategy_two_wins}, "
-                f"{matchup.draws} draws, "
-                f"{matchup.average_rounds} average rounds."
-            )
+        if not args.summary_only:
+            for matchup in summary.matchups:
+                print(
+                    f"- {matchup.strategy_one} vs {matchup.strategy_two}: "
+                    f"{matchup.strategy_one_wins}-{matchup.strategy_two_wins}, "
+                    f"{matchup.draws} draws, "
+                    f"{matchup.average_rounds} average rounds."
+                )
         print("Standings:")
         for row in summary.standings:
             print(
