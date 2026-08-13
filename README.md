@@ -111,6 +111,12 @@ Torneio com estratégias selecionadas:
 python -m battle_simulator --mode tournament --strategies aggressive,balanced,economy --simulations 20 --rounds 30
 ```
 
+Torneio mostrando só a classificação, sem a linha de cada confronto:
+
+```bash
+python -m battle_simulator --mode tournament --simulations 20 --rounds 30 --summary-only
+```
+
 Listar estratégias disponíveis:
 
 ```bash

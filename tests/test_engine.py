@@ -1,6 +1,8 @@
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 
-from battle_simulator.cli import _build_report, _parse_strategies
+from battle_simulator.cli import _build_report, _parse_strategies, main
 from battle_simulator.engine import AttackOrder, BattleEngine, Battlefield, Player, RecruitOrder, TurnPlan
 from battle_simulator.models import (
     Archer,
@@ -313,6 +315,28 @@ class CliTest(unittest.TestCase):
     def test_parse_strategies_rejects_unknown_names(self):
         with self.assertRaises(ValueError):
             _parse_strategies("balanced,unknown")
+
+    def test_summary_only_omits_tournament_matchups(self):
+        output = StringIO()
+
+        with redirect_stdout(output):
+            exit_code = main(
+                [
+                    "--mode",
+                    "tournament",
+                    "--strategies",
+                    "aggressive,balanced",
+                    "--simulations",
+                    "1",
+                    "--rounds",
+                    "2",
+                    "--summary-only",
+                ]
+            )
+
+        self.assertEqual(exit_code, 0)
+        self.assertIn("Standings:", output.getvalue())
+        self.assertNotIn("aggressive vs balanced", output.getvalue())
 
 
 if __name__ == "__main__":
