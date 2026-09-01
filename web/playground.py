@@ -36,11 +36,14 @@ def catalog() -> str:
             }
         )
 
+    base = Base(name="preview")
     return json.dumps(
         {
             "strategies": sorted(STRATEGIES),
             "default_strategies": list(DEFAULT_STRATEGIES),
-            "base_health": Base(name="preview").health,
+            "base_health": base.health,
+            "base_resources": base.resources,
+            "base_income": base.resource_income,
             "units": units,
         }
     )

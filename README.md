@@ -47,13 +47,19 @@ projeto legível, sem nenhuma dependência externa em tempo de execução.
 
 A página em [enzo-going.github.io/tactical-autobattler-python](https://enzo-going.github.io/tactical-autobattler-python/)
 carrega os arquivos `.py` deste repositório dentro do Pyodide e chama exatamente
-as mesmas funções que a CLI usa — nada é reimplementado em JavaScript, e nada
-roda em servidor. Ela oferece:
+as mesmas funções que a CLI usa — nenhuma regra de jogo é reimplementada em
+JavaScript, e nada roda em servidor. Ela oferece:
 
-- **Batalha** — duas estratégias, número de rodadas e seed, com log traduzido,
-  HP das bases, tropas sobreviventes e o mesmo JSON de `--report-json`.
-- **Torneio** — round-robin espelhado com tabela de classificação e confrontos.
-- **Unidades** — ficha técnica lida de `battle_simulator/models.py` em tempo real.
+- **Batalha** — tela de deploy com os dois comandantes, rodadas e seed; a
+  batalha vira um replay animado numa arena com bases, linhas de frente e fundo,
+  barras de HP, efeitos e números de dano. O campo é reconstruído a partir dos
+  eventos do relatório, com controles de play/pause, velocidade, pulo de rodada
+  e linha do tempo. No fim aparecem o desfecho, o destaque da partida, o log
+  completo e o mesmo JSON de `--report-json`.
+- **Torneio** — round-robin espelhado com pódio, classificação e matriz de
+  confrontos em mapa de calor.
+- **Manual** — ficha técnica das unidades lida de `battle_simulator/models.py` em
+  tempo real, mais efeitos de combate e o resumo de cada estratégia.
 
 O deploy é feito pelo workflow [`pages.yml`](.github/workflows/pages.yml), que
 só publica depois que os testes passam. Os fontes da página ficam em
@@ -246,6 +252,7 @@ battle_simulator/
   tournament.py
 web/
   index.html
+  style.css
   app.js
   playground.py
 docs/
