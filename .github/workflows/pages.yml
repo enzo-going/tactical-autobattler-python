@@ -33,7 +33,7 @@ jobs:
       - name: Assemble site
         run: |
           mkdir -p _site
-          cp web/index.html web/app.js web/playground.py _site/
+          cp web/index.html web/style.css web/app.js web/playground.py _site/
           mkdir -p _site/battle_simulator
           cp battle_simulator/*.py _site/battle_simulator/
           touch _site/.nojekyll
