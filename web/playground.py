@@ -51,7 +51,7 @@ def catalog() -> str:
 
 def battle(strategy_one: str, strategy_two: str, rounds: int, seed: int) -> str:
     """Roda uma batalha e devolve o mesmo relatorio de ``--report-json``."""
-    engine = BattleEngine()
+    engine = BattleEngine(initiative_seed=seed)
     result = engine.run(
         STRATEGIES[strategy_one](seed),
         STRATEGIES[strategy_two](seed),
@@ -60,8 +60,9 @@ def battle(strategy_one: str, strategy_two: str, rounds: int, seed: int) -> str:
     return json.dumps(_build_report(engine, result))
 
 
-def tournament(strategies: str, simulations: int, rounds: int, seed: int) -> str:
+def tournament(strategies: str, simulations: int, rounds: int, seeds: str) -> str:
     """Roda um torneio round-robin a partir de nomes separados por virgula."""
     selected = tuple(name.strip() for name in strategies.split(",") if name.strip())
-    summary = run_tournament(simulations, rounds, seed=seed, strategies=selected)
+    selected_seeds = tuple(int(seed.strip()) for seed in seeds.split(",") if seed.strip())
+    summary = run_tournament(simulations, rounds, strategies=selected, seeds=selected_seeds)
     return json.dumps(summary.to_dict())

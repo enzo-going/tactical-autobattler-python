@@ -40,6 +40,19 @@
 
 * { box-sizing: border-box; }
 
+.skip-link {
+  position: fixed;
+  z-index: 20;
+  top: 8px;
+  left: 8px;
+  padding: 9px 13px;
+  color: var(--void);
+  background: var(--gold);
+  transform: translateY(-160%);
+}
+
+.skip-link:focus { transform: translateY(0); }
+
 /* ================================================================== *
  * 2. Atmosfera
  * ================================================================== */
@@ -152,6 +165,23 @@ h1, h2, h3, .display {
 #boot.done { display: none; }
 #boot.error { border-left-color: var(--red); color: var(--red-soft); }
 
+.quickstart {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 0 0 18px;
+  padding: 11px 14px;
+  color: var(--muted);
+  background: rgba(15, 21, 34, .72);
+  border: 1px solid var(--line);
+  font-size: .88rem;
+}
+
+.quickstart strong { color: var(--text); font-family: var(--font-display); letter-spacing: .08em; text-transform: uppercase; }
+.quickstart span { display: inline-flex; align-items: center; gap: 7px; }
+.quickstart span b { display: grid; place-items: center; width: 21px; height: 21px; color: var(--void); background: var(--gold); border-radius: 50%; }
+
 .spinner {
   width: 18px; height: 18px; flex: none;
   border: 2px solid rgba(245, 196, 81, .25);
@@ -247,7 +277,7 @@ h1, h2, h3, .display {
   color: var(--muted);
 }
 
-select, input[type="number"] {
+select, input[type="number"], input[type="text"] {
   font-family: var(--font-ui);
   font-size: 1rem;
   font-weight: 600;
@@ -257,6 +287,9 @@ select, input[type="number"] {
   padding: 9px 11px;
   width: 100%;
 }
+
+.field small { color: var(--dim); font-size: .75rem; }
+input[aria-invalid="true"] { border-color: var(--red); }
 
 select:focus-visible, input:focus-visible, .btn:focus-visible, .tab:focus-visible,
 .commander-slot:focus-visible, .toggle:focus-visible {
@@ -998,7 +1031,24 @@ pre.json {
 .toggle:has(input:checked) .nm { color: var(--gold); }
 
 .tourney-dials { display: grid; gap: 12px; }
-.tourney-dials .trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.tourney-dials .trio { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.tourney-dials .seeds-field { grid-column: 1 / -1; }
+
+.initiative-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 15px 18px;
+  border: 1px solid var(--line-strong);
+  background: linear-gradient(90deg, rgba(77, 157, 255, .1), rgba(245, 196, 81, .08));
+}
+
+.initiative-card .em { font-size: 1.6rem; }
+.initiative-card .label { font-family: var(--font-display); letter-spacing: .1em; text-transform: uppercase; }
+.initiative-card .detail { color: var(--muted); font-size: .85rem; }
+.initiative-card .rate { color: var(--gold); font-family: var(--font-display); font-size: 1.6rem; font-variant-numeric: tabular-nums; }
 
 .progress-strip { height: 3px; background: rgba(120, 160, 220, .15); overflow: hidden; margin-top: 14px; }
 .progress-strip > span { display: block; height: 100%; width: 34%; background: var(--gold); animation: sweep 1.1s ease-in-out infinite; }
@@ -1219,6 +1269,9 @@ footer.credits a { color: var(--muted); }
   .ticker { height: 132px; }
   .podium { grid-template-columns: 1fr; }
   .plinth.p1 { padding-bottom: 18px; }
+  .quickstart { align-items: flex-start; flex-direction: column; }
+  .initiative-card { grid-template-columns: auto 1fr; }
+  .initiative-card .rate { grid-column: 2; }
 }
 
 @media (prefers-reduced-motion: reduce) {
