@@ -36,10 +36,10 @@ Toda mudança relevante deve manter:
 ## Próximas melhorias
 
 1. Análise de balanceamento
-   - Rodar torneios com vários grupos de seed.
+   - [Concluído] Rodar torneios com vários grupos de seed.
    - Acompanhar se alguma estratégia se torna dominante ao longo do tempo.
    - Ajustar as heurísticas antes de mexer nos atributos das unidades.
-   - Investigar a vantagem de iniciativa apontada em `balance_notes.md`.
+   - [Concluído] Investigar e reduzir a vantagem de iniciativa apontada em `balance_notes.md`.
 
 2. Relatórios
    - Exportação opcional de eventos em JSON Lines.

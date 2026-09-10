@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<a class="skip-link" href="#p-battle">Ir para o conteúdo</a>
 <div class="shell">
 
   <header class="masthead">
@@ -34,14 +35,21 @@
 
   <div id="boot"><div class="spinner"></div><span id="boot-msg">Carregando o interpretador Python…</span></div>
 
+  <aside class="quickstart" aria-label="Como começar">
+    <strong>Comece em 3 passos</strong>
+    <span><b>1</b> Escolha dois comandantes</span>
+    <span><b>2</b> Ajuste rodadas e seed</span>
+    <span><b>3</b> Inicie e acompanhe o replay</span>
+  </aside>
+
   <div class="tabs" role="tablist">
-    <button class="tab" role="tab" aria-selected="true" aria-controls="p-battle" data-panel="p-battle">Batalha</button>
-    <button class="tab" role="tab" aria-selected="false" aria-controls="p-tournament" data-panel="p-tournament">Torneio</button>
-    <button class="tab" role="tab" aria-selected="false" aria-controls="p-manual" data-panel="p-manual">Manual</button>
+    <button class="tab" id="tab-battle" role="tab" aria-selected="true" aria-controls="p-battle" tabindex="0" data-panel="p-battle">Batalha</button>
+    <button class="tab" id="tab-tournament" role="tab" aria-selected="false" aria-controls="p-tournament" tabindex="-1" data-panel="p-tournament">Torneio</button>
+    <button class="tab" id="tab-manual" role="tab" aria-selected="false" aria-controls="p-manual" tabindex="-1" data-panel="p-manual">Manual</button>
   </div>
 
   <!-- ================================ BATALHA ================================ -->
-  <section class="panel" id="p-battle" role="tabpanel">
+  <section class="panel" id="p-battle" role="tabpanel" aria-labelledby="tab-battle">
 
     <!-- ---------- tela de deploy ---------- -->
     <div id="deploy-screen">
@@ -76,7 +84,7 @@
             </div>
           </div>
           <button class="btn primary big" id="b-run" disabled>Iniciar batalha</button>
-          <p class="note">A seed só muda a estratégia <strong>Aleatória</strong>. As outras são determinísticas: mesmos parâmetros, mesmo desfecho.</p>
+          <p class="note">A seed define quem abre empates de velocidade e também os sorteios da estratégia <strong>Aleatória</strong>.</p>
         </div>
 
         <article class="commander red" id="cmd-2">
@@ -184,33 +192,34 @@
   </section>
 
   <!-- ================================ TORNEIO ================================ -->
-  <section class="panel" id="p-tournament" role="tabpanel" hidden>
+  <section class="panel" id="p-tournament" role="tabpanel" aria-labelledby="tab-tournament" hidden>
     <div class="tourney-setup">
       <div class="card">
         <h2 class="section-title" style="margin-top:0">Grade de participantes</h2>
         <div class="roster" id="t-roster"></div>
         <p class="note">
-          Round-robin espelhado: cada par joga nas duas ordens, o que elimina o viés de quem começa.
+          Round-robin espelhado: cada par joga nos dois lados. As seeds repetem o torneio e distribuem a iniciativa de abertura.
         </p>
       </div>
 
       <div class="card tourney-dials">
         <div class="trio">
           <div class="field">
-            <label for="t-sims">Batalhas</label>
+            <label for="t-sims">Batalhas por seed</label>
             <input type="number" id="t-sims" value="20" min="1" max="50">
           </div>
           <div class="field">
             <label for="t-rounds">Rodadas</label>
             <input type="number" id="t-rounds" value="30" min="1" max="200">
           </div>
-          <div class="field">
-            <label for="t-seed">Seed</label>
-            <input type="number" id="t-seed" value="11" min="0" max="999999">
+          <div class="field seeds-field">
+            <label for="t-seeds">Seeds</label>
+            <input type="text" id="t-seeds" value="3, 7, 11, 19, 29" inputmode="numeric" aria-describedby="t-seeds-help">
+            <small id="t-seeds-help">Separe por vírgula; use até 20 seeds únicas.</small>
           </div>
         </div>
         <button class="btn primary" id="t-run" disabled>Rodar torneio</button>
-        <p class="note" id="t-estimate">Selecione ao menos duas estratégias.</p>
+        <p class="note" id="t-estimate" role="status" aria-live="polite">Selecione ao menos duas estratégias.</p>
       </div>
     </div>
 
@@ -218,10 +227,11 @@
   </section>
 
   <!-- ================================= MANUAL ================================ -->
-  <section class="panel" id="p-manual" role="tabpanel" hidden>
+  <section class="panel" id="p-manual" role="tabpanel" aria-labelledby="tab-manual" hidden>
     <p class="note" style="margin-top:0">
       Ficha técnica lida de <code>battle_simulator/models.py</code> quando a página carrega.
-      Alcance 1 atinge só a linha de frente; alcance 2 alcança também o fundo.
+      Alcance 1 atinge só a linha de frente; alcance 2 alcança também o fundo. Em velocidade igual,
+      os lados intercalam ações e a prioridade muda a cada rodada.
     </p>
 
     <h2 class="section-title">Unidades</h2>

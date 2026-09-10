@@ -18,7 +18,19 @@ def main(argv: list[str] | None = None) -> int:
         help="Simulation mode. Defaults to auto.",
     )
     parser.add_argument("--rounds", type=int, default=30, help="Maximum number of rounds.")
-    parser.add_argument("--seed", type=int, default=7, help="Seed for random mode.")
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=7,
+        help="Seed used for initiative and random decisions. Defaults to 7.",
+    )
+    parser.add_argument(
+        "--seeds",
+        help=(
+            "Comma-separated starting seeds for tournament mode. "
+            "Each seed runs the requested simulations."
+        ),
+    )
     parser.add_argument(
         "--strategy-one",
         choices=tuple(STRATEGIES),
@@ -45,7 +57,7 @@ def main(argv: list[str] | None = None) -> int:
         "--simulations",
         type=int,
         default=100,
-        help="Number of simulations for tournament mode.",
+        help="Battles per directed matchup and seed in tournament mode.",
     )
     parser.add_argument("--quiet", action="store_true", help="Print only the final result.")
     parser.add_argument(
@@ -69,6 +81,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.mode == "tournament":
         try:
             selected_strategies = _parse_strategies(args.strategies)
+            selected_seeds = _parse_seeds(args.seeds) if args.seeds else (args.seed,)
         except ValueError as exc:
             parser.error(str(exc))
         summary = run_tournament(
@@ -76,15 +89,17 @@ def main(argv: list[str] | None = None) -> int:
             args.rounds,
             seed=args.seed,
             strategies=selected_strategies,
+            seeds=selected_seeds,
         )
         print(
             f"Tournament: {summary.simulations} simulations "
-            f"across {len(summary.matchups)} matchups."
+            f"across {summary.simulations_per_matchup} battles per matchup "
+            f"and {len(summary.seeds)} seed(s): {', '.join(map(str, summary.seeds))}."
         )
         if not args.summary_only:
             for matchup in summary.matchups:
                 print(
-                    f"- {matchup.strategy_one} vs {matchup.strategy_two}: "
+                    f"- [seed {matchup.seed}] {matchup.strategy_one} vs {matchup.strategy_two}: "
                     f"{matchup.strategy_one_wins}-{matchup.strategy_two_wins}, "
                     f"{matchup.draws} draws, "
                     f"{matchup.average_rounds} average rounds."
@@ -98,6 +113,13 @@ def main(argv: list[str] | None = None) -> int:
                 f"{row.average_rounds} avg rounds, "
                 f"{row.average_damage_dealt}/{row.average_damage_taken} avg damage."
             )
+        print(
+            "Initiative: "
+            f"{summary.initiative_wins} opening-side wins / "
+            f"{summary.response_wins} response-side wins / {summary.draws} draws, "
+            f"{summary.initiative_win_rate:.1%} opening-side win rate "
+            f"({summary.initiative_advantage * 100:+.1f} pp opening-response gap)."
+        )
         if args.report_json:
             args.report_json.parent.mkdir(parents=True, exist_ok=True)
             args.report_json.write_text(
@@ -106,7 +128,7 @@ def main(argv: list[str] | None = None) -> int:
             )
         return 0
 
-    engine = BattleEngine()
+    engine = BattleEngine(initiative_seed=args.seed)
     if args.mode == "interactive":
         result = _run_interactive(engine, args.rounds)
     else:
@@ -143,7 +165,21 @@ def _parse_strategies(value: str) -> tuple[str, ...]:
     unknown = [strategy for strategy in strategies if strategy not in STRATEGIES]
     if unknown:
         raise ValueError(f"Unknown strategies: {', '.join(unknown)}")
+    if len(set(strategies)) != len(strategies):
+        raise ValueError("Strategies cannot be repeated.")
     return strategies
+
+
+def _parse_seeds(value: str) -> tuple[int, ...]:
+    try:
+        seeds = tuple(int(seed.strip()) for seed in value.split(",") if seed.strip())
+    except ValueError as exc:
+        raise ValueError("Seeds must be comma-separated integers.") from exc
+    if not seeds:
+        raise ValueError("At least one seed is required.")
+    if len(set(seeds)) != len(seeds):
+        raise ValueError("Seeds cannot be repeated.")
+    return seeds
 
 
 def _run_interactive(engine: BattleEngine, max_rounds: int):
@@ -161,6 +197,8 @@ def _run_interactive(engine: BattleEngine, max_rounds: int):
         winner=engine.battlefield.winner(),
         rounds_played=engine.round_number,
         events=engine.events,
+        stats=engine.stats,
+        strategies={Player.ONE: "interactive", Player.TWO: "balanced"},
     )
 
 
@@ -221,6 +259,7 @@ def _build_report(engine: BattleEngine, result) -> dict:
     return {
         "winner": None if result.winner is None else battlefield.base_for(result.winner).name,
         "rounds_played": result.rounds_played,
+        "opening_initiative": engine.battlefield.base_for(engine.opening_initiative).name,
         "strategies": {
             "player_one": result.strategies.get(Player.ONE),
             "player_two": result.strategies.get(Player.TWO),

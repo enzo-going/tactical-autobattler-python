@@ -2,7 +2,7 @@ import unittest
 from contextlib import redirect_stdout
 from io import StringIO
 
-from battle_simulator.cli import _build_report, _parse_strategies, main
+from battle_simulator.cli import _build_report, _parse_seeds, _parse_strategies, main
 from battle_simulator.engine import AttackOrder, BattleEngine, Battlefield, Player, RecruitOrder, TurnPlan
 from battle_simulator.models import (
     Archer,
@@ -10,9 +10,11 @@ from battle_simulator.models import (
     Guardian,
     Lane,
     Medic,
+    Role,
     Soldier,
     StatusEffect,
     Tank,
+    Troop,
     TroopFactory,
     TroopKind,
 )
@@ -75,6 +77,58 @@ class TroopTest(unittest.TestCase):
 
 
 class BattleEngineTest(unittest.TestCase):
+    def test_equal_speed_actions_interleave_and_priority_flips_each_round(self):
+        def durable_troop(name: str) -> Troop:
+            return Troop(name, 100, 1, 0, 2, 1, 0, Role.ASSAULT)
+
+        battlefield = Battlefield(
+            troops_one=[durable_troop("Blue 1"), durable_troop("Blue 2")],
+            troops_two=[durable_troop("Red 1"), durable_troop("Red 2")],
+        )
+        engine = BattleEngine(battlefield, initiative_seed=0)
+        plans = {
+            player: TurnPlan(attacks=(AttackOrder(0), AttackOrder(1)))
+            for player in Player
+        }
+
+        first_round = engine.play_round(plans)
+        second_round = engine.play_round(plans)
+
+        first_order = [event.player for event in first_round if event.event_type == "unit_attack"]
+        second_order = [event.player for event in second_round if event.event_type == "unit_attack"]
+        self.assertEqual(first_order, [Player.ONE, Player.TWO, Player.ONE, Player.TWO])
+        self.assertEqual(second_order, [Player.TWO, Player.ONE, Player.TWO, Player.ONE])
+
+    def test_seed_changes_opening_initiative_without_changing_speed_priority(self):
+        plan = {
+            Player.ONE: TurnPlan(attacks=(AttackOrder(0),)),
+            Player.TWO: TurnPlan(attacks=(AttackOrder(0),)),
+        }
+
+        even_engine = BattleEngine(
+            Battlefield(troops_one=[Guardian("Blue")], troops_two=[Guardian("Red")]),
+            initiative_seed=2,
+        )
+        odd_engine = BattleEngine(
+            Battlefield(troops_one=[Guardian("Blue")], troops_two=[Guardian("Red")]),
+            initiative_seed=3,
+        )
+
+        even_events = even_engine.play_round(plan)
+        odd_events = odd_engine.play_round(plan)
+        even_first = next(event.player for event in even_events if event.event_type == "unit_attack")
+        odd_first = next(event.player for event in odd_events if event.event_type == "unit_attack")
+        self.assertEqual(even_first, Player.ONE)
+        self.assertEqual(odd_first, Player.TWO)
+
+        speed_engine = BattleEngine(
+            Battlefield(troops_one=[Guardian("Blue")], troops_two=[Archer("Red")]),
+            initiative_seed=2,
+        )
+        speed_events = speed_engine.play_round(plan)
+        speed_first = next(event.player for event in speed_events if event.event_type == "unit_attack")
+        self.assertEqual(speed_first, Player.TWO)
+
     def test_recruitment_spends_resources_and_adds_troop(self):
         engine = BattleEngine()
 
@@ -256,6 +310,7 @@ class BattleEngineTest(unittest.TestCase):
         self.assertIn("strategies", report)
         self.assertIn("damage", report)
         self.assertIn("events", report)
+        self.assertIn("opening_initiative", report)
         self.assertEqual(report["rounds_played"], result.rounds_played)
 
 
@@ -295,6 +350,25 @@ class TournamentTest(unittest.TestCase):
         self.assertEqual(summary.simulations, 4)
         self.assertEqual(summary.strategies, ("aggressive", "defensive"))
 
+    def test_tournament_aggregates_multiple_seeds_and_initiative_metrics(self):
+        summary = run_tournament(
+            simulations=2,
+            max_rounds=8,
+            strategies=("aggressive", "defensive"),
+            seeds=(3, 11),
+        )
+
+        self.assertEqual(summary.seeds, (3, 11))
+        self.assertEqual(summary.simulations_per_seed, 2)
+        self.assertEqual(summary.simulations_per_matchup, 4)
+        self.assertEqual(len(summary.matchups), 4)
+        self.assertEqual(summary.simulations, 8)
+        self.assertEqual(
+            summary.initiative_wins + summary.response_wins + summary.draws,
+            summary.simulations,
+        )
+        self.assertIn("initiative", summary.to_dict())
+
     def test_matchup_reports_wins_losses_draws_and_damage(self):
         summary = run_matchup("aggressive", "balanced", simulations=2, max_rounds=3, seed=2)
 
@@ -306,6 +380,13 @@ class TournamentTest(unittest.TestCase):
 
 
 class CliTest(unittest.TestCase):
+    def test_parse_multiple_unique_seeds(self):
+        self.assertEqual(_parse_seeds("3, 7,11"), (3, 7, 11))
+
+    def test_parse_seeds_rejects_duplicates(self):
+        with self.assertRaises(ValueError):
+            _parse_seeds("3,7,3")
+
     def test_parse_strategies_from_comma_separated_value(self):
         self.assertEqual(
             _parse_strategies("aggressive, balanced, economy"),
@@ -337,6 +418,18 @@ class CliTest(unittest.TestCase):
         self.assertEqual(exit_code, 0)
         self.assertIn("Standings:", output.getvalue())
         self.assertNotIn("aggressive vs balanced", output.getvalue())
+
+
+class BalanceRegressionTest(unittest.TestCase):
+    def test_opening_initiative_stays_within_ten_percentage_points(self):
+        summary = run_tournament(
+            simulations=2,
+            max_rounds=30,
+            strategies=("aggressive", "balanced", "defensive", "economy", "random"),
+            seeds=(3, 7),
+        )
+
+        self.assertLessEqual(abs(summary.initiative_advantage), 0.10)
 
 
 if __name__ == "__main__":
