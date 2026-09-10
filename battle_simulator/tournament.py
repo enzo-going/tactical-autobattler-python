@@ -28,12 +28,15 @@ STRATEGIES: dict[str, StrategyFactory] = {
 
 
 DEFAULT_STRATEGIES = ("aggressive", "balanced", "defensive", "economy")
+# Keeps the web UI's seed groups disjoint while still making every battle reproducible.
+SEED_STRIDE = 1_000_003
 
 
 @dataclass(frozen=True)
 class MatchupSummary:
     strategy_one: str
     strategy_two: str
+    seed: int
     simulations: int
     max_rounds: int
     strategy_one_wins: int
@@ -44,6 +47,8 @@ class MatchupSummary:
     strategy_two_damage_dealt: float
     strategy_one_damage_taken: float
     strategy_two_damage_taken: float
+    initiative_wins: int
+    response_wins: int
 
     @property
     def losses_for_strategy_one(self) -> int:
@@ -53,6 +58,7 @@ class MatchupSummary:
         return {
             "strategy_one": self.strategy_one,
             "strategy_two": self.strategy_two,
+            "seed": self.seed,
             "simulations": self.simulations,
             "max_rounds": self.max_rounds,
             "strategy_one_wins": self.strategy_one_wins,
@@ -64,6 +70,8 @@ class MatchupSummary:
             "strategy_two_damage_dealt": self.strategy_two_damage_dealt,
             "strategy_one_damage_taken": self.strategy_one_damage_taken,
             "strategy_two_damage_taken": self.strategy_two_damage_taken,
+            "initiative_wins": self.initiative_wins,
+            "response_wins": self.response_wins,
         }
 
 
@@ -127,22 +135,60 @@ class StrategySummary:
 
 @dataclass(frozen=True)
 class TournamentSummary:
-    simulations_per_matchup: int
+    simulations_per_seed: int
     max_rounds: int
+    seeds: tuple[int, ...]
     strategies: tuple[str, ...]
     matchups: tuple[MatchupSummary, ...]
     standings: tuple[StrategySummary, ...]
 
     @property
     def simulations(self) -> int:
-        return self.simulations_per_matchup * len(self.matchups)
+        return self.simulations_per_seed * len(self.matchups)
+
+    @property
+    def simulations_per_matchup(self) -> int:
+        return self.simulations_per_seed * len(self.seeds)
+
+    @property
+    def initiative_wins(self) -> int:
+        return sum(matchup.initiative_wins for matchup in self.matchups)
+
+    @property
+    def response_wins(self) -> int:
+        return sum(matchup.response_wins for matchup in self.matchups)
+
+    @property
+    def draws(self) -> int:
+        return sum(matchup.draws for matchup in self.matchups)
+
+    @property
+    def initiative_win_rate(self) -> float:
+        decided = self.initiative_wins + self.response_wins
+        return self.initiative_wins / decided if decided else 0.0
+
+    @property
+    def initiative_advantage(self) -> float:
+        decided = self.initiative_wins + self.response_wins
+        if not decided:
+            return 0.0
+        return (self.initiative_wins - self.response_wins) / decided
 
     def to_dict(self) -> dict:
         return {
             "simulations": self.simulations,
             "simulations_per_matchup": self.simulations_per_matchup,
+            "simulations_per_seed": self.simulations_per_seed,
             "max_rounds": self.max_rounds,
+            "seeds": list(self.seeds),
             "strategies": list(self.strategies),
+            "initiative": {
+                "wins": self.initiative_wins,
+                "response_wins": self.response_wins,
+                "draws": self.draws,
+                "win_rate": self.initiative_win_rate,
+                "advantage": self.initiative_advantage,
+            },
             "standings": [summary.to_dict() for summary in self.standings],
             "matchups": [matchup.to_dict() for matchup in self.matchups],
         }
@@ -153,6 +199,7 @@ def run_tournament(
     max_rounds: int,
     seed: int = 7,
     strategies: tuple[str, ...] = DEFAULT_STRATEGIES,
+    seeds: tuple[int, ...] | None = None,
 ) -> TournamentSummary:
     if simulations <= 0:
         raise ValueError("simulations must be greater than zero.")
@@ -160,6 +207,11 @@ def run_tournament(
         raise ValueError("max_rounds must be greater than zero.")
     if len(strategies) < 2:
         raise ValueError("at least two strategies are required.")
+    tournament_seeds = (seed,) if seeds is None else seeds
+    if not tournament_seeds:
+        raise ValueError("at least one seed is required.")
+    if len(set(tournament_seeds)) != len(tournament_seeds):
+        raise ValueError("seeds must be unique.")
 
     matchups = _round_robin_matchups(strategies)
     matchup_summaries = tuple(
@@ -168,14 +220,16 @@ def run_tournament(
             strategy_two=strategy_two,
             simulations=simulations,
             max_rounds=max_rounds,
-            seed=seed + matchup_index * simulations,
+            seed=tournament_seed,
         )
-        for matchup_index, (strategy_one, strategy_two) in enumerate(matchups)
+        for tournament_seed in tournament_seeds
+        for strategy_one, strategy_two in matchups
     )
 
     return TournamentSummary(
-        simulations_per_matchup=simulations,
+        simulations_per_seed=simulations,
         max_rounds=max_rounds,
+        seeds=tournament_seeds,
         strategies=strategies,
         matchups=matchup_summaries,
         standings=_build_standings(strategies, matchup_summaries),
@@ -202,12 +256,15 @@ def run_matchup(
     strategy_two_damage_dealt = 0
     strategy_one_damage_taken = 0
     strategy_two_damage_taken = 0
+    initiative_wins = 0
+    response_wins = 0
 
     for offset in range(simulations):
-        engine = BattleEngine()
+        simulation_seed = seed + offset * SEED_STRIDE
+        engine = BattleEngine(initiative_seed=simulation_seed)
         result = engine.run(
-            STRATEGIES[strategy_one](seed + offset),
-            STRATEGIES[strategy_two](seed + offset),
+            STRATEGIES[strategy_one](simulation_seed),
+            STRATEGIES[strategy_two](simulation_seed),
             max_rounds=max_rounds,
         )
         total_rounds += result.rounds_played
@@ -218,14 +275,20 @@ def run_matchup(
 
         if result.winner is None:
             draws += 1
-        elif result.winner.value == 1:
-            strategy_one_wins += 1
         else:
-            strategy_two_wins += 1
+            if result.winner == Player.ONE:
+                strategy_one_wins += 1
+            else:
+                strategy_two_wins += 1
+            if result.winner == engine.opening_initiative:
+                initiative_wins += 1
+            else:
+                response_wins += 1
 
     return MatchupSummary(
         strategy_one=strategy_one,
         strategy_two=strategy_two,
+        seed=seed,
         simulations=simulations,
         max_rounds=max_rounds,
         strategy_one_wins=strategy_one_wins,
@@ -236,6 +299,8 @@ def run_matchup(
         strategy_two_damage_dealt=round(strategy_two_damage_dealt / simulations, 2),
         strategy_one_damage_taken=round(strategy_one_damage_taken / simulations, 2),
         strategy_two_damage_taken=round(strategy_two_damage_taken / simulations, 2),
+        initiative_wins=initiative_wins,
+        response_wins=response_wins,
     )
 
 

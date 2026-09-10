@@ -57,7 +57,7 @@ const COMMANDERS = {
     name: "Aleatória",
     className: "RandomBot",
     emblem: "🎲",
-    tagline: "Compra e mira por sorteio com seed. É a única estratégia em que mudar a seed muda a batalha.",
+    tagline: "Compra e mira por sorteio com seed. É a única estratégia que também usa a seed nas próprias decisões.",
     traits: { Agressão: 3, Defesa: 3, Economia: 1 },
   },
 };
@@ -165,6 +165,25 @@ function clampInput(input) {
   return clamped;
 }
 
+function quantityLabel(count, singular, plural = `${singular}s`) {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+function parseSeedList(input) {
+  const tokens = input.value.split(",").map((value) => value.trim());
+  const valid = (
+    tokens.length > 0
+    && tokens.length <= 20
+    && tokens.every((value) => /^\d+$/.test(value) && Number(value) <= 999999)
+  );
+  const seeds = valid ? tokens.map(Number) : [];
+  const unique = new Set(seeds).size === seeds.length;
+  const message = valid && unique ? "" : "Informe de 1 a 20 seeds únicas, separadas por vírgula.";
+  input.setCustomValidity(message);
+  input.setAttribute("aria-invalid", String(Boolean(message)));
+  return message ? null : seeds;
+}
+
 /** Deixa o navegador pintar o estado "rodando" antes de travar no Python. */
 function nextFrame() {
   return new Promise((resolve) => setTimeout(resolve, 30));
@@ -234,7 +253,7 @@ playground
     buildManual();
 
     document.getElementById("b-run").disabled = false;
-    document.getElementById("t-run").disabled = false;
+    updateEstimate();
     bootBox.classList.add("done");
   } catch (error) {
     bootBox.classList.add("error");
@@ -248,13 +267,32 @@ playground
 
 function wireTabs() {
   const buttons = [...document.querySelectorAll(".tab")];
+  const activate = (button, moveFocus = false) => {
+    buttons.forEach((other) => {
+      const selected = other === button;
+      other.setAttribute("aria-selected", String(selected));
+      other.tabIndex = selected ? 0 : -1;
+      document.getElementById(other.dataset.panel).hidden = !selected;
+    });
+    if (moveFocus) button.focus();
+  };
   buttons.forEach((button) => {
-    button.addEventListener("click", () => {
-      buttons.forEach((other) => {
-        const selected = other === button;
-        other.setAttribute("aria-selected", String(selected));
-        document.getElementById(other.dataset.panel).hidden = !selected;
-      });
+    button.addEventListener("click", () => activate(button));
+    button.addEventListener("keydown", (event) => {
+      const index = buttons.indexOf(button);
+      const target = event.key === "Home"
+        ? buttons[0]
+        : event.key === "End"
+          ? buttons.at(-1)
+          : event.key === "ArrowRight"
+            ? buttons[(index + 1) % buttons.length]
+            : event.key === "ArrowLeft"
+              ? buttons[(index - 1 + buttons.length) % buttons.length]
+              : null;
+      if (target) {
+        event.preventDefault();
+        activate(target, true);
+      }
     });
   });
 }
@@ -1029,7 +1067,7 @@ function buildRoster() {
     roster.appendChild(label);
   });
 
-  ["t-sims", "t-rounds"].forEach((id) => {
+  ["t-sims", "t-rounds", "t-seeds"].forEach((id) => {
     document.getElementById(id).addEventListener("input", updateEstimate);
   });
   updateEstimate();
@@ -1041,48 +1079,78 @@ function selectedStrategies() {
 
 function updateEstimate() {
   const note = document.getElementById("t-estimate");
+  const button = document.getElementById("t-run");
   const selected = selectedStrategies();
+  const seeds = parseSeedList(document.getElementById("t-seeds"));
   if (selected.length < 2) {
     note.textContent = "Selecione ao menos duas estratégias.";
+    button.disabled = true;
+    return;
+  }
+  if (!seeds) {
+    note.textContent = "Revise as seeds: use números únicos separados por vírgula.";
+    button.disabled = true;
     return;
   }
   const simulations = Number(document.getElementById("t-sims").value) || 0;
-  const total = simulations * selected.length * (selected.length - 1);
-  note.textContent = `${total} batalhas — ${selected.length * (selected.length - 1)} confrontos rodando na sua máquina.`;
+  const matchups = selected.length * (selected.length - 1);
+  const total = simulations * seeds.length * matchups;
+  note.textContent = `${quantityLabel(total, "batalha")} no total — ${quantityLabel(matchups, "confronto")} × ${quantityLabel(seeds.length, "seed")} × ${quantityLabel(simulations, "batalha")}.`;
+  button.disabled = !bridge;
 }
 
 async function runTournament() {
   const button = document.getElementById("t-run");
   const out = document.getElementById("t-out");
   const selected = selectedStrategies();
+  const seedInput = document.getElementById("t-seeds");
+  const seeds = parseSeedList(seedInput);
 
-  if (selected.length < 2) {
-    out.innerHTML = '<div class="placeholder">Selecione ao menos duas estratégias.</div>';
+  if (selected.length < 2 || !seeds) {
+    out.innerHTML = '<div class="placeholder">Revise os participantes e as seeds antes de rodar.</div>';
+    seedInput.reportValidity();
     return;
   }
 
   const simulations = clampInput(document.getElementById("t-sims"));
   const rounds = clampInput(document.getElementById("t-rounds"));
-  const seed = clampInput(document.getElementById("t-seed"));
-  const total = simulations * selected.length * (selected.length - 1);
+  const total = simulations * seeds.length * selected.length * (selected.length - 1);
 
   button.disabled = true;
-  out.innerHTML = `<div class="placeholder">Rodando ${total} batalhas…<div class="progress-strip"><span></span></div></div>`;
+  button.textContent = "Simulando…";
+  out.setAttribute("aria-busy", "true");
+  out.innerHTML = `<div class="placeholder">Rodando ${quantityLabel(total, "batalha")}…<div class="progress-strip"><span></span></div></div>`;
   await nextFrame();
 
   try {
-    const summary = JSON.parse(bridge.tournament(selected.join(","), simulations, rounds, seed));
+    const summary = JSON.parse(bridge.tournament(selected.join(","), simulations, rounds, seeds.join(",")));
     renderTournament(summary);
   } catch (error) {
     out.innerHTML = `<div class="placeholder">Erro no torneio: ${escapeHtml(error.message)}</div>`;
   } finally {
-    button.disabled = false;
+    out.removeAttribute("aria-busy");
+    button.textContent = "Rodar torneio";
+    updateEstimate();
   }
 }
 
 function renderTournament(summary) {
   const out = document.getElementById("t-out");
   out.innerHTML = "";
+
+  const initiative = summary.initiative;
+  const initiativeCard = el("div", "initiative-card");
+  initiativeCard.appendChild(el("div", "em", "⚡"));
+  const initiativeCopy = el("div");
+  initiativeCopy.appendChild(el("div", "label", "Equilíbrio de iniciativa"));
+  initiativeCopy.appendChild(el(
+    "div",
+    "detail",
+    `${initiative.wins} vitórias de quem abriu os empates · ${initiative.response_wins} de quem respondeu · diferença de ${(Math.abs(initiative.advantage) * 100).toFixed(1)} p.p.`
+  ));
+  initiativeCard.appendChild(initiativeCopy);
+  initiativeCard.appendChild(el("div", "rate", `${(initiative.win_rate * 100).toFixed(1)}%`));
+  out.appendChild(initiativeCard);
 
   out.appendChild(sectionTitle("Pódio"));
   const podium = el("div", "podium");
@@ -1105,7 +1173,7 @@ function renderTournament(summary) {
   const meta = el(
     "p",
     "note",
-    `${summary.simulations} batalhas · ${summary.matchups.length} confrontos · limite de ${summary.max_rounds} rodadas.`
+    `${quantityLabel(summary.simulations, "batalha")} · ${summary.simulations_per_matchup} por confronto · seeds ${summary.seeds.join(", ")} · limite de ${summary.max_rounds} rodadas.`
   );
   out.appendChild(meta);
 

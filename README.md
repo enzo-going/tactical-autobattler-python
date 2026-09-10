@@ -56,8 +56,8 @@ JavaScript, e nada roda em servidor. Ela oferece:
   eventos do relatório, com controles de play/pause, velocidade, pulo de rodada
   e linha do tempo. No fim aparecem o desfecho, o destaque da partida, o log
   completo e o mesmo JSON de `--report-json`.
-- **Torneio** — round-robin espelhado com pódio, classificação e matriz de
-  confrontos em mapa de calor.
+- **Torneio** — round-robin espelhado e multi-seed com pódio, classificação,
+  indicador de equilíbrio da iniciativa e matriz de confrontos em mapa de calor.
 - **Manual** — ficha técnica das unidades lida de `battle_simulator/models.py` em
   tempo real, mais efeitos de combate e o resumo de cada estratégia.
 
@@ -109,6 +109,12 @@ Torneio round-robin:
 
 ```bash
 python -m battle_simulator --mode tournament --simulations 20 --rounds 30 --seed 11 --report-json reports/tournament-balance.json
+```
+
+Torneio em várias seeds (20 batalhas por confronto para cada seed):
+
+```bash
+python -m battle_simulator --mode tournament --simulations 20 --rounds 30 --seeds 3,7,11,19,29,43,71,101 --summary-only
 ```
 
 Torneio com estratégias selecionadas:
@@ -185,8 +191,9 @@ e regras de alcance.
 - `RandomBot`: usa aleatoriedade com seed.
 
 O modo torneio roda confrontos round-robin espelhados, então cada par joga nas
-duas ordens. Isso reduz o viés de ordem de jogador ao comparar estratégias
-determinísticas.
+duas ordens. Em empates de velocidade, os lados intercalam ações; a seed define
+quem abre o primeiro empate e essa prioridade troca a cada rodada. Isso reduz o
+viés de iniciativa sem mudar a velocidade das unidades.
 
 A saída do torneio inclui:
 
@@ -197,7 +204,9 @@ A saída do torneio inclui:
 - taxa de empate;
 - média de rodadas;
 - dano médio causado;
-- dano médio sofrido.
+- dano médio sofrido;
+- vitórias de quem abriu a iniciativa e de quem respondeu;
+- vantagem de iniciativa agregada entre todas as seeds.
 
 ## Exemplo de JSON
 

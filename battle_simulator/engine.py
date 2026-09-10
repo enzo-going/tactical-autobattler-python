@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import deque
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Protocol
@@ -156,12 +157,13 @@ class Battlefield:
 
 
 class BattleEngine:
-    def __init__(self, battlefield: Battlefield | None = None) -> None:
+    def __init__(self, battlefield: Battlefield | None = None, initiative_seed: int = 0) -> None:
         self.battlefield = battlefield or Battlefield()
         self.events: list[BattleEvent] = []
         self.stats = BattleStats()
         self.round_number = 0
         self.strategy_names: dict[Player, str] = {}
+        self.opening_initiative = Player.ONE if initiative_seed % 2 == 0 else Player.TWO
 
     def play_round(self, plans: dict[Player, TurnPlan]) -> list[BattleEvent]:
         self.round_number += 1
@@ -315,8 +317,27 @@ class BattleEngine:
                     continue
                 attacker = troops[order.attacker_index]
                 planned.append((player, order, attacker.speed))
-        planned.sort(key=lambda item: item[2], reverse=True)
-        return [(player, order) for player, order, _ in planned]
+
+        initiative: list[tuple[Player, AttackOrder]] = []
+        tie_priority = (
+            self.opening_initiative
+            if self.round_number % 2
+            else self.opening_initiative.opponent
+        )
+        for speed in sorted({item[2] for item in planned}, reverse=True):
+            queues = {
+                player: deque(
+                    (queued_player, order)
+                    for queued_player, order, queued_speed in planned
+                    if queued_speed == speed and queued_player == player
+                )
+                for player in Player
+            }
+            while queues[Player.ONE] or queues[Player.TWO]:
+                for player in (tie_priority, tie_priority.opponent):
+                    if queues[player]:
+                        initiative.append(queues[player].popleft())
+        return initiative
 
     def _perform_unit_action(self, player: Player, order: AttackOrder) -> list[BattleEvent]:
         events: list[BattleEvent] = []
