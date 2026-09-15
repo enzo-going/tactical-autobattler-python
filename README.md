@@ -53,9 +53,9 @@ JavaScript, e nada roda em servidor. Ela oferece:
 - **Batalha** — tela de deploy com os dois comandantes, rodadas e seed; a
   batalha vira um replay animado numa arena com bases, linhas de frente e fundo,
   barras de HP, efeitos e números de dano. O campo é reconstruído a partir dos
-  eventos do relatório, com controles de play/pause, velocidade, pulo de rodada
-  e linha do tempo. No fim aparecem o desfecho, o destaque da partida, o log
-  completo e o mesmo JSON de `--report-json`.
+  snapshots por rodada e dos eventos entre eles, com controles de play/pause,
+  velocidade, pulo de rodada e linha do tempo. No fim aparecem o desfecho, o
+  destaque da partida, o log completo e o mesmo JSON de `--report-json`.
 - **Torneio** — round-robin espelhado e multi-seed com pódio, classificação,
   indicador de equilíbrio da iniciativa e matriz de confrontos em mapa de calor.
 - **Manual** — ficha técnica das unidades lida de `battle_simulator/models.py` em
@@ -211,7 +211,7 @@ A saída do torneio inclui:
 ## Exemplo de JSON
 
 Os relatórios de batalha incluem metadados da partida, estratégias, contagem de
-recrutamentos, dano e eventos estruturados:
+recrutamentos, dano, snapshots ao fim de cada rodada e eventos estruturados:
 
 ```json
 {
@@ -231,6 +231,20 @@ recrutamentos, dano e eventos estruturados:
       "received": 31
     }
   },
+  "round_snapshots": [
+    {
+      "round": 1,
+      "event_count": 1,
+      "bases": {
+        "player_one": {"name": "Blue", "health": 28, "resources": 16},
+        "player_two": {"name": "Red", "health": 28, "resources": 16}
+      },
+      "troops": {
+        "player_one": [],
+        "player_two": []
+      }
+    }
+  ],
   "events": [
     {
       "type": "unit_attack",
@@ -314,4 +328,4 @@ pacote, testes automatizados, CI e regras de batalha mais ricas.
 - Exportar logs completos de eventos em JSON Lines.
 - Adicionar métricas de eficiência de recursos e sobreviventes.
 - Melhorar a ergonomia do modo interativo.
-- Adicionar visualização de rodada a rodada na interface web.
+- Adicionar relatórios de exemplo versionados.

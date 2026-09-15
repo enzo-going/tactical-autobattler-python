@@ -160,6 +160,7 @@ class BattleEngine:
     def __init__(self, battlefield: Battlefield | None = None, initiative_seed: int = 0) -> None:
         self.battlefield = battlefield or Battlefield()
         self.events: list[BattleEvent] = []
+        self.round_snapshots: list[dict] = []
         self.stats = BattleStats()
         self.round_number = 0
         self.strategy_names: dict[Player, str] = {}
@@ -191,7 +192,58 @@ class BattleEngine:
             self.battlefield.base_for(player).collect_resources()
 
         self.events.extend(round_events)
+        self.round_snapshots.append(self._capture_round_snapshot())
         return round_events
+
+    def _capture_round_snapshot(self) -> dict:
+        """Return the complete battlefield state at the end of the current round."""
+        return {
+            "round": self.round_number,
+            "event_count": len(self.events),
+            "bases": {
+                "player_one": self._base_state(Player.ONE),
+                "player_two": self._base_state(Player.TWO),
+            },
+            "troops": {
+                "player_one": self._troop_states(Player.ONE),
+                "player_two": self._troop_states(Player.TWO),
+            },
+            "stats": {
+                "player_one": self._stats_state(Player.ONE),
+                "player_two": self._stats_state(Player.TWO),
+            },
+        }
+
+    def _base_state(self, player: Player) -> dict:
+        base = self.battlefield.base_for(player)
+        return {"name": base.name, "health": base.health, "resources": base.resources}
+
+    def _troop_states(self, player: Player) -> list[dict]:
+        return [
+            {
+                "name": troop.name,
+                "role": troop.role.value,
+                "lane": troop.lane.value,
+                "max_hp": troop.max_hp,
+                "current_hp": troop.health,
+                "attack": troop.attack,
+                "defense": troop.defense,
+                "speed": troop.speed,
+                "range": troop.range,
+                "cost": troop.cost,
+                "effects": {effect.value: duration for effect, duration in troop.effects.items()},
+                "damage_dealt": troop.damage_dealt,
+                "damage_received": troop.damage_received,
+            }
+            for troop in self.battlefield.troops_for(player)
+        ]
+
+    def _stats_state(self, player: Player) -> dict:
+        return {
+            "units_recruited": self.stats.units_recruited[player],
+            "damage_dealt": self.stats.damage_dealt[player],
+            "damage_taken": self.stats.damage_taken[player],
+        }
 
     def run(
         self,

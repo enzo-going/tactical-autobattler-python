@@ -286,6 +286,7 @@ def _build_report(engine: BattleEngine, result) -> dict:
             "player_one": [_troop_snapshot(troop) for troop in battlefield.troops_for(Player.ONE)],
             "player_two": [_troop_snapshot(troop) for troop in battlefield.troops_for(Player.TWO)],
         },
+        "round_snapshots": engine.round_snapshots,
         "event_count": len(result.events),
         "events": [event.to_dict() for event in result.events],
     }
