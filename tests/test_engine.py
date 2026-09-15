@@ -310,8 +310,37 @@ class BattleEngineTest(unittest.TestCase):
         self.assertIn("strategies", report)
         self.assertIn("damage", report)
         self.assertIn("events", report)
+        self.assertIn("round_snapshots", report)
         self.assertIn("opening_initiative", report)
         self.assertEqual(report["rounds_played"], result.rounds_played)
+        self.assertEqual(len(report["round_snapshots"]), result.rounds_played)
+
+        first_snapshot = report["round_snapshots"][0]
+        final_snapshot = report["round_snapshots"][-1]
+        self.assertEqual(first_snapshot["round"], 1)
+        self.assertGreater(first_snapshot["event_count"], 0)
+        self.assertEqual(final_snapshot["round"], result.rounds_played)
+        self.assertEqual(final_snapshot["bases"], report["bases"])
+        self.assertEqual(final_snapshot["troops"], report["troops_remaining"])
+        self.assertEqual(
+            final_snapshot["stats"]["player_one"]["damage_dealt"],
+            report["damage"]["player_one"]["dealt"],
+        )
+
+    def test_round_snapshots_preserve_historical_state(self):
+        engine = BattleEngine()
+        empty_plans = {Player.ONE: TurnPlan(), Player.TWO: TurnPlan()}
+
+        engine.play_round(empty_plans)
+        engine.play_round(empty_plans)
+
+        self.assertEqual(len(engine.round_snapshots), 2)
+        self.assertEqual(engine.round_snapshots[0]["bases"]["player_one"]["resources"], 16)
+        self.assertEqual(engine.round_snapshots[1]["bases"]["player_one"]["resources"], 22)
+        self.assertLess(
+            engine.round_snapshots[0]["event_count"],
+            engine.round_snapshots[1]["event_count"],
+        )
 
 
 class StrategyTest(unittest.TestCase):

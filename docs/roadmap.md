@@ -43,7 +43,7 @@ Toda mudança relevante deve manter:
 
 2. Relatórios
    - Exportação opcional de eventos em JSON Lines.
-   - Snapshots por rodada.
+   - [Concluído] Snapshots por rodada com bases, tropas e estatísticas acumuladas.
    - Métricas de eficiência de recursos e valor das unidades sobreviventes.
 
 3. Polimento da CLI
@@ -51,6 +51,6 @@ Toda mudança relevante deve manter:
    - Melhorar os prompts do modo interativo e a seleção de alvo.
 
 4. Apresentação
-   - Visualização rodada a rodada na interface web, consumindo os snapshots.
+   - [Concluído] Visualização rodada a rodada na interface web, consumindo os snapshots.
    - Página de documentação explicando o loop de batalha.
    - Relatórios de exemplo em um diretório `examples/` versionado.

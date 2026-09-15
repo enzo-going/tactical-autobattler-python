@@ -5,9 +5,9 @@
  * Pyodide. Este arquivo cuida de tres coisas:
  *
  *   1. montar os controles a partir do catalogo devolvido por playground.py;
- *   2. reconstruir o campo de batalha rodada a rodada a partir da lista de
- *      eventos do relatorio -- nenhuma regra e recalculada aqui, os eventos ja
- *      trazem quanto dano foi aplicado, quem morreu e quem foi recrutado;
+ *   2. apresentar os snapshots do motor e aplicar os eventos entre eles --
+ *      nenhuma regra e recalculada aqui, os eventos ja trazem quanto dano foi
+ *      aplicado, quem morreu e quem foi recrutado;
  *   3. animar essa reconstrucao na arena e traduzir tudo para pt-BR.
  */
 
@@ -355,12 +355,13 @@ function paintCommander(side) {
 }
 
 /* ------------------------------------------------------------------ *
- * Reconstrucao do campo de batalha a partir dos eventos
+ * Estado do campo a partir dos snapshots e eventos
  * ------------------------------------------------------------------ */
 
 function initialState() {
   return {
     round: 0,
+    incomeThrough: 0,
     bases: {
       1: { hp: catalog.base_health, res: catalog.base_resources },
       2: { hp: catalog.base_health, res: catalog.base_resources },
@@ -391,7 +392,10 @@ function applyEvent(state, event) {
   switch (event.type) {
     case "round_started":
       if (event.round > 1) {
-        collectIncome(state);
+        if (state.incomeThrough < event.round - 1) {
+          collectIncome(state);
+          state.incomeThrough = event.round - 1;
+        }
         tickEffects(state);
       }
       state.round = event.round;
@@ -464,11 +468,51 @@ function applyEvent(state, event) {
   }
 }
 
-/** Estado do campo depois de aplicar os `count` primeiros eventos. */
-function buildState(events, count) {
+function stateFromSnapshot(snapshot) {
   const state = initialState();
-  for (let index = 0; index < count; index += 1) applyEvent(state, events[index]);
-  if (count >= events.length) collectIncome(state);
+  state.round = snapshot.round;
+  state.incomeThrough = snapshot.round;
+
+  [["player_one", 1], ["player_two", 2]].forEach(([key, owner]) => {
+    state.bases[owner] = {
+      hp: snapshot.bases[key].health,
+      res: snapshot.bases[key].resources,
+    };
+    snapshot.troops[key].forEach((troop) => {
+      const kind = parseUnitName(troop.name).kind;
+      state.units.set(troop.name, {
+        name: troop.name,
+        kind,
+        owner,
+        lane: troop.lane,
+        role: troop.role,
+        maxHp: troop.max_hp,
+        hp: troop.current_hp,
+        attack: troop.attack,
+        defense: troop.defense,
+        effects: { ...troop.effects },
+        alive: true,
+        dealt: troop.damage_dealt,
+        kills: 0,
+      });
+    });
+  });
+  return state;
+}
+
+/** Estado depois de `count` eventos, retomando do snapshot mais proximo quando existir. */
+function buildState(events, count, snapshots = []) {
+  const snapshot = [...snapshots]
+    .reverse()
+    .find((candidate) => candidate.event_count <= count);
+  const state = snapshot ? stateFromSnapshot(snapshot) : initialState();
+  const start = snapshot ? snapshot.event_count : 0;
+
+  for (let index = start; index < count; index += 1) applyEvent(state, events[index]);
+  if (count >= events.length && state.incomeThrough < state.round) {
+    collectIncome(state);
+    state.incomeThrough = state.round;
+  }
   return state;
 }
 
@@ -782,6 +826,7 @@ function renderFullLog(events) {
 const replay = {
   report: null,
   events: [],
+  snapshots: [],
   state: null,
   index: 0,
   playing: false,
@@ -802,6 +847,7 @@ const transport = {
 function startReplay(report) {
   replay.report = report;
   replay.events = report.events;
+  replay.snapshots = report.round_snapshots || [];
   replay.index = 0;
   replay.state = initialState();
 
@@ -834,7 +880,7 @@ function updateTransport() {
 function seek(count) {
   const target = Math.max(0, Math.min(replay.events.length, count));
   replay.index = target;
-  replay.state = buildState(replay.events, target);
+  replay.state = buildState(replay.events, target, replay.snapshots);
   renderBoard(replay.state, false);
   rebuildTicker(replay.events, target);
   updateTransport();
@@ -857,7 +903,10 @@ function step() {
   updateTransport();
 
   if (replay.index >= replay.events.length) {
-    collectIncome(replay.state);
+    if (replay.state.incomeThrough < replay.state.round) {
+      collectIncome(replay.state);
+      replay.state.incomeThrough = replay.state.round;
+    }
     renderForts(replay.state);
   }
 
