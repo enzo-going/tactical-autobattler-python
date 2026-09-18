@@ -1,45 +1,45 @@
 :root {
   color-scheme: dark;
 
-  /* Superficies: neutro quente, sem desvio de matiz para o verde. A escada
-     vai do fundo ate a peca, cada degrau um pouco mais claro que o anterior. */
-  --bg: #15120f;
-  --surface: #1d1915;
-  --surface-2: #262019;
-  --surface-3: #2a231c;
-  --control: #2b241d;
-  --control-hover: #3a3129;
+  /* A mesa e escura e as pecas sao de papel: a carta nao e um degrau a mais
+     na mesma escala, e outro plano (14,6:1 entre tabuleiro e carta). */
+  --bg: #0f0d0b;
+  --surface: #171310;
+  --surface-2: #1e1815;
+  --surface-3: #14110e;
+  --control: #272019;
+  --control-hover: #372e25;
 
   /* Pecas do tabuleiro */
-  --piece: #3a312a;
-  --piece-selected: #4a4034;
-  --piece-spent: #241f19;
-  --piece-foe: #3e2c24;
-  --piece-shadow: #0c0a07;
+  --piece: #ece2cf;
+  --piece-selected: #fff6dc;
+  --piece-spent: #b3a894;
+  --piece-foe: #f1e3d6;
+  --piece-shadow: #000000;
   --track: #100e0b;
 
   /* Traco: o discreto separa, o forte delimita controle (3:1 no minimo) */
-  --line: #52483e;
-  --line-strong: #8a7a6b;
-  --line-foe: #9c7c67;
-  --line-foe-soft: #9c7c6755;
+  --line: #453b31;
+  --line-strong: #9c8b76;
+  --line-foe: #c16a48;
+  --line-foe-soft: #c16a4866;
   --grid: #f4ebda0a;
   --backdrop: #0c0906e6;
 
-  /* Texto sobre as superficies acima: 15,8:1, 8,6:1 e 6,2:1 */
-  --ink: #f4ebda;
-  --muted: #c0b5a4;
-  --dim: #a2988a;
+  /* Texto claro sobre a mesa. Dentro da carta a escala inverte, mais abaixo. */
+  --ink: #fbf5e8;
+  --muted: #cdc1ae;
+  --dim: #a99c88;
 
   /* Cor com significado: azul e voce, terracota e o rival, latao e recurso */
-  --ally: #8fb6d9;
-  --ally-fill: #6e9cc4;
-  --foe: #e39a7e;
-  --foe-fill: #d4826a;
-  --gold: #e6be74;
-  --primary: #e0b565;
-  --primary-hover: #efcb88;
-  --primary-ink: #1a1109;
+  --ally: #78c8f7;
+  --ally-fill: #3f9fd8;
+  --foe: #f08a62;
+  --foe-fill: #d65a35;
+  --gold: #f2c96f;
+  --primary: #f2c96f;
+  --primary-hover: #ffdb8c;
+  --primary-ink: #1a1206;
   --primary-shade: #8a6a28;
 
   /* Olho do retrato: vazado na cor da superficie que estiver atras */
@@ -403,10 +403,51 @@ meter::-moz-meter-bar {
   font: 8px var(--mono);
   letter-spacing: 2px;
 }
+/* A peca e papel sobre a mesa: dentro dela a luz vem de cima, entao tinta
+   escura, e os lados podem usar cor saturada, que so funciona sobre claro. */
+.piece {
+  --ink: #1c1710;
+  --muted: #494030;
+  --dim: #5d5341;
+  --track: #c2b7a1;
+  --ally: #17457f;
+  --foe: #8f2f1c;
+  --ally-fill: #2a5d9f;
+  --foe-fill: #a33f26;
+  --gold: #8a5a00;
+  --line-strong: #6f6247;
+  --line-foe: #9b5238;
+}
+/* Faixa do time no topo: o lado da peca se le antes de qualquer texto. */
+.piece::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 5px;
+  background: var(--ally-fill);
+}
+.piece.enemy-piece::before {
+  background: var(--foe-fill);
+}
+.piece.spent::before {
+  opacity: 0.45;
+}
+/* Selecao e mira vivem na borda da carta, contra a mesa: latao claro. */
+.piece.selected {
+  outline-color: #f2c96f;
+}
+.piece.targetable {
+  border-color: #f2c96f;
+  box-shadow:
+    inset 0 0 0 2px #f2c96f,
+    0 2px 0 #00000055;
+}
+
 .piece {
   position: relative;
-  padding: 8px 7px;
+  padding: 13px 7px 8px;
   background: var(--piece);
+  box-shadow: 0 2px 0 #00000055;
   border: 1px solid var(--line-strong);
   border-bottom: 3px solid var(--piece-shadow);
   min-width: 0;
