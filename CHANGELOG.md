@@ -4,18 +4,32 @@
 
 ### Interface
 
-- Paleta refeita: as superfícies passam a ser neutras quentes, sem o desvio de
-  matiz para o verde que pintava fundo, painéis, cartas e botões.
-- Cor volta a ter significado: azul é o seu lado, terracota é o rival, latão é
-  recurso e foco. O laboratório segue a mesma regra — o "comandante azul" era
-  azul só no nome, porque o token `--blue` guardava um verde-oliva.
-- Contraste conferido par a par: texto principal 15,8:1 sobre o fundo,
-  secundário 8,6:1, rótulos miúdos 6,3:1 e bordas de controle em 3:1.
-- Carta e tabuleiro deixam de ser dois tons do mesmo marrom: a mesa é escura e
-  as peças são de papel, 14,6:1 entre uma e outra. A tinta dentro da carta é
-  escura, então o texto miúdo ganha o contraste de papel impresso.
-- Cada peça recebe uma faixa do time no topo — azul ou vermelha —, de modo que
-  o lado se lê antes de qualquer texto, e não só pela cor do retrato.
+Nada disso saiu em versão ainda: as três passagens de cor desta rodada estão
+resumidas aqui pelo estado final, não pelo caminho.
+
+- **Paleta neutra.** As superfícies perdem a matiz própria — ardósia em vez do
+  oliva antigo e do marrom que veio depois. A única cor que sobra na tela é a
+  que significa alguma coisa: azul é o seu lado, vermelho é o rival, latão é
+  recurso.
+- **A peça vira face de carta**: janela de arte no topo, faixa do time, nome,
+  atributos, vida e estado. O fundo da janela identifica a espécie, para as
+  unidades se distinguirem de longe.
+- **A carta é outro plano, não outro tom.** A mesa é escura e a peça é clara,
+  16:1 entre uma e outra; dentro dela a escala inverte e o texto miúdo ganha o
+  contraste de papel impresso. Antes a carta estava a 1,2:1 do tabuleiro — no
+  papel aprovada pelo WCAG, no olho uma mancha só.
+- **Faixa do time** no topo de cada peça, em luminâncias diferentes entre azul e
+  vermelho, para o lado não depender só da matiz.
+- **Laboratório alinhado** à mesma escala. A barra de vida lá passa a usar a cor
+  do lado: com o azul valendo "vida cheia", uma unidade vermelha inteira
+  aparecia azul. O aviso de vida baixa e crítica continua em latão e vermelho.
+- Contraste conferido par a par, em três famílias: texto sobre a superfície,
+  superfície contra superfície e um lado contra o outro.
+
+### Documentação
+
+- Roadmap ganha a fase III, que registra a direção de jogo de cartas com
+  criaturas e move campanha para lá.
 
 ## 0.3.0 — Capítulo II: sob seu comando
 

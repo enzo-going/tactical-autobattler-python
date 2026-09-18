@@ -312,11 +312,13 @@ function renderBoard() {
         );
         if (side === "ally")
           b.setAttribute("aria-pressed", String(selected === t.name));
-        b.innerHTML = `<div class="piece-head">${portrait(kindOf(t.name))}<span class="piece-name">${esc(label(t.name))}<span class="piece-stats">ATQ ${t.attack} · DEF ${t.defense}</span></span></div><div class="hp-line"><span class="hp-track"><i style="width:${(t.current_hp / t.max_hp) * 100}%"></i></span><small>${t.current_hp}/${t.max_hp}</small></div><span class="piece-state">${choice ? "↗ Confirmar alvo" : spent ? "— Já agiu" : ready ? "● Pronta" : "Em posição"}</span>`;
+        b.dataset.kind = kindOf(t.name);
+        b.innerHTML = `<div class="piece-art">${portrait(kindOf(t.name))}</div><div class="piece-body"><span class="piece-name">${esc(label(t.name))}</span><span class="piece-stats">ATQ ${t.attack} · DEF ${t.defense}</span><div class="hp-line"><span class="hp-track"><i style="width:${(t.current_hp / t.max_hp) * 100}%"></i></span><small>${t.current_hp}/${t.max_hp}</small></div><span class="piece-state">${choice ? "↗ Confirmar alvo" : spent ? "— Já agiu" : ready ? "● Pronta" : "Em posição"}</span></div>`;
         const effects = Object.entries(t.effects)
           .map(([e, n]) => `${EFFECTS[e]} ${n}`)
           .join(" · ");
-        if (effects) b.append(node("span", "effects", effects));
+        if (effects)
+          b.querySelector(".piece-body").append(node("span", "effects", effects));
         container.append(b);
       }
     }
