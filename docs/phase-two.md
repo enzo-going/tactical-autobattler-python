@@ -76,7 +76,8 @@ a seleção ou esperar não altera o campo.
 
 Destruir uma base encerra imediatamente a partida, sem mais respostas do rival.
 Ao chegar ao limite (1–50 rodadas), a comparação é: vida das bases, depois dano
-causado acumulado. Igualdade total resulta em empate. A última rodada não paga
+de golpes acumulado (sangramento não entra nesse contador, conforme o motor
+compartilhado). Igualdade total resulta em empate. A última rodada não paga
 renda porque não existe próxima preparação. Comandos de jogo ficam bloqueados;
 continuam disponíveis relatório e nova partida.
 

@@ -47,10 +47,12 @@ diferenças de regras, contrato de comandos e processo de migração.
    ação e confirme o alvo. O rival responde com uma unidade. Cada peça age
    uma vez por rodada, inclusive os recrutas recém-chegados.
 3. **Reorganize.** Quando todas as unidades agirem, confira o resultado da
-   rodada. Ambos os lados recebem 6 suprimentos e o jogo espera você avançar.
+   rodada. Se a partida continuar, ambos recebem 6 suprimentos e o jogo espera
+   você avançar.
 4. **Vença.** Elimine as tropas para atacar o forte rival. Destruir a base vence
    a partida. No limite de rodadas, vence a base com mais vida; em igualdade,
-   conta o dano total causado. Persistindo a igualdade, há empate.
+   conta o dano de golpes causado (sem sangramento). Persistindo a igualdade,
+   há empate.
 
 | Unidade | Custo | O que oferece |
 | --- | ---: | --- |
@@ -159,6 +161,10 @@ Instalação opcional dos comandos `tactical-autobattler` e `battle-simulator`:
 python -m pip install -e .
 ```
 
+Para instalar uma cópia sem vínculo com os fontes, use `python -m pip install .`.
+Só o pacote `battle_simulator` é instalado; a interface web e os scripts
+históricos permanecem no repositório.
+
 ## Testes
 
 ```bash
@@ -169,6 +175,8 @@ node --check web/app.js
 ```
 
 Node é necessário somente para as verificações de sintaxe JavaScript acima.
+O CI verifica Python 3.10 e 3.12, incluindo a instalação e a execução dos
+comandos de console fora da pasta dos fontes.
 Os testes Python cobrem modos anteriores, comandos inválidos, custos, limite
 de esquadrão, alcance, alvos estáveis, habilidades, efeitos, renda, desempate,
 fim de partida e reprodução determinística do histórico.

@@ -415,14 +415,14 @@ function renderReview() {
     : "Respire. Reorganize.";
   $("result-copy").textContent = finished
     ? state.reason === "round_limit"
-      ? "Limite de rodadas atingido. Desempate por vida da base, depois dano total causado."
+      ? "Limite de rodadas atingido. Desempate por vida da base, depois dano de golpes (sem sangramento)."
       : "A destruição de um forte encerrou a partida."
     : "Os sobreviventes mantêm a vida e os efeitos. Mais 6 suprimentos chegaram para o próximo confronto.";
   $("round-summary").replaceChildren();
   for (const [name, value] of [
     ["Seu forte", `${state.bases.player_one.health} HP`],
     ["Forte rival", `${state.bases.player_two.health} HP`],
-    ["Seu dano total", state.stats.player_one.damage_dealt],
+    ["Seu dano de golpes", state.stats.player_one.damage_dealt],
     ["Tropas sobreviventes", state.troops.player_one.length],
   ]) {
     const row = node("div");

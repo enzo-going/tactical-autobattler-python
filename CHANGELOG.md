@@ -27,6 +27,11 @@
 - Build local e Pages unificados em `tools/build_site.py`.
 - 25 testes de sessão/ponte e teste opcional de navegador real.
 - README, guia de transição e roadmap atualizados para a nova fase.
+- Empacotamento explícito de `battle_simulator`, permitindo instalação normal
+  e editável sem incluir `web` ou `legacy` como pacotes.
+- CI em Python 3.10 e 3.12 verifica também os comandos instalados fora dos fontes.
+- Manual e relatório esclarecem o desempate por dano de golpes, sem sangramento,
+  e a ausência de renda após o fim da partida.
 
 Detalhes das diferenças entre modos em [Fase II](docs/phase-two.md).
 

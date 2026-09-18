@@ -6,14 +6,14 @@ O projeto original implementa um simulador simples de batalha em Python, com bas
 
 ## Objetivo deste fork
 
-Este fork será usado para refatoração, organização e evolução do projeto, com foco em:
+O projeto evolui a partir do exercício acadêmico, com foco em:
 
 - melhorar a estrutura do código;
 - aplicar melhor os conceitos de Programação Orientada a Objetos;
 - organizar os arquivos do projeto;
 - melhorar a documentação;
 - tornar o projeto mais apresentável como portfólio;
-- futuramente adicionar novas funcionalidades.
+- transformar a simulação em um jogo tático interativo.
 
 ## Estado atual
 
