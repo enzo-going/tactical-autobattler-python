@@ -1,7 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["battle_simulator", "battle_simulator.*"]
+namespaces = false
+
 [project]
 name = "tactical-autobattler-python"
-version = "0.2.0"
-description = "A compact tactical auto-battler simulator built with Python and object-oriented design."
+version = "0.3.0"
+description = "A turn-based tactical game and auto-battler simulation lab built with Python and object-oriented design."
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [

@@ -1,331 +1,216 @@
-# Tactical Auto-Battler Simulator
+# Tactical Auto-Battler
 
 [![Tests](https://github.com/enzo-going/tactical-autobattler-python/actions/workflows/tests.yml/badge.svg)](https://github.com/enzo-going/tactical-autobattler-python/actions/workflows/tests.yml)
 [![Pages](https://github.com/enzo-going/tactical-autobattler-python/actions/workflows/pages.yml/badge.svg)](https://github.com/enzo-going/tactical-autobattler-python/actions/workflows/pages.yml)
-![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat&logo=python&logoColor=white)
-![Dependencies](https://img.shields.io/badge/Depend%C3%AAncias-nenhuma-brightgreen?style=flat)
 
-### ▶️ [Testar no navegador](https://enzo-going.github.io/tactical-autobattler-python/)
+Um pequeno jogo tático em turnos feito em Python. Recrute um esquadrão, escolha
+a ação de cada unidade e abra caminho até o forte adversário.
 
-Sem clonar, sem instalar: o próprio pacote `battle_simulator` roda no navegador
-via [Pyodide](https://pyodide.org/). Escolha as estratégias, rode batalhas ou
-torneios round-robin e baixe o relatório JSON.
+**[Jogar no navegador](https://enzo-going.github.io/tactical-autobattler-python/)** ·
+[Laboratório de simulação](https://enzo-going.github.io/tactical-autobattler-python/simulator.html) ·
+[A transição para a fase II](docs/phase-two.md)
 
----
+> A versão publicada acompanha `main`. Mudanças em uma branch/PR só aparecem
+> no site após merge e conclusão do workflow Pages. Para testar uma branch,
+> siga as instruções locais abaixo.
 
-Mini simulador tático auto-battler escrito em Python.
+![Combate interativo: escolha de unidade, ordem e alvo](docs/images/interactive-desktop.png)
 
-Este repositório é um projeto de portfólio independente. Começou como um pequeno
-exercício acadêmico de POO e foi redesenhado em um motor de simulação compacto,
-com unidades táticas, linhas de frente e fundo, efeitos de combate, estratégias
-automatizadas e relatórios de torneio round-robin.
+## Capítulo II — sob seu comando
 
-O objetivo não é ser um jogo completo. O objetivo é mostrar arquitetura
-Python/POO limpa, simulações determinísticas, cobertura de testes e estrutura de
-projeto legível, sem nenhuma dependência externa em tempo de execução.
+Na versão 0.2, a interface calculava a partida inteira e apresentava um replay.
+O jogador escolhia duas estratégias e assistia. A versão **0.3** retoma a ideia
+de um jogo por turnos: a partida existe como uma sessão em Python e espera por
+uma ordem a cada decisão. Nenhum cronômetro avança o campo.
 
-> **Idioma:** a documentação e a interface web estão em pt-BR; o código-fonte
-> mantém identificadores em inglês, seguindo a convenção padrão de projetos
-> Python.
+| Antes: simulador | Agora: modo principal |
+| --- | --- |
+| Escolher dois bots | Comandar um esquadrão contra um bot |
+| Assistir à sequência pronta | Escolher unidade, ação e alvo |
+| Recrutamento automático | Comprar reforços e decidir a linha |
+| Cura e proteção automáticas | Decidir quando atacar, curar ou proteger |
+| Play, pause e velocidade | Preparação, ações alternadas e revisão |
+| Relatório de uma simulação | Histórico de comandos e estado da partida |
 
-## Conceitos
+O laboratório continua disponível com simulações, replays, torneios e regras
+da fase anterior. O jogo interativo tem regras próprias de alternância e avanço
+de linha; resultados dos dois modos não medem o mesmo balanceamento.
 
-- Python 3.10+.
-- Design orientado a objetos.
-- `dataclasses`, `Enum` e classes de domínio enxutas.
-- Motor de batalha separado da saída da CLI.
-- Atributos táticos: ataque, defesa, HP, velocidade, alcance, custo e papel.
-- Modelo simples de linhas `front` / `back`.
-- Efeitos de combate: `shield`, `bleed`, `stun` e `heal`.
-- Estratégias automatizadas (bots).
-- Torneios round-robin.
-- Relatórios JSON estruturados.
-- Testes com `unittest`.
-- Validação via GitHub Actions.
+A [documentação da fase II](docs/phase-two.md) registra decisões de arquitetura,
+diferenças de regras, contrato de comandos e processo de migração.
 
-## Interface web
+## Como jogar
 
-A página em [enzo-going.github.io/tactical-autobattler-python](https://enzo-going.github.io/tactical-autobattler-python/)
-carrega os arquivos `.py` deste repositório dentro do Pyodide e chama exatamente
-as mesmas funções que a CLI usa — nenhuma regra de jogo é reimplementada em
-JavaScript, e nada roda em servidor. Ela oferece:
+1. **Prepare.** Comece com 10 suprimentos e recrute até 8 unidades. Escolha a
+   vanguarda ou a retaguarda, ou mantenha a posição recomendada.
+2. **Dê ordens.** Entre em combate, selecione uma unidade pronta, escolha uma
+   ação e confirme o alvo. O rival responde com uma unidade. Cada peça age
+   uma vez por rodada, inclusive os recrutas recém-chegados.
+3. **Reorganize.** Quando todas as unidades agirem, confira o resultado da
+   rodada. Se a partida continuar, ambos recebem 6 suprimentos e o jogo espera
+   você avançar.
+4. **Vença.** Elimine as tropas para atacar o forte rival. Destruir a base vence
+   a partida. No limite de rodadas, vence a base com mais vida; em igualdade,
+   conta o dano de golpes causado (sem sangramento). Persistindo a igualdade,
+   há empate.
 
-- **Batalha** — tela de deploy com os dois comandantes, rodadas e seed; a
-  batalha vira um replay animado numa arena com bases, linhas de frente e fundo,
-  barras de HP, efeitos e números de dano. O campo é reconstruído a partir dos
-  snapshots por rodada e dos eventos entre eles, com controles de play/pause,
-  velocidade, pulo de rodada e linha do tempo. No fim aparecem o desfecho, o
-  destaque da partida, o log completo e o mesmo JSON de `--report-json`.
-- **Torneio** — round-robin espelhado e multi-seed com pódio, classificação,
-  indicador de equilíbrio da iniciativa e matriz de confrontos em mapa de calor.
-- **Manual** — ficha técnica das unidades lida de `battle_simulator/models.py` em
-  tempo real, mais efeitos de combate e o resumo de cada estratégia.
+| Unidade | Custo | O que oferece |
+| --- | ---: | --- |
+| Soldado | 2 | Linha de frente barata |
+| Arqueiro | 3 | Alcança as duas linhas e causa sangramento |
+| Guardião | 4 | Resiste a golpes e pode proteger um aliado |
+| Médico | 5 | Pode curar 2 de vida de um aliado, inclusive a si mesmo |
+| Tanque | 5 | Ataque forte que atordoa o alvo |
 
-O deploy é feito pelo workflow [`pages.yml`](.github/workflows/pages.yml), que
-só publica depois que os testes passam. Os fontes da página ficam em
-[`web/`](web/).
+Todas as peças podem atacar, proteger a si mesmas, trocar de linha ou esperar.
+Cada ordem consome a ação. A vanguarda impede ataques corpo a corpo à retaguarda;
+sem tropas na frente, o fundo fica exposto. Unidades de alcance 2 atingem ambas
+as linhas mesmo com a vanguarda ocupada.
 
-## Uso pela linha de comando
+A seed define quem abre a primeira rodada; a prioridade alterna nas seguintes.
+Os estilos rivais mudam as compras. Durante o combate, todos usam a mesma
+heurística: unidade mais rápida disponível, cura se possível, ataque ao alvo
+alcançável com menos vida. Você escolhe livremente a ordem de suas peças.
 
-Rode os comandos a partir da raiz do repositório.
+## Rodar localmente
 
-Instale em modo editável se quiser os comandos de console:
+Requer **Python 3.10+**. O pacote de jogo usa somente a biblioteca padrão.
+
+```bash
+python tools/build_site.py
+python -m http.server 8765 --bind 127.0.0.1 --directory _site
+```
+
+Abra [localhost:8765](http://localhost:8765). Refaça o build depois de editar os
+fontes. Abrir `web/index.html` diretamente como arquivo não funciona: os módulos
+Python precisam ser servidos por HTTP.
+
+O navegador carrega Python por [Pyodide](https://pyodide.org/), via CDN, na
+primeira visita. Isso exige conexão. A partida roda localmente na aba, sem
+backend, conta ou envio das decisões a um servidor.
+
+## Interface
+
+O campo usa verde oliva, tons de terra, fontes do sistema e silhuetas em SVG.
+A abertura recolhe ao entrar em combate para dar espaço ao tabuleiro. Abaixo de
+800 pixels, os comandos ficam sob o campo; em telas pequenas, as peças se
+organizam em duas colunas. Alvos também aparecem como botões no painel, sem
+depender de arrastar peças, hover ou precisão do mouse.
+
+Há foco de teclado visível, rótulos de vida e ações, avisos de turno anunciados
+por leitores de tela, manual e preferência de movimento reduzido. O diário
+mostra os seis eventos mais recentes e permite abrir todo o histórico.
+
+<details>
+<summary>Ver a interface no celular</summary>
+
+<img src="docs/images/interactive-mobile.png" alt="Tabuleiro e painel de ordens em uma tela de 390 pixels" width="320">
+
+</details>
+
+## Arquitetura Python / POO
+
+```text
+battle_simulator/
+  models.py       # Base, Troop, subclasses, efeitos, linhas e fábrica
+  engine.py       # Motor automático, dano, eventos e snapshots
+  session.py      # Sessão interativa: fases, comandos e ações válidas
+  strategies.py   # Políticas de compra e planos dos bots
+  tournament.py   # Confrontos e métricas do laboratório
+  cli.py          # Simulador, modo textual histórico e exportação
+web/
+  index.html      # Jogo principal
+  game.js         # Controles, apresentação e tradução dos eventos
+  game.css        # Tabuleiro e interface responsiva
+  playground.py   # Ponte JSON entre navegador e pacote Python
+  simulator.html  # Laboratório preservado
+  app.js          # Replays e torneios
+  style.css       # Estilos do laboratório
+tools/
+  build_site.py   # Mesmo build local e no GitHub Pages
+tests/
+  test_engine.py  # Regressões do simulador
+  test_session.py # Regras e comandos do jogo interativo
+  browser_smoke.py # Verificação opcional com navegador real
+```
+
+`TacticalSession` compõe `BattleEngine` e os objetos de domínio existentes.
+A interface recebe estado, eventos e ações válidas; não calcula dano, alcance,
+recursos ou vitória em JavaScript. Identificadores são em inglês; interface e
+documentação estão em pt-BR.
+
+## Simulador e linha de comando
+
+Os comandos anteriores continuam funcionando:
+
+```bash
+python -m battle_simulator --mode auto --strategy-one aggressive --strategy-two defensive --rounds 20 --seed 11
+python -m battle_simulator --mode tournament --simulations 20 --rounds 30 --seeds 3,7,11 --summary-only
+python -m battle_simulator --mode auto --quiet --report-json reports/battle.json
+python -m battle_simulator --list-strategies
+python -m battle_simulator --mode interactive --rounds 20
+```
+
+O último comando é a interface textual **histórica** do simulador. O novo ciclo
+de ações alternadas está na interface web e na API Python `TacticalSession`.
+Não foi feita uma migração silenciosa das regras da CLI.
+
+Instalação opcional dos comandos `tactical-autobattler` e `battle-simulator`:
 
 ```bash
 python -m pip install -e .
 ```
 
-Simulação automática:
+Para instalar uma cópia sem vínculo com os fontes, use `python -m pip install .`.
+Só o pacote `battle_simulator` é instalado; a interface web e os scripts
+históricos permanecem no repositório.
 
-```bash
-python -m battle_simulator --mode auto --rounds 20 --seed 11
-```
-
-O comando de console instalado é equivalente:
-
-```bash
-tactical-autobattler --mode auto --rounds 20 --seed 11
-```
-
-Simulação automática curta:
-
-```bash
-python -m battle_simulator --mode auto --rounds 20 --seed 11 --quiet
-```
-
-Simulação automática com relatório JSON:
-
-```bash
-python -m battle_simulator --mode auto --rounds 20 --seed 11 --quiet --report-json reports/battle.json
-```
-
-Escolher estratégias na simulação automática:
-
-```bash
-python -m battle_simulator --mode auto --strategy-one aggressive --strategy-two defensive --rounds 30
-```
-
-Torneio round-robin:
-
-```bash
-python -m battle_simulator --mode tournament --simulations 20 --rounds 30 --seed 11 --report-json reports/tournament-balance.json
-```
-
-Torneio em várias seeds (20 batalhas por confronto para cada seed):
-
-```bash
-python -m battle_simulator --mode tournament --simulations 20 --rounds 30 --seeds 3,7,11,19,29,43,71,101 --summary-only
-```
-
-Torneio com estratégias selecionadas:
-
-```bash
-python -m battle_simulator --mode tournament --strategies aggressive,balanced,economy --simulations 20 --rounds 30
-```
-
-Torneio mostrando só a classificação, sem a linha de cada confronto:
-
-```bash
-python -m battle_simulator --mode tournament --simulations 20 --rounds 30 --summary-only
-```
-
-Listar estratégias disponíveis:
-
-```bash
-python -m battle_simulator --list-strategies
-```
-
-Modo interativo:
-
-```bash
-python -m battle_simulator --mode interactive --rounds 20
-```
-
-Rodar os testes:
+## Testes
 
 ```bash
 python -m unittest discover -s tests
+python -m compileall battle_simulator tests web/playground.py tools
+node --check web/game.js
+node --check web/app.js
 ```
 
-Compilar os módulos:
+Node é necessário somente para as verificações de sintaxe JavaScript acima.
+O CI verifica Python 3.10 e 3.12, incluindo a instalação e a execução dos
+comandos de console fora da pasta dos fontes.
+Os testes Python cobrem modos anteriores, comandos inválidos, custos, limite
+de esquadrão, alcance, alvos estáveis, habilidades, efeitos, renda, desempate,
+fim de partida e reprodução determinística do histórico.
+
+O teste de navegador é opcional. Com o servidor local aberto:
 
 ```bash
-python -m compileall battle_simulator tests
+python -m pip install playwright
+python tests/browser_smoke.py
 ```
 
-## Modelo de batalha
+Por padrão usa Edge instalado. Para Chromium, execute
+`python -m playwright install chromium` e defina `BROWSER_CHANNEL=chromium`
+no ambiente. Ele percorre uma partida real com Pyodide, exportação, reinício,
+seis larguras de tela, ações no celular e o laboratório. Playwright é uma
+dependência de desenvolvimento, não do jogo.
 
-Cada unidade tem:
+## Limites desta versão
 
-- `attack`: dano base.
-- `defense`: redução de dano, preservando um dano mínimo.
-- `max_hp` e `current_hp`: vida máxima e atual.
-- `speed`: prioridade de ação dentro da rodada.
-- `range`: se a unidade alcança a linha de frente ou também o fundo.
-- `cost`: custo de recrutamento.
-- `role`: papel tático usado pelo motor e pelas estratégias.
+- A partida vive na memória da aba. Recarregar começa outra; não há autosave.
+- O JSON registra configuração, comandos e snapshots, mas ainda não há botão
+  de importar ou retomar. A reprodução em Python está em
+  [phase-two.md](docs/phase-two.md#relatórios-e-reprodução).
+- O mapa tem duas linhas por lado, sem deslocamento em grid.
+- Ainda não há campanha, multiplayer, áudio ou progressão persistente.
+- O equilíbrio interativo precisa de playtests; métricas antigas de torneio
+  não validam automaticamente as novas regras.
 
-O campo de batalha usa intencionalmente apenas duas linhas:
+## Histórico e próximos passos
 
-- `front`: mais fácil de alcançar, normalmente ocupada por unidades resistentes.
-- `back`: posição mais segura para unidades de alcance e suporte.
+O projeto começou como exercício acadêmico de POO. Os scripts originais estão
+em `legacy/`. A primeira reorganização criou o simulador com bots, testes e
+torneios. A fase atual transforma essa base em um jogo controlado pelo jogador.
 
-Isso mantém o projeto pequeno e ainda demonstra posicionamento, seleção de alvo
-e regras de alcance.
-
-## Unidades
-
-- `Soldier` (Soldado): unidade barata de linha de frente.
-- `Archer` (Arqueiro): atacante de fundo com alcance, aplica `bleed`.
-- `Guardian` (Guardião): unidade defensiva de frente, pode aplicar `shield`.
-- `Medic` (Médico): unidade de suporte que cura aliados feridos.
-- `Tank` (Tanque): unidade cara de frente, ataque forte e `stun`.
-
-## Estratégias
-
-- `AggressiveBot`: compra menos unidades por rodada, foca alvos fracos ao
-  alcance e tenta encerrar a partida rápido.
-- `BalancedBot`: monta composição mista entre frente e fundo.
-- `DefensiveBot`: prioriza unidades resistentes e proteção.
-- `EconomyBot`: adia parte dos gastos para comprar turnos mais fortes depois.
-- `RandomBot`: usa aleatoriedade com seed.
-
-O modo torneio roda confrontos round-robin espelhados, então cada par joga nas
-duas ordens. Em empates de velocidade, os lados intercalam ações; a seed define
-quem abre o primeiro empate e essa prioridade troca a cada rodada. Isso reduz o
-viés de iniciativa sem mudar a velocidade das unidades.
-
-A saída do torneio inclui:
-
-- vitórias;
-- derrotas;
-- empates;
-- taxa de vitória;
-- taxa de empate;
-- média de rodadas;
-- dano médio causado;
-- dano médio sofrido;
-- vitórias de quem abriu a iniciativa e de quem respondeu;
-- vantagem de iniciativa agregada entre todas as seeds.
-
-## Exemplo de JSON
-
-Os relatórios de batalha incluem metadados da partida, estratégias, contagem de
-recrutamentos, dano, snapshots ao fim de cada rodada e eventos estruturados:
-
-```json
-{
-  "winner": "Blue",
-  "rounds_played": 12,
-  "strategies": {
-    "player_one": "balanced",
-    "player_two": "random"
-  },
-  "units_recruited": {
-    "player_one": 8,
-    "player_two": 7
-  },
-  "damage": {
-    "player_one": {
-      "dealt": 42,
-      "received": 31
-    }
-  },
-  "round_snapshots": [
-    {
-      "round": 1,
-      "event_count": 1,
-      "bases": {
-        "player_one": {"name": "Blue", "health": 28, "resources": 16},
-        "player_two": {"name": "Red", "health": 28, "resources": 16}
-      },
-      "troops": {
-        "player_one": [],
-        "player_two": []
-      }
-    }
-  ],
-  "events": [
-    {
-      "type": "unit_attack",
-      "round": 3,
-      "actor": "Archer 1",
-      "target": "Guardian 1",
-      "amount": 1
-    }
-  ]
-}
-```
-
-Os relatórios de torneio incluem `standings` por estratégia e o detalhe dos
-confrontos.
-
-## Arquitetura
-
-```text
-.github/workflows/
-  tests.yml
-  pages.yml
-battle_simulator/
-  __main__.py
-  cli.py
-  engine.py
-  models.py
-  strategies.py
-  tournament.py
-web/
-  index.html
-  style.css
-  app.js
-  playground.py
-docs/
-  academic_context.md
-  balance_notes.md
-  initial_audit.md
-  roadmap.md
-legacy/
-  projeto.py
-  projeto2.0.py
-  projeto2.1.py
-  projeto3.0.py
-tests/
-  test_engine.py
-pyproject.toml
-```
-
-Responsabilidades principais:
-
-- `models.py`: bases, unidades, linhas, papéis e efeitos.
-- `engine.py`: regras de batalha, turnos, seleção de alvo, alcance, efeitos e
-  eventos.
-- `strategies.py`: estratégias automatizadas.
-- `tournament.py`: confrontos round-robin e métricas agregadas.
-- `cli.py`: interface de linha de comando e exportação JSON.
-- `web/`: interface no navegador (Pyodide) — apresentação apenas, sem regras de
-  jogo.
-- `tests/`: cobertura de regressão das regras principais.
-
-Notas adicionais ficam em `docs/`, incluindo o resumo de balanceamento e o
-roadmap técnico.
-
-## Histórico
-
-A versão original era um pequeno exercício acadêmico de POO com scripts
-interativos. Esses arquivos estão preservados em `legacy/` como referência
-histórica. O repositório atual é um simulador redesenhado, com estrutura de
-pacote, testes automatizados, CI e regras de batalha mais ricas.
-
-## Limitações atuais
-
-- O balanceamento é intencionalmente leve e ainda heurístico.
-- O campo de batalha tem duas linhas, não um grid completo.
-- As estratégias são heurísticas determinísticas, não agentes de aprendizado de
-  máquina.
-- O modo interativo é secundário em relação às simulações automáticas.
-
-## Próximos passos
-
-- Exportar logs completos de eventos em JSON Lines.
-- Adicionar métricas de eficiência de recursos e sobreviventes.
-- Melhorar a ergonomia do modo interativo.
-- Adicionar relatórios de exemplo versionados.
+[Transição para a fase II](docs/phase-two.md) · [Changelog](CHANGELOG.md) ·
+[Roadmap](docs/roadmap.md) · [Contexto acadêmico](docs/academic_context.md) ·
+[Contribuição](CONTRIBUTING.md)

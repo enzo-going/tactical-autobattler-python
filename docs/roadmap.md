@@ -1,56 +1,48 @@
-# Roadmap técnico
+# Roadmap
 
-Este projeto evoluiu de um pequeno exercício acadêmico de POO para um simulador
-tático auto-battler independente. A prioridade atual é manter o projeto enxuto,
-legível e útil como peça de portfólio Python.
+## Fase I — simulador (0.2, concluída)
 
-## Concluído
+- Pacote Python com modelos de POO, regras, efeitos e estratégias.
+- CLI, simulações determinísticas, torneios espelhados e relatórios JSON.
+- Testes automatizados, CI e publicação via GitHub Pages.
+- Interface de replay usando o próprio pacote Python no navegador.
 
-- Estrutura de pacote com `python -m battle_simulator`.
-- CLI para simulações automáticas, modo interativo e torneios.
-- Seleção de estratégia por argumentos da CLI.
-- Modelo tático com ataque, defesa, HP, velocidade, alcance, custo e papel.
-- Sistema simples de linhas de frente/fundo.
-- Efeitos de combate: `shield`, `bleed`, `stun` e `heal`.
-- Estratégias automatizadas com estilos distintos.
-- Torneio round-robin espelhado para reduzir o viés de ordem de jogador.
-- Relatórios JSON estruturados.
-- Testes unitários das regras principais, estratégias, relatórios e torneio.
-- Workflow do GitHub Actions para testes e compilação.
-- README e metadados de projeto independentes.
-- Interface web (Pyodide) publicada no GitHub Pages, reaproveitando o mesmo
-  pacote Python.
+## Fase II — jogo interativo (0.3, implementada nesta versão)
 
-## Barra de qualidade atual
+- Sessão entre comandos, com preparação, combate, revisão e desfecho.
+- Recrutamento manual, duas linhas e limite de oito tropas.
+- Seleção de unidade, ordem e alvo; respostas alternadas do rival.
+- Ataque, proteção, cura, reposicionamento e espera.
+- Tabuleiro responsivo, peças SVG, manual e diário de combate.
+- Exportação de decisões e reprodução determinística pela API Python.
+- Laboratório preservado e documentação das diferenças de regras.
 
-Toda mudança relevante deve manter:
+Veja os critérios e detalhes em [Fase II](phase-two.md).
 
-- testes unitários passando;
-- `compileall` passando;
-- nenhuma dependência externa obrigatória em tempo de execução;
-- comandos da CLI documentados;
-- regras de batalha isoladas do código de apresentação — incluindo `web/`, que
-  só formata resultados;
-- relatórios gerados ignorados pelo Git.
+## Próxima prioridade — jogar, observar, ajustar
 
-## Próximas melhorias
+1. Playtests: duração, clareza, utilidade das unidades e vantagem de abrir a
+   rodada. Medir o modo interativo separadamente do simulador.
+2. Salvar/retomar sessão com versão de esquema e migração de regras explícitas.
+3. Desfazer compras durante a preparação.
+4. Melhorar o bot: proteção, movimento e estilos próprios de combate.
+5. Feedback visual breve de dano e movimentação, sem bloquear comandos nem
+   prejudicar quem prefere movimento reduzido.
+6. Expandir verificações para Firefox, Safari e leitores de tela.
 
-1. Análise de balanceamento
-   - [Concluído] Rodar torneios com vários grupos de seed.
-   - Acompanhar se alguma estratégia se torna dominante ao longo do tempo.
-   - Ajustar as heurísticas antes de mexer nos atributos das unidades.
-   - [Concluído] Investigar e reduzir a vantagem de iniciativa apontada em `balance_notes.md`.
+## Depois, se fizer sentido
 
-2. Relatórios
-   - Exportação opcional de eventos em JSON Lines.
-   - [Concluído] Snapshots por rodada com bases, tropas e estatísticas acumuladas.
-   - Métricas de eficiência de recursos e valor das unidades sobreviventes.
+- Interface textual usando a mesma `TacticalSession` da web.
+- Pequenos cenários com objetivos diferentes de destruir a base.
+- Terrenos e obstáculos, após validar o valor das duas linhas atuais.
+- Áudio opcional e progressão entre partidas.
 
-3. Polimento da CLI
-   - Opção compacta `--summary-only`.
-   - Melhorar os prompts do modo interativo e a seleção de alvo.
+Campanha e multiplayer não fazem parte desta entrega.
 
-4. Apresentação
-   - [Concluído] Visualização rodada a rodada na interface web, consumindo os snapshots.
-   - Página de documentação explicando o loop de batalha.
-   - Relatórios de exemplo em um diretório `examples/` versionado.
+## Barra de qualidade
+
+Regras e validação permanecem em Python. O pacote continua sem dependências
+externas de runtime; Pyodide é a dependência do navegador. Mudanças devem
+preservar testes, documentar diferenças entre modos e manter o build local
+igual ao do GitHub Pages. Recursos futuros não devem ser apresentados como
+já disponíveis.
