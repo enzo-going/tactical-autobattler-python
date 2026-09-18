@@ -1,9 +1,8 @@
 """Ponte entre o pacote ``battle_simulator`` e a interface web.
 
-Este modulo roda dentro do Pyodide, no navegador. Ele nao contem regras de
-jogo: apenas chama o mesmo codigo usado pela CLI e devolve JSON para o
-JavaScript da pagina. Assim a interface web e a linha de comando nunca
-divergem.
+Este modulo roda dentro do Pyodide, no navegador. Nao contem regras de jogo:
+delega ao motor automatico (compartilhado com a CLI) ou a TacticalSession
+(modo interativo web), e devolve JSON para o JavaScript.
 """
 
 from __future__ import annotations
@@ -14,6 +13,27 @@ from battle_simulator.cli import _build_report
 from battle_simulator.engine import BattleEngine
 from battle_simulator.models import Base, TroopFactory, TroopKind
 from battle_simulator.tournament import DEFAULT_STRATEGIES, STRATEGIES, run_tournament
+from battle_simulator.session import TacticalSession
+
+_session: TacticalSession | None = None
+
+
+def new_game(opponent: str, seed: int, rounds: int) -> str:
+    global _session
+    _session = TacticalSession(opponent, seed, rounds)
+    return json.dumps(_session.state())
+
+
+def game_command(payload: str) -> str:
+    if _session is None:
+        raise ValueError("Inicie uma partida primeiro.")
+    return json.dumps(_session.command(json.loads(payload)))
+
+
+def game_report() -> str:
+    if _session is None:
+        raise ValueError("Inicie uma partida primeiro.")
+    return json.dumps(_session.report())
 
 
 def catalog() -> str:

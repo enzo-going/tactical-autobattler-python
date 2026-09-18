@@ -17,4 +17,8 @@ Este fork será usado para refatoração, organização e evolução do projeto,
 
 ## Estado atual
 
-O código ainda mantém a estrutura original do trabalho acadêmico e será evoluído gradualmente.
+Os scripts originais estão preservados em `legacy/`. A versão 0.2 reorganizou
+o código em um pacote de simulação com testes e bots. A versão 0.3 retoma a
+proposta de interação por turnos com uma sessão comandada pelo jogador,
+mantendo POO como base das regras. Veja a [transição para a fase II](phase-two.md)
+e o [roadmap](roadmap.md).

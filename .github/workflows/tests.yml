@@ -23,4 +23,12 @@ jobs:
         run: python -m unittest discover -s tests
 
       - name: Compile Python modules
-        run: python -m compileall battle_simulator tests
+        run: python -m compileall battle_simulator tests web/playground.py tools
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check web/game.js
+          node --check web/app.js
+
+      - name: Assemble both web entry points
+        run: python tools/build_site.py

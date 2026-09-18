@@ -1,281 +1,326 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tactical Auto-Battler — arena tática no navegador</title>
-<meta name="description" content="Auto-battler tático em Python rodando direto no navegador via Pyodide: escolha os comandantes, assista à batalha rodada a rodada na arena animada e rode torneios round-robin sem instalar nada.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>⚔️</text></svg>">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap">
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<a class="skip-link" href="#p-battle">Ir para o conteúdo</a>
-<div class="shell">
-
-  <header class="masthead">
-    <div class="brand">
-      <div class="crest">⚔️</div>
-      <div>
-        <h1>Tactical <em>Auto-Battler</em></h1>
-        <p class="tagline">
-          Escolha os comandantes, solte as tropas e assista à batalha rodada a rodada.
-          O motor é o pacote Python <code>battle_simulator</code> rodando no seu navegador — sem servidor.
-        </p>
-      </div>
-    </div>
-    <nav class="masthead-links">
-      <a href="https://github.com/enzo-going/tactical-autobattler-python">Repositório</a>
-      <a href="https://github.com/enzo-going/tactical-autobattler-python#readme">README</a>
-      <a href="https://github.com/enzo-going/tactical-autobattler-python/tree/main/battle_simulator">Motor</a>
-    </nav>
-  </header>
-
-  <div id="boot"><div class="spinner"></div><span id="boot-msg">Carregando o interpretador Python…</span></div>
-
-  <aside class="quickstart" aria-label="Como começar">
-    <strong>Comece em 3 passos</strong>
-    <span><b>1</b> Escolha dois comandantes</span>
-    <span><b>2</b> Ajuste rodadas e seed</span>
-    <span><b>3</b> Inicie e acompanhe o replay</span>
-  </aside>
-
-  <div class="tabs" role="tablist">
-    <button class="tab" id="tab-battle" role="tab" aria-selected="true" aria-controls="p-battle" tabindex="0" data-panel="p-battle">Batalha</button>
-    <button class="tab" id="tab-tournament" role="tab" aria-selected="false" aria-controls="p-tournament" tabindex="-1" data-panel="p-tournament">Torneio</button>
-    <button class="tab" id="tab-manual" role="tab" aria-selected="false" aria-controls="p-manual" tabindex="-1" data-panel="p-manual">Manual</button>
-  </div>
-
-  <!-- ================================ BATALHA ================================ -->
-  <section class="panel" id="p-battle" role="tabpanel" aria-labelledby="tab-battle">
-
-    <!-- ---------- tela de deploy ---------- -->
-    <div id="deploy-screen">
-      <div class="deploy">
-        <article class="commander blue" id="cmd-1">
-          <div class="commander-head">
-            <span class="side-tag">Comandante Azul</span>
-            <span class="commander-class" data-slot="class"></span>
-          </div>
-          <div class="commander-body">
-            <div class="commander-emblem" data-slot="emblem"></div>
-            <div>
-              <div class="commander-name" data-slot="name"></div>
-              <div class="commander-class" data-slot="kind"></div>
-            </div>
-          </div>
-          <p class="commander-tagline" data-slot="tagline"></p>
-          <div class="traits" data-slot="traits"></div>
-          <div class="commander-slots" data-slot="slots" role="group" aria-label="Estratégia do comandante azul"></div>
-        </article>
-
-        <div class="versus">
-          <div class="versus-mark">VS</div>
-          <div class="versus-dials">
-            <div class="field">
-              <label for="b-rounds">Rodadas</label>
-              <input type="number" id="b-rounds" value="30" min="1" max="200">
-            </div>
-            <div class="field">
-              <label for="b-seed">Seed</label>
-              <input type="number" id="b-seed" value="11" min="0" max="999999">
-            </div>
-          </div>
-          <button class="btn primary big" id="b-run" disabled>Iniciar batalha</button>
-          <p class="note">A seed define quem abre empates de velocidade e também os sorteios da estratégia <strong>Aleatória</strong>.</p>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tactical Auto-Battler · A fronteira</title>
+    <meta
+      name="description"
+      content="Um pequeno jogo tático em turnos. Recrute seu esquadrão, escolha cada ação e defenda seu forte. Feito em Python, jogável no navegador."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%238fa779' d='M4 4h6v6h4V4h4v6h4V4h6v24H4z'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="game.css" />
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"
+    ></script>
+    <script defer src="game.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#battlefield">Ir ao campo</a>
+    <div class="wrap">
+      <header class="masthead">
+        <a
+          class="brand"
+          href="index.html"
+          aria-label="Tactical Auto-Battler, início"
+          ><span class="brand-mark" aria-hidden="true">⚑</span
+          ><span>TACTICAL<br /><b>AUTO-BATTLER</b></span></a
+        >
+        <nav aria-label="Navegação principal">
+          <a href="simulator.html">Laboratório</a
+          ><button class="text-button" id="help">Como jogar</button
+          ><a href="https://github.com/enzo-going/tactical-autobattler-python"
+            >GitHub ↗</a
+          >
+        </nav>
+      </header>
+      <section class="intro">
+        <div>
+          <span class="eyebrow">CAPÍTULO II / SOB SEU COMANDO</span>
+          <h1>A fronteira não se<br />defende sozinha.</h1>
+          <p>Um esquadrão pequeno. Uma decisão de cada vez.</p>
         </div>
-
-        <article class="commander red" id="cmd-2">
-          <div class="commander-head">
-            <span class="side-tag">Comandante Vermelho</span>
-            <span class="commander-class" data-slot="class"></span>
-          </div>
-          <div class="commander-body">
-            <div class="commander-emblem" data-slot="emblem"></div>
-            <div>
-              <div class="commander-name" data-slot="name"></div>
-              <div class="commander-class" data-slot="kind"></div>
-            </div>
-          </div>
-          <p class="commander-tagline" data-slot="tagline"></p>
-          <div class="traits" data-slot="traits"></div>
-          <div class="commander-slots" data-slot="slots" role="group" aria-label="Estratégia do comandante vermelho"></div>
-        </article>
+        <div class="intro-note">
+          <span class="seal" aria-hidden="true">II</span>
+          <p>Recrute. Posicione. Lute.<br />O próximo movimento é seu.</p>
+        </div>
+      </section>
+      <div id="boot" class="notice" role="status">
+        <span class="loading-dot"></span
+        ><span id="boot-text"
+          >Preparando o campo… O primeiro carregamento pode demorar.</span
+        ><button id="retry" hidden>Tentar novamente</button>
       </div>
-
-      <p class="note">
-        Equivale a <code>python -m battle_simulator --mode auto</code>. A página não reimplementa nenhuma
-        regra: ela reconstrói o campo de batalha a partir dos eventos que o motor Python emitiu.
+      <main id="game" aria-busy="true">
+        <div class="game-bar">
+          <div>
+            <span class="eyebrow"
+              >ESCARAMUÇA / <span id="match-id">0011</span></span
+            >
+            <h2 id="phase-title">Preparando a expedição</h2>
+          </div>
+          <div class="game-tools">
+            <span id="round-label">RODADA —</span
+            ><button id="new" disabled>Nova partida</button>
+          </div>
+        </div>
+        <div
+          id="announcement"
+          class="turn-notice"
+          role="status"
+          aria-live="polite"
+        >
+          O jogo espera por você. Não há limite de tempo.
+        </div>
+        <div class="game-layout">
+          <section
+            class="field-panel"
+            id="battlefield"
+            tabindex="-1"
+            aria-label="Campo de batalha"
+          >
+            <div class="fort enemy">
+              <div>
+                <span class="flag" aria-hidden="true">⚑</span
+                ><strong>Forte rival</strong
+                ><span id="enemy-style" class="muted">Equilibrado</span>
+              </div>
+              <div class="fort-health">
+                <span id="enemy-hp">28 / 28</span
+                ><meter
+                  id="enemy-meter"
+                  min="0"
+                  max="28"
+                  value="28"
+                  aria-label="Vida do forte rival"
+                ></meter>
+              </div>
+            </div>
+            <div class="board">
+              <div class="lane enemy-lane">
+                <div class="lane-label">
+                  <span>RIVAL · RETAGUARDA</span><span>02</span>
+                </div>
+                <div class="units" id="enemy-back"></div>
+              </div>
+              <div class="lane enemy-lane">
+                <div class="lane-label">
+                  <span>RIVAL · VANGUARDA</span><span>01</span>
+                </div>
+                <div class="units" id="enemy-front"></div>
+              </div>
+              <div class="frontier">
+                <span></span><b>LINHA DE CONFRONTO</b><span></span>
+              </div>
+              <div class="lane ally-lane">
+                <div class="lane-label">
+                  <span>VOCÊ · VANGUARDA</span><span>01</span>
+                </div>
+                <div class="units" id="ally-front"></div>
+              </div>
+              <div class="lane ally-lane">
+                <div class="lane-label">
+                  <span>VOCÊ · RETAGUARDA</span><span>02</span>
+                </div>
+                <div class="units" id="ally-back"></div>
+              </div>
+            </div>
+            <div class="fort ally">
+              <div>
+                <span class="flag" aria-hidden="true">⚑</span
+                ><strong>Seu forte</strong
+                ><span id="ready-count" class="muted">Seu esquadrão</span>
+              </div>
+              <div class="fort-health">
+                <span id="ally-hp">28 / 28</span
+                ><meter
+                  id="ally-meter"
+                  min="0"
+                  max="28"
+                  value="28"
+                  aria-label="Vida do seu forte"
+                ></meter>
+              </div>
+            </div>
+            <div class="board-key">
+              <span><i class="key-ready"></i> Pronta</span
+              ><span><i class="key-spent"></i> Já agiu</span
+              ><span>Selecione uma peça para dar uma ordem.</span>
+            </div>
+          </section>
+          <aside class="command-panel" aria-label="Comandos do esquadrão">
+            <section class="supplies">
+              <span class="eyebrow">SEUS SUPRIMENTOS</span>
+              <div>
+                <strong id="resources">10</strong
+                ><span
+                  >+6 ao fim da rodada<br /><b id="roster-count"
+                    >0 / 8 unidades</b
+                  ></span
+                >
+              </div>
+            </section>
+            <section id="recruit-panel" class="panel-body">
+              <div class="section-heading">
+                <h3>Reforços</h3>
+                <span>01 / PREPARAR</span>
+              </div>
+              <p class="hint">
+                Compre reforços ou guarde recursos para a próxima rodada.
+              </p>
+              <label class="lane-picker"
+                >Posicionar na
+                <select id="recruit-lane">
+                  <option value="auto">linha recomendada</option>
+                  <option value="front">vanguarda</option>
+                  <option value="back">retaguarda</option>
+                </select></label
+              >
+              <div id="shop" class="shop"></div>
+            </section>
+            <section id="orders-panel" class="panel-body" hidden>
+              <div class="section-heading">
+                <h3>Suas ordens</h3>
+                <span>02 / AGIR</span>
+              </div>
+              <div id="unit-detail"></div>
+              <div id="actions" class="actions"></div>
+              <p id="target-hint" class="hint"></p>
+              <div id="targets" class="targets"></div>
+            </section>
+            <section id="review-panel" class="panel-body" hidden>
+              <span class="eyebrow" id="result-kicker">RELATÓRIO DE CAMPO</span>
+              <h3 id="result-title">Rodada encerrada</h3>
+              <p id="result-copy"></p>
+              <div id="round-summary" class="round-summary"></div>
+            </section>
+            <div class="command-footer">
+              <button id="advance" class="primary" disabled>Preparando…</button>
+              <p id="advance-hint" class="hint">
+                Cada unidade tem uma ação por rodada.
+              </p>
+            </div>
+          </aside>
+        </div>
+        <section class="journal">
+          <div class="section-heading">
+            <h3>Diário de combate</h3>
+            <button id="export" class="text-button" disabled>
+              Salvar relatório ↓
+            </button>
+          </div>
+          <p id="journal-empty" class="hint">
+            As decisões deixam marcas. Seus movimentos aparecerão aqui.
+          </p>
+          <ol id="event-log" aria-label="Eventos mais recentes primeiro"></ol>
+          <details>
+            <summary>Histórico completo da partida</summary>
+            <ol id="history"></ol>
+          </details>
+        </section>
+      </main>
+      <footer>
+        <span
+          >Um pequeno jogo de estratégia de
+          <a href="https://github.com/enzo-going">Enzo Going</a>.</span
+        ><span>Python · Código aberto · v0.3</span>
+      </footer>
+    </div>
+    <dialog id="setup-dialog" aria-labelledby="setup-title">
+      <form id="setup-form">
+        <span class="eyebrow">UMA NOVA EXPEDIÇÃO</span>
+        <h2 id="setup-title">Escolha seu adversário.</h2>
+        <p>
+          A nova partida substitui a atual. Salve o relatório se quiser guardar
+          suas decisões.
+        </p>
+        <label
+          >Estilo de recrutamento rival<select id="opponent">
+            <option value="balanced">Equilibrado · composição mista</option>
+            <option value="aggressive">Agressivo · pressão constante</option>
+            <option value="defensive">Defensivo · resistência e alcance</option>
+            <option value="economy">Econômico · poupa para depois</option>
+            <option value="random">Aleatório · compras imprevisíveis</option>
+          </select></label
+        >
+        <div class="form-row">
+          <label
+            >Seed<input
+              id="seed"
+              type="number"
+              min="0"
+              max="999999"
+              step="1"
+              value="11"
+              required /></label
+          ><label
+            >Limite de rodadas<input
+              id="rounds"
+              type="number"
+              min="1"
+              max="50"
+              step="1"
+              value="20"
+              required
+          /></label>
+        </div>
+        <p class="hint">
+          A seed define quem abre o combate; a prioridade alterna a cada rodada.
+          No estilo aleatório, ela também define as compras.
+        </p>
+        <div class="dialog-actions">
+          <button type="button" id="cancel-new">Voltar à partida</button
+          ><button class="primary" type="submit">Começar partida</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="help-dialog" aria-labelledby="help-title">
+      <span class="eyebrow">MANUAL DE CAMPO</span>
+      <h2 id="help-title">Cada peça conta.</h2>
+      <ol class="guide">
+        <li>
+          <b>Prepare seu esquadrão.</b> Comece com 10 suprimentos. Recrute até 8
+          unidades e escolha suas linhas. Cada rodada concluída rende 6
+          suprimentos.
+        </li>
+        <li>
+          <b>Entre no combate.</b> Selecione uma peça pronta, escolha uma ordem
+          e depois o alvo. O rival responde com uma unidade. Cada peça age uma
+          vez.
+        </li>
+        <li>
+          <b>Abra caminho até o forte.</b> Elimine as tropas rivais para atacar
+          a base. Destruir o forte vence a partida. No limite de rodadas: maior
+          vida da base, depois maior dano causado; igualdade total dá empate.
+        </li>
+      </ol>
+      <h3>Ordens e terreno</h3>
+      <p>
+        Atacar, proteger a si mesmo, trocar de linha ou esperar consomem a ação.
+        O Médico pode curar um aliado; o Guardião pode proteger outra peça. Você
+        decide quando usar essas habilidades.
       </p>
-    </div>
-
-    <!-- ---------- arena ---------- -->
-    <div id="battle-screen" hidden>
-      <div class="arena" id="arena">
-        <div class="round-pill">Rodada <b id="round-now">0</b><span id="round-phase"></span></div>
-
-        <div class="arena-grid">
-          <div class="fort blue" id="fort-1">
-            <div class="fort-emblem">🏰</div>
-            <div>
-              <div class="fort-name">Base Azul</div>
-              <div class="fort-strategy" data-slot="strategy"></div>
-            </div>
-            <div class="hp-block">
-              <div class="hp-line"><span class="k">Integridade</span><span class="v" data-slot="hp">—</span></div>
-              <div class="bar"><span data-slot="bar" style="width:100%"></span></div>
-            </div>
-            <div class="fort-res">🪙 <b data-slot="res">0</b> recursos</div>
-          </div>
-
-          <div class="side blue">
-            <div class="lane back" id="lane-1-back"><span class="lane-label">Fundo</span></div>
-            <div class="lane front" id="lane-1-front"><span class="lane-label">Frente</span></div>
-          </div>
-
-          <div class="clash"><span class="clash-mark">⚔️</span></div>
-
-          <div class="side red">
-            <div class="lane front" id="lane-2-front"><span class="lane-label">Frente</span></div>
-            <div class="lane back" id="lane-2-back"><span class="lane-label">Fundo</span></div>
-          </div>
-
-          <div class="fort red" id="fort-2">
-            <div class="fort-emblem">🏰</div>
-            <div>
-              <div class="fort-name">Base Vermelha</div>
-              <div class="fort-strategy" data-slot="strategy"></div>
-            </div>
-            <div class="hp-block">
-              <div class="hp-line"><span class="k">Integridade</span><span class="v" data-slot="hp">—</span></div>
-              <div class="bar"><span data-slot="bar" style="width:100%"></span></div>
-            </div>
-            <div class="fort-res">🪙 <b data-slot="res">0</b> recursos</div>
-          </div>
-        </div>
-
-        <div class="fx-layer" id="fx-layer"></div>
-        <div class="round-banner" id="round-banner"><span></span></div>
-        <div class="victory" id="victory"></div>
-      </div>
-
-      <div class="transport">
-        <button class="btn icon" id="t-restart" title="Rever do começo" aria-label="Rever do começo">⏮</button>
-        <button class="btn icon" id="t-play" title="Pausar ou continuar" aria-label="Pausar ou continuar">⏸</button>
-        <button class="btn icon wide" id="t-speed" title="Velocidade do replay">2×</button>
-        <button class="btn icon wide" id="t-round" title="Pular para a próxima rodada">Rodada ⏭</button>
-        <button class="btn icon wide" id="t-end" title="Ir direto para o desfecho">Desfecho ⏭</button>
-        <div class="scrub">
-          <input type="range" id="t-scrub" min="0" max="0" value="0" aria-label="Linha do tempo da batalha">
-          <span class="counter" id="t-counter">0 / 0</span>
-        </div>
-      </div>
-
-      <div class="ticker" id="ticker"></div>
-
-      <details class="drawer">
-        <summary>Log completo da batalha</summary>
-        <div class="log" id="full-log"></div>
-      </details>
-
-      <details class="drawer">
-        <summary>Relatório JSON — idêntico ao <code>--report-json</code> da CLI</summary>
-        <div class="row-actions">
-          <button class="btn" id="j-download">⬇ Baixar batalha.json</button>
-          <button class="btn" id="b-again">Nova batalha</button>
-        </div>
-        <pre class="json" id="json-view"></pre>
-      </details>
-    </div>
-  </section>
-
-  <!-- ================================ TORNEIO ================================ -->
-  <section class="panel" id="p-tournament" role="tabpanel" aria-labelledby="tab-tournament" hidden>
-    <div class="tourney-setup">
-      <div class="card">
-        <h2 class="section-title" style="margin-top:0">Grade de participantes</h2>
-        <div class="roster" id="t-roster"></div>
-        <p class="note">
-          Round-robin espelhado: cada par joga nos dois lados. As seeds repetem o torneio e distribuem a iniciativa de abertura.
-        </p>
-      </div>
-
-      <div class="card tourney-dials">
-        <div class="trio">
-          <div class="field">
-            <label for="t-sims">Batalhas por seed</label>
-            <input type="number" id="t-sims" value="20" min="1" max="50">
-          </div>
-          <div class="field">
-            <label for="t-rounds">Rodadas</label>
-            <input type="number" id="t-rounds" value="30" min="1" max="200">
-          </div>
-          <div class="field seeds-field">
-            <label for="t-seeds">Seeds</label>
-            <input type="text" id="t-seeds" value="3, 7, 11, 19, 29" inputmode="numeric" aria-describedby="t-seeds-help">
-            <small id="t-seeds-help">Separe por vírgula; use até 20 seeds únicas.</small>
-          </div>
-        </div>
-        <button class="btn primary" id="t-run" disabled>Rodar torneio</button>
-        <p class="note" id="t-estimate" role="status" aria-live="polite">Selecione ao menos duas estratégias.</p>
-      </div>
-    </div>
-
-    <div id="t-out"><div class="placeholder">A classificação aparece aqui depois da primeira rodada de simulações.</div></div>
-  </section>
-
-  <!-- ================================= MANUAL ================================ -->
-  <section class="panel" id="p-manual" role="tabpanel" aria-labelledby="tab-manual" hidden>
-    <p class="note" style="margin-top:0">
-      Ficha técnica lida de <code>battle_simulator/models.py</code> quando a página carrega.
-      Alcance 1 atinge só a linha de frente; alcance 2 alcança também o fundo. Em velocidade igual,
-      os lados intercalam ações e a prioridade muda a cada rodada.
-    </p>
-
-    <h2 class="section-title">Unidades</h2>
-    <div class="manual-grid" id="manual-units"></div>
-
-    <h2 class="section-title">Efeitos de combate</h2>
-    <div class="effect-grid">
-      <div class="effect-card" style="--accent: #ff9c6d">
-        <div class="em">🩸</div>
-        <div class="nm">Sangramento</div>
-        <div class="src">Aplicado por unidades de alcance (Arqueiro)</div>
-        <p>1 de dano por rodada durante 3 rodadas, ignorando a defesa do alvo.</p>
-      </div>
-      <div class="effect-card" style="--accent: #b07cff">
-        <div class="em">🛡️</div>
-        <div class="nm">Escudo</div>
-        <div class="src">Guardião, sobre o aliado de frente mais ferido</div>
-        <p>Absorve 1 de dano do próximo golpe recebido pelo aliado protegido.</p>
-      </div>
-      <div class="effect-card" style="--accent: #f5c451">
-        <div class="em">💫</div>
-        <div class="nm">Atordoamento</div>
-        <div class="src">Todo ataque do Tanque</div>
-        <p>O alvo perde a próxima ação inteira — o golpe mais caro do jogo em tempo de turno.</p>
-      </div>
-      <div class="effect-card" style="--accent: #3ddc97">
-        <div class="em">➕</div>
-        <div class="nm">Cura</div>
-        <div class="src">Médico, sobre o aliado com menor HP proporcional</div>
-        <p>Recupera 2 de HP em vez de atacar — o Médico nunca ataca enquanto houver ferido.</p>
-      </div>
-    </div>
-
-    <h2 class="section-title">Comandantes</h2>
-    <div class="brief-grid" id="manual-strategies"></div>
-  </section>
-
-  <footer class="credits">
-    <span>Python no navegador com <a href="https://pyodide.org/">Pyodide</a> · licença MIT</span>
-    <span>Projeto de portfólio de <a href="https://github.com/enzo-going">Enzo Liutkus Going</a></span>
-  </footer>
-</div>
-
-<script src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"></script>
-<script src="app.js"></script>
-</body>
+      <p>
+        A vanguarda bloqueia ataques corpo a corpo à retaguarda. Arqueiros e
+        Médicos alcançam as duas linhas. Sem vanguarda, todas as peças podem
+        alcançar o fundo.
+      </p>
+      <h3>Efeitos</h3>
+      <p>
+        Sangramento: 1 de dano no início das próximas 3 rodadas. Escudo: reduz o
+        próximo dano em 1 e expira após duas viradas de rodada. Atordoamento:
+        perde uma ação. A defesa reduz golpes, com dano mínimo de 1 antes do
+        escudo.
+      </p>
+      <p class="hint">
+        Não há cronômetro. O campo só muda quando você confirma uma ordem. A
+        partida fica na memória desta aba; recarregar a página começa outra.
+      </p>
+      <button id="close-help" class="primary">Entendi. Ao campo.</button>
+    </dialog>
+  </body>
 </html>

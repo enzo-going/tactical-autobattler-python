@@ -31,12 +31,7 @@ jobs:
         run: python -m unittest discover -s tests
 
       - name: Assemble site
-        run: |
-          mkdir -p _site
-          cp web/index.html web/style.css web/app.js web/playground.py _site/
-          mkdir -p _site/battle_simulator
-          cp battle_simulator/*.py _site/battle_simulator/
-          touch _site/.nojekyll
+        run: python tools/build_site.py
 
       - name: Configure Pages
         uses: actions/configure-pages@v6

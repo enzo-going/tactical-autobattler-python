@@ -18,6 +18,7 @@ const MODULES = [
   "strategies.py",
   "tournament.py",
   "cli.py",
+  "session.py",
 ];
 
 /* ------------------------------------------------------------------ *
