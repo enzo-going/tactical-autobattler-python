@@ -11,8 +11,11 @@
   azul só no nome, porque o token `--blue` guardava um verde-oliva.
 - Contraste conferido par a par: texto principal 15,8:1 sobre o fundo,
   secundário 8,6:1, rótulos miúdos 6,3:1 e bordas de controle em 3:1.
-- Carta e tabuleiro passam a ter degraus de luminância distintos, para a peça
-  descolar do campo sem depender só da borda.
+- Carta e tabuleiro deixam de ser dois tons do mesmo marrom: a mesa é escura e
+  as peças são de papel, 14,6:1 entre uma e outra. A tinta dentro da carta é
+  escura, então o texto miúdo ganha o contraste de papel impresso.
+- Cada peça recebe uma faixa do time no topo — azul ou vermelha —, de modo que
+  o lado se lê antes de qualquer texto, e não só pela cor do retrato.
 
 ## 0.3.0 — Capítulo II: sob seu comando
 
