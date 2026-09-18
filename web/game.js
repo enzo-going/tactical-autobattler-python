@@ -72,7 +72,7 @@ const esc = (text) =>
       ],
   );
 const portrait = (kind) =>
-  `<svg class="portrait" viewBox="0 0 32 32" aria-hidden="true" shape-rendering="crispEdges"><path fill="currentColor" d="${GLYPHS[kind] || GLYPHS.soldier}"/><path fill="#22281c" d="M13 9h3v2h-3zM19 9h3v2h-3z"/></svg>`;
+  `<svg class="portrait" viewBox="0 0 32 32" aria-hidden="true" shape-rendering="crispEdges"><path fill="currentColor" d="${GLYPHS[kind] || GLYPHS.soldier}"/><path fill="var(--eye)" d="M13 9h3v2h-3zM19 9h3v2h-3z"/></svg>`;
 function node(tag, className, text) {
   const n = document.createElement(tag);
   if (className) n.className = className;

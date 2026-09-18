@@ -1,5 +1,19 @@
 # Changelog
 
+## Não lançado
+
+### Interface
+
+- Paleta refeita: as superfícies passam a ser neutras quentes, sem o desvio de
+  matiz para o verde que pintava fundo, painéis, cartas e botões.
+- Cor volta a ter significado: azul é o seu lado, terracota é o rival, latão é
+  recurso e foco. O laboratório segue a mesma regra — o "comandante azul" era
+  azul só no nome, porque o token `--blue` guardava um verde-oliva.
+- Contraste conferido par a par: texto principal 15,8:1 sobre o fundo,
+  secundário 8,6:1, rótulos miúdos 6,3:1 e bordas de controle em 3:1.
+- Carta e tabuleiro passam a ter degraus de luminância distintos, para a peça
+  descolar do campo sem depender só da borda.
+
 ## 0.3.0 — Capítulo II: sob seu comando
 
 ### Jogo
