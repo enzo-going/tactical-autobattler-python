@@ -1,46 +1,50 @@
 :root {
   color-scheme: dark;
 
-  /* A mesa e escura e as pecas sao de papel: a carta nao e um degrau a mais
-     na mesma escala, e outro plano (14,6:1 entre tabuleiro e carta). */
-  --bg: #0f0d0b;
-  --surface: #171310;
-  --surface-2: #1e1815;
-  --surface-3: #14110e;
-  --control: #272019;
-  --control-hover: #372e25;
+  /* Ardosia neutra: a mesa nao tem matiz propria, entao a unica cor que
+     sobra na tela e a que significa alguma coisa. A carta e outro plano. */
+  --bg: #0e0f11;
+  --surface: #1c2024;
+  --surface-2: #23282d;
+  --surface-3: #0a0b0c;
+  --control: #262b31;
+  --control-hover: #333a41;
 
   /* Pecas do tabuleiro */
-  --piece: #ece2cf;
-  --piece-selected: #fff6dc;
-  --piece-spent: #b3a894;
-  --piece-foe: #f1e3d6;
+  --piece: #e8e8e5;
+  --piece-selected: #f4f2ea;
+  --piece-spent: #adaeab;
+  --piece-foe: #eae6e5;
   --piece-shadow: #000000;
-  --track: #100e0b;
+  --track: #0a0b0c;
+
+  /* Faixa do time: luminancias diferentes, para o lado nao depender so da matiz */
+  --ally-band: #4a86c0;
+  --foe-band: #8f2230;
 
   /* Traco: o discreto separa, o forte delimita controle (3:1 no minimo) */
-  --line: #453b31;
-  --line-strong: #9c8b76;
-  --line-foe: #c16a48;
-  --line-foe-soft: #c16a4866;
-  --grid: #f4ebda0a;
-  --backdrop: #0c0906e6;
+  --line: #333940;
+  --line-strong: #8d949b;
+  --line-foe: #b9666a;
+  --line-foe-soft: #b9666a66;
+  --grid: #f1f3f50a;
+  --backdrop: #080a0be6;
 
   /* Texto claro sobre a mesa. Dentro da carta a escala inverte, mais abaixo. */
-  --ink: #fbf5e8;
-  --muted: #cdc1ae;
-  --dim: #a99c88;
+  --ink: #f1f3f5;
+  --muted: #bcc2c8;
+  --dim: #8f969d;
 
   /* Cor com significado: azul e voce, terracota e o rival, latao e recurso */
-  --ally: #78c8f7;
-  --ally-fill: #3f9fd8;
-  --foe: #f08a62;
-  --foe-fill: #d65a35;
-  --gold: #f2c96f;
-  --primary: #f2c96f;
-  --primary-hover: #ffdb8c;
-  --primary-ink: #1a1206;
-  --primary-shade: #8a6a28;
+  --ally: #7ab8ea;
+  --ally-fill: #2a5f96;
+  --foe: #e58a8a;
+  --foe-fill: #a32b38;
+  --gold: #cbb27c;
+  --primary: #3070ad;
+  --primary-hover: #3d82c4;
+  --primary-ink: #f4f7fa;
+  --primary-shade: #1c4a74;
 
   /* Olho do retrato: vazado na cor da superficie que estiver atras */
   --eye: var(--surface);
@@ -371,10 +375,10 @@ meter::-moz-meter-bar {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
-  min-height: 96px;
+  min-height: 134px;
 }
 .empty-slot {
-  min-height: 96px;
+  min-height: 134px;
   border: 1px dashed var(--line);
   display: grid;
   place-items: center;
@@ -406,17 +410,17 @@ meter::-moz-meter-bar {
 /* A peca e papel sobre a mesa: dentro dela a luz vem de cima, entao tinta
    escura, e os lados podem usar cor saturada, que so funciona sobre claro. */
 .piece {
-  --ink: #1c1710;
-  --muted: #494030;
-  --dim: #5d5341;
-  --track: #c2b7a1;
-  --ally: #17457f;
-  --foe: #8f2f1c;
-  --ally-fill: #2a5d9f;
-  --foe-fill: #a33f26;
-  --gold: #8a5a00;
-  --line-strong: #6f6247;
-  --line-foe: #9b5238;
+  --ink: #16181a;
+  --muted: #4a4f55;
+  --dim: #5f656b;
+  --track: #c3c4c1;
+  --ally: #1d4e7c;
+  --foe: #93202e;
+  --ally-fill: #2a5f96;
+  --foe-fill: #a32b38;
+  --gold: #7a6420;
+  --line-strong: #6a6f75;
+  --line-foe: #9b5a60;
 }
 /* Faixa do time no topo: o lado da peca se le antes de qualquer texto. */
 .piece::before {
@@ -424,10 +428,10 @@ meter::-moz-meter-bar {
   position: absolute;
   inset: 0 0 auto 0;
   height: 5px;
-  background: var(--ally-fill);
+  background: var(--ally-band);
 }
 .piece.enemy-piece::before {
-  background: var(--foe-fill);
+  background: var(--foe-band);
 }
 .piece.spent::before {
   opacity: 0.45;
@@ -445,7 +449,8 @@ meter::-moz-meter-bar {
 
 .piece {
   position: relative;
-  padding: 13px 7px 8px;
+  padding: 5px 0 0;
+  overflow: hidden;
   background: var(--piece);
   box-shadow: 0 2px 0 #00000055;
   border: 1px solid var(--line-strong);
@@ -453,7 +458,7 @@ meter::-moz-meter-bar {
   min-width: 0;
   text-align: left;
   color: var(--ink);
-  min-height: 96px;
+  min-height: 134px;
 }
 .piece.enemy-piece {
   background: var(--piece-foe);
@@ -480,10 +485,39 @@ meter::-moz-meter-bar {
 .piece.spent .portrait {
   opacity: 0.5;
 }
-.piece-head {
-  display: flex;
-  gap: 8px;
-  align-items: center;
+/* Face de carta: janela de arte em cima, ficha tecnica embaixo. O fundo da
+   janela identifica a especie; a faixa acima dela identifica o time. */
+.piece-art {
+  display: grid;
+  place-items: center;
+  height: 48px;
+  background: var(--art, #d3d9e2);
+  border-bottom: 1px solid var(--line-strong);
+}
+.piece-art .portrait {
+  width: 34px;
+  height: 38px;
+}
+.piece[data-kind="soldier"] {
+  --art: #d3d9e2;
+}
+.piece[data-kind="archer"] {
+  --art: #ddd8e8;
+}
+.piece[data-kind="guardian"] {
+  --art: #d2dfe2;
+}
+.piece[data-kind="medic"] {
+  --art: #ecdde1;
+}
+.piece[data-kind="tank"] {
+  --art: #dcd8d0;
+}
+.piece-body {
+  padding: 7px 8px 8px;
+}
+.piece-name {
+  display: block;
 }
 .portrait {
   width: 28px;
@@ -879,10 +913,10 @@ dialog h3 {
   }
   .units,
   .empty-slot {
-    min-height: 105px;
+    min-height: 142px;
   }
   .piece {
-    min-height: 105px;
+    min-height: 142px;
   }
   .board {
     padding: 16px 22px;
@@ -1041,14 +1075,14 @@ dialog h3 {
   }
   .units {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    min-height: 84px;
+    min-height: 130px;
     gap: 8px;
   }
   .empty-slot {
-    min-height: 70px;
+    min-height: 92px;
   }
   .piece {
-    min-height: 94px;
+    min-height: 130px;
   }
   .fort {
     padding: 12px;

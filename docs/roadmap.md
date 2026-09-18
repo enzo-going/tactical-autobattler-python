@@ -30,6 +30,29 @@ Veja os critérios e detalhes em [Fase II](phase-two.md).
    prejudicar quem prefere movimento reduzido.
 6. Expandir verificações para Firefox, Safari e leitores de tela.
 
+## Fase III — as peças ganham vida (direção)
+
+O alvo declarado é um jogo de cartas com criaturas: a peça no campo precisa
+parecer uma carta com bicho dentro, e não uma linha de tabela. É a referência
+que orienta as decisões de interface daqui para frente.
+
+Já entregue:
+
+- Face de carta no tabuleiro: janela de arte, faixa do time, ficha técnica e
+  barra de vida, em vez de retrato miúdo ao lado do nome.
+- Fundo de arte por espécie, para as unidades se distinguirem de longe.
+
+Próximos passos na mesma direção:
+
+1. Arte própria por unidade, maior que a silhueta de 32 px de hoje, com pose e
+   contorno reconhecíveis em miniatura.
+2. Mais espécies, e variações dentro da mesma função, para o recrutamento ter
+   escolha de verdade em vez de uma opção por papel.
+3. Estados visíveis na arte — sangramento, escudo e atordoamento como marcas na
+   carta, não apenas como texto embaixo dela.
+4. Campanha: sequência de confrontos com um esquadrão que persiste entre
+   partidas. Depende de salvar/retomar sessão, que já está na lista acima.
+
 ## Depois, se fizer sentido
 
 - Interface textual usando a mesma `TacticalSession` da web.
@@ -37,7 +60,7 @@ Veja os critérios e detalhes em [Fase II](phase-two.md).
 - Terrenos e obstáculos, após validar o valor das duas linhas atuais.
 - Áudio opcional e progressão entre partidas.
 
-Campanha e multiplayer não fazem parte desta entrega.
+Multiplayer não faz parte desta entrega. Campanha passou para a fase III.
 
 ## Barra de qualidade
 
