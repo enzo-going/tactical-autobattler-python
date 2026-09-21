@@ -19,11 +19,11 @@ const NAMES = {
 };
 const DESCRIPTIONS = {
   soldier: "Linha de frente · baixo custo",
-  archer: "Alcance · aplica sangramento",
+  archer: "Alcance 2 · aplica sangramento",
   guardian: "Resistência · protege aliados",
-  medic: "Suporte · cura 2 de vida",
-  tank: "Impacto · atordoa o alvo",
-  pikeman: "Alcance 2 · golpeia da retaguarda",
+  medic: "Cura 2 · conjuração recarrega 1 rodada",
+  tank: "Impacto pesado · atordoa · recarga 1 rodada",
+  pikeman: "Alcance 2 · golpeia da retaguarda · sem recarga",
 };
 const STYLES = {
   balanced: "Equilibrado",
@@ -337,7 +337,7 @@ function renderBoard() {
         b.dataset.unit = t.name;
         for (const effect of Object.keys(EFFECTS))
           b.classList.toggle(`status-${effect}`, Boolean(t.effects[effect]));
-        b.innerHTML = `<div class="piece-art">${portrait(kindOf(t.name), side === "enemy")}</div><div class="piece-body"><span class="piece-name">${esc(label(t.name))}</span><span class="piece-stats">ATQ ${t.attack} · DEF ${t.defense}</span><div class="hp-line"><span class="hp-track"><i style="width:${(t.current_hp / t.max_hp) * 100}%"></i></span><small>${t.current_hp}/${t.max_hp}</small></div><span class="piece-state">${choice ? "↗ Confirmar alvo" : spent ? "— Já agiu" : ready ? "● Pronta" : "Em posição"}</span></div>`;
+        b.innerHTML = `<div class="piece-art">${portrait(kindOf(t.name), side === "enemy")}</div><div class="piece-body"><span class="piece-name">${esc(label(t.name))}</span><span class="piece-stats">ATQ ${t.attack} · DEF ${t.defense}</span><div class="hp-line"><span class="hp-track"><i style="width:${(t.current_hp / t.max_hp) * 100}%"></i></span><small>${t.current_hp}/${t.max_hp}</small></div><span class="piece-state">${choice ? "↗ Confirmar alvo" : spent ? "— Já agiu" : t.reloading > 0 ? `⟳ Recarregando ${t.reloading}` : ready ? "● Pronta" : "Em posição"}</span></div>`;
         const effects = Object.entries(t.effects)
           .map(([e, n]) => `${EFFECTS[e]} ${n}`)
           .join(" · ");
@@ -395,7 +395,7 @@ function renderOrders() {
     return;
   }
   $("unit-detail").innerHTML =
-    `<div class="unit-heading">${portrait(kindOf(t.name))}<div><h4>${esc(label(t.name))}</h4><small>${t.current_hp}/${t.max_hp} VIDA · ${t.lane === "front" ? "VANGUARDA" : "RETAGUARDA"}</small></div></div><p class="unit-facts">Ataque ${t.attack} · Defesa ${t.defense} · Alcance ${t.range}<br>${DESCRIPTIONS[kindOf(t.name)]}</p>`;
+    `<div class="unit-heading">${portrait(kindOf(t.name))}<div><h4>${esc(label(t.name))}</h4><small>${t.current_hp}/${t.max_hp} VIDA · ${t.lane === "front" ? "VANGUARDA" : "RETAGUARDA"}</small></div></div><p class="unit-facts">Ataque ${t.attack} · Defesa ${t.defense} · Alcance ${t.range}${t.reload ? ` · Recarga ${t.reload}` : " · Sem recarga"}<br>${DESCRIPTIONS[kindOf(t.name)]}</p>`;
   const choices = state.legal_actions[selected];
   for (const [action, name] of Object.entries(ACTIONS)) {
     const available = choices.filter((c) => c.action === action);
