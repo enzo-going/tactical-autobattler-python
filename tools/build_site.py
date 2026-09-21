@@ -10,7 +10,7 @@ def build():
     destination = ROOT / "_site"
     destination.mkdir(exist_ok=True)
     for source in (ROOT / "web").iterdir():
-        if source.is_file() and source.suffix in {".html", ".css", ".js", ".py"}:
+        if source.is_file() and source.suffix in {".html", ".css", ".js", ".py", ".svg"}:
             shutil.copy2(source, destination / source.name)
     package = destination / "battle_simulator"
     package.mkdir(exist_ok=True)

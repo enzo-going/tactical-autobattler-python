@@ -32,25 +32,32 @@ Veja os critérios e detalhes em [Fase II](phase-two.md).
 
 ## Fase III — as peças ganham vida (direção)
 
-O alvo declarado é um jogo de cartas com criaturas: a peça no campo precisa
-parecer uma carta com bicho dentro, e não uma linha de tabela. É a referência
-que orienta as decisões de interface daqui para frente.
+A referência são os auto-battlers de formação que rodavam no navegador: dois
+exércitos parados frente a frente, em fileiras, com a batalha resolvida pela
+composição do esquadrão e pelo tempo de cada arma. A peça no campo precisa
+parecer uma criatura em pé na linha, e não uma linha de tabela — é isso que
+orienta as decisões de interface daqui para frente.
 
 Já entregue:
 
-- Face de carta no tabuleiro: janela de arte, faixa do time, ficha técnica e
-  barra de vida, em vez de retrato miúdo ao lado do nome.
-- Fundo de arte por espécie, para as unidades se distinguirem de longe.
+- Cenário desenhado em SVG no lugar da grade, com as quatro linhas de formação
+  viradas uma para a outra.
+- Elenco original em vetor, um desenho por função, com equipamento indicando o
+  papel e cor de pano indicando o exército.
+- Reação visível: respiração parada, golpe, dano e cura, com interruptor para
+  desligar o movimento.
 
-Próximos passos na mesma direção:
+Próximos passos na mesma direção — agora do lado das regras, não do desenho:
 
-1. Arte própria por unidade, maior que a silhueta de 32 px de hoje, com pose e
-   contorno reconhecíveis em miniatura.
-2. Mais espécies, e variações dentro da mesma função, para o recrutamento ter
-   escolha de verdade em vez de uma opção por papel.
-3. Estados visíveis na arte — sangramento, escudo e atordoamento como marcas na
-   carta, não apenas como texto embaixo dela.
-4. Campanha: sequência de confrontos com um esquadrão que persiste entre
+1. Alcance por fileira: lança e pique atingindo duas linhas à frente, o que dá
+   sentido tático a posicionar fundo e frente.
+2. Tempo de recarga por arma, e conjuração mais lenta que o golpe comum, para a
+   ordem das ações virar decisão em vez de consequência da velocidade.
+3. Unidades que ocupam dois espaços — cavalaria forte, mas vulnerável a lanças.
+4. Facções com forças e fraquezas próprias, em vez de um só elenco espelhado.
+5. Estados visíveis na arte: sangramento, escudo e atordoamento como marcas na
+   figura, não apenas como texto embaixo dela.
+6. Campanha: sequência de confrontos com um esquadrão que persiste entre
    partidas. Depende de salvar/retomar sessão, que já está na lista acima.
 
 ## Depois, se fizer sentido

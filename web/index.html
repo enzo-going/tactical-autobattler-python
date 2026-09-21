@@ -10,14 +10,16 @@
     />
     <link
       rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%238fa779' d='M4 4h6v6h4V4h4v6h4V4h6v24H4z'/%3E%3C/svg%3E"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%239dccec' d='M4 4h6v6h4V4h4v6h4V4h6v24H4z'/%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="game.css" />
+    <link rel="stylesheet" href="characters.css?v=field-1" />
+    <link rel="stylesheet" href="game.css?v=field-1" />
     <script
       defer
       src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"
     ></script>
-    <script defer src="game.js"></script>
+    <script defer src="characters.js?v=field-1"></script>
+    <script defer src="game.js?v=field-1"></script>
   </head>
   <body>
     <a class="skip" href="#battlefield">Ir ao campo</a>
@@ -40,14 +42,11 @@
       </header>
       <section class="intro">
         <div>
-          <span class="eyebrow">CAPÍTULO II / SOB SEU COMANDO</span>
-          <h1>A fronteira não se<br />defende sozinha.</h1>
-          <p>Um esquadrão pequeno. Uma decisão de cada vez.</p>
+          <span class="eyebrow">CRÔNICAS DA FRONTEIRA · ESCARAMUÇA</span>
+          <h1>Erga seu estandarte.</h1>
+          <p>Reúna suas tropas. Forme a linha. Defenda a fronteira.</p>
         </div>
-        <div class="intro-note">
-          <span class="seal" aria-hidden="true">II</span>
-          <p>Recrute. Posicione. Lute.<br />O próximo movimento é seu.</p>
-        </div>
+        <div class="intro-note"><b>A vitória começa na formação.</b><p>Vanguarda para resistir.<br />Retaguarda para mudar a batalha.</p></div>
       </section>
       <div id="boot" class="notice" role="status">
         <span class="loading-dot"></span
@@ -83,52 +82,8 @@
             tabindex="-1"
             aria-label="Campo de batalha"
           >
-            <div class="fort enemy">
-              <div>
-                <span class="flag" aria-hidden="true">⚑</span
-                ><strong>Forte rival</strong
-                ><span id="enemy-style" class="muted">Equilibrado</span>
-              </div>
-              <div class="fort-health">
-                <span id="enemy-hp">28 / 28</span
-                ><meter
-                  id="enemy-meter"
-                  min="0"
-                  max="28"
-                  value="28"
-                  aria-label="Vida do forte rival"
-                ></meter>
-              </div>
-            </div>
-            <div class="board">
-              <div class="lane enemy-lane">
-                <div class="lane-label">
-                  <span>RIVAL · RETAGUARDA</span><span>02</span>
-                </div>
-                <div class="units" id="enemy-back"></div>
-              </div>
-              <div class="lane enemy-lane">
-                <div class="lane-label">
-                  <span>RIVAL · VANGUARDA</span><span>01</span>
-                </div>
-                <div class="units" id="enemy-front"></div>
-              </div>
-              <div class="frontier">
-                <span></span><b>LINHA DE CONFRONTO</b><span></span>
-              </div>
-              <div class="lane ally-lane">
-                <div class="lane-label">
-                  <span>VOCÊ · VANGUARDA</span><span>01</span>
-                </div>
-                <div class="units" id="ally-front"></div>
-              </div>
-              <div class="lane ally-lane">
-                <div class="lane-label">
-                  <span>VOCÊ · RETAGUARDA</span><span>02</span>
-                </div>
-                <div class="units" id="ally-back"></div>
-              </div>
-            </div>
+            <div class="field-heading"><div><strong>Passo da Vigília</strong><span>TERRAS DA FRONTEIRA / CAMPO DE BATALHA</span></div><button id="motion" type="button" aria-pressed="true">Animações: ligadas</button></div>
+            <div class="forts">
             <div class="fort ally">
               <div>
                 <span class="flag" aria-hidden="true">⚑</span
@@ -146,10 +101,34 @@
                 ></meter>
               </div>
             </div>
+            <div class="fort enemy">
+              <div>
+                <span class="flag" aria-hidden="true">⚑</span
+                ><strong>Forte rival</strong
+                ><span id="enemy-style" class="muted">Equilibrado</span>
+              </div>
+              <div class="fort-health">
+                <span id="enemy-hp">28 / 28</span
+                ><meter
+                  id="enemy-meter"
+                  min="0"
+                  max="28"
+                  value="28"
+                  aria-label="Vida do forte rival"
+                ></meter>
+              </div>
+            </div>
+            </div>
+            <div class="board"><span class="scene-caption">Sob as ruínas, dois estandartes.</span><div class="formation">
+<div class="lane ally-lane ally-back"><div class="lane-label"><span>SUA RETAGUARDA</span><span>II</span></div><div class="units" id="ally-back"></div></div>
+<div class="lane ally-lane ally-front"><div class="lane-label"><span>SUA VANGUARDA</span><span>I</span></div><div class="units" id="ally-front"></div></div>
+<div class="lane enemy-lane enemy-front"><div class="lane-label"><span>VANGUARDA RIVAL</span><span>I</span></div><div class="units" id="enemy-front"></div></div>
+<div class="lane enemy-lane enemy-back"><div class="lane-label"><span>RETAGUARDA RIVAL</span><span>II</span></div><div class="units" id="enemy-back"></div></div>
+            </div><div class="frontier" aria-hidden="true"><b>CONFRONTO</b></div></div>
             <div class="board-key">
               <span><i class="key-ready"></i> Pronta</span
               ><span><i class="key-spent"></i> Já agiu</span
-              ><span>Selecione uma peça para dar uma ordem.</span>
+              ><span>Selecione uma tropa pronta para dar uma ordem.</span>
             </div>
           </section>
           <aside class="command-panel" aria-label="Comandos do esquadrão">
@@ -166,7 +145,7 @@
             </section>
             <section id="recruit-panel" class="panel-body">
               <div class="section-heading">
-                <h3>Reforços</h3>
+                <h3>Recrutar tropas</h3>
                 <span>01 / PREPARAR</span>
               </div>
               <p class="hint">

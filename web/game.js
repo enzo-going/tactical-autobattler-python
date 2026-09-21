@@ -38,17 +38,6 @@ const ACTIONS = {
   wait: "Esperar",
 };
 const EFFECTS = { bleed: "Sangramento", shield: "Escudo", stun: "Atordoado" };
-// Tiny code-native silhouettes, shared by the roster and the board.
-const GLYPHS = {
-  soldier:
-    "M11 3h10v4h3v8h-5v3h5v10h-7v-7h-2v7H8V18h5v-3H8V7h3z M3 8h2v13H3z M1 18h6v2H1z",
-  archer:
-    "M12 3h8v3h3v8h-6v4h5v10h-6v-7h-2v7H8V18h5v-4H9V7h3z M27 4h2v3h2v16h-2v4h-2V4z M23 14h9v2h-9z",
-  guardian: "M12 2h10v4h3v9h-7v4h8v9H15V18h-5V7h2z M2 15h12v9l-6 6-6-6z",
-  medic:
-    "M11 3h10v12h-5v3h7v10h-6v-7h-2v7H8V18h5v-3H9V6h2z M25 16h3v4h4v3h-4v4h-3v-4h-4v-3h4z",
-  tank: "M10 2h12v4h4v10h-8v3h8v9h-8v-7h-3v7H6V18h6v-3H6V6h4z M1 2h3v27H1z M4 4h4v9H4z",
-};
 let bridge,
   catalog,
   state,
@@ -71,8 +60,7 @@ const esc = (text) =>
         v
       ],
   );
-const portrait = (kind) =>
-  `<svg class="portrait" viewBox="0 0 32 32" aria-hidden="true" shape-rendering="crispEdges"><path fill="currentColor" d="${GLYPHS[kind] || GLYPHS.soldier}"/><path fill="var(--eye)" d="M13 9h3v2h-3zM19 9h3v2h-3z"/></svg>`;
+const portrait = (kind, enemy = false) => BattleArt.portrait(kind, enemy);
 function node(tag, className, text) {
   const n = document.createElement(tag);
   if (className) n.className = className;
@@ -155,6 +143,7 @@ function command(payload) {
     if (!state.legal_actions[selected])
       selected = Object.keys(state.legal_actions)[0] || null;
     render();
+    showCombatFeedback(state.events.slice(count));
     const changes = state.events
       .slice(count)
       .filter((e) =>
@@ -193,6 +182,31 @@ function command(payload) {
   } finally {
     busy = false;
   }
+}
+function showCombatFeedback(events) {
+  if (document.body.classList.contains("motion-paused") ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const pieces = new Map([...document.querySelectorAll(".piece")].map(p => [p.dataset.unit, p]));
+  const totals = new Map();
+  for (const e of events) {
+    if (["unit_attack", "base_attack"].includes(e.type)) pieces.get(e.actor)?.classList.add("striking");
+    if (!["unit_attack", "effect_damage", "heal"].includes(e.type)) continue;
+    const target = pieces.get(e.target);
+    if (!target) continue; // Defeated troops have already left the authoritative state.
+    const healing = e.type === "heal";
+    target.classList.add(healing ? "restored" : "hurt");
+    const key = `${e.target}:${healing}`;
+    const item = totals.get(key) || { target, amount: 0, healing };
+    item.amount += e.amount;
+    totals.set(key, item);
+  }
+  for (const { target, amount, healing } of totals.values()) {
+    const floater = node("span", `combat-float${healing ? " healing" : ""}`, `${healing ? "+" : "−"}${amount}`);
+    floater.setAttribute("aria-hidden", "true");
+    target.append(floater);
+    setTimeout(() => floater.remove(), 1000);
+  }
+  setTimeout(() => pieces.forEach(p => p.classList.remove("striking", "hurt", "restored")), 700);
 }
 function phaseHint() {
   if (state.phase === "recruit")
@@ -279,7 +293,7 @@ function renderBoard() {
           node(
             "div",
             "empty-slot",
-            side === "ally" ? "Terreno livre" : "Nenhuma tropa à vista",
+            side === "ally" ? "Recrute tropas para esta linha" : "O rival se prepara",
           ),
         );
       for (const t of troops) {
@@ -313,7 +327,10 @@ function renderBoard() {
         if (side === "ally")
           b.setAttribute("aria-pressed", String(selected === t.name));
         b.dataset.kind = kindOf(t.name);
-        b.innerHTML = `<div class="piece-art">${portrait(kindOf(t.name))}</div><div class="piece-body"><span class="piece-name">${esc(label(t.name))}</span><span class="piece-stats">ATQ ${t.attack} · DEF ${t.defense}</span><div class="hp-line"><span class="hp-track"><i style="width:${(t.current_hp / t.max_hp) * 100}%"></i></span><small>${t.current_hp}/${t.max_hp}</small></div><span class="piece-state">${choice ? "↗ Confirmar alvo" : spent ? "— Já agiu" : ready ? "● Pronta" : "Em posição"}</span></div>`;
+        b.dataset.unit = t.name;
+        for (const effect of Object.keys(EFFECTS))
+          b.classList.toggle(`status-${effect}`, Boolean(t.effects[effect]));
+        b.innerHTML = `<div class="piece-art">${portrait(kindOf(t.name), side === "enemy")}</div><div class="piece-body"><span class="piece-name">${esc(label(t.name))}</span><span class="piece-stats">ATQ ${t.attack} · DEF ${t.defense}</span><div class="hp-line"><span class="hp-track"><i style="width:${(t.current_hp / t.max_hp) * 100}%"></i></span><small>${t.current_hp}/${t.max_hp}</small></div><span class="piece-state">${choice ? "↗ Confirmar alvo" : spent ? "— Já agiu" : ready ? "● Pronta" : "Em posição"}</span></div>`;
         const effects = Object.entries(t.effects)
           .map(([e, n]) => `${EFFECTS[e]} ${n}`)
           .join(" · ");
@@ -522,4 +539,19 @@ $("export").addEventListener("click", () => {
   link.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 });
+const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+let motionEnabled = !motionQuery.matches;
+try { motionEnabled = localStorage.getItem("battle-motion") !== "off" && !motionQuery.matches; } catch { /* Storage may be unavailable. */ }
+function updateMotion() {
+  document.body.classList.toggle("motion-paused", !motionEnabled);
+  $("motion").textContent = motionEnabled ? "Animações: ligadas" : "Animações: pausadas";
+  $("motion").setAttribute("aria-pressed", String(motionEnabled));
+}
+$("motion").addEventListener("click", () => {
+  motionEnabled = !motionEnabled;
+  try { localStorage.setItem("battle-motion", motionEnabled ? "on" : "off"); } catch { /* Optional preference only. */ }
+  updateMotion();
+});
+motionQuery.addEventListener("change", e => { if (e.matches) { motionEnabled = false; updateMotion(); } });
+updateMotion();
 boot();
