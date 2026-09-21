@@ -8,6 +8,7 @@ from typing import Protocol
 from battle_simulator.models import (
     Base,
     Lane,
+    can_strike,
     Role,
     StatusEffect,
     Troop,
@@ -512,8 +513,11 @@ class BattleEngine:
                 )
             ]
 
-        target = self._select_target(attacker, enemies, target_index)
+        target = self._select_target(player, attacker, enemies, target_index)
         if target is None:
+            advanced = self._advance_into_range(player, attacker, enemies)
+            if advanced:
+                return advanced
             return [
                 BattleEvent(
                     event_type="out_of_range",
@@ -552,21 +556,57 @@ class BattleEngine:
 
     def _select_target(
         self,
+        player: Player,
         attacker: Troop,
         enemies: list[Troop],
         target_index: int | None,
     ) -> Troop | None:
         living = [troop for troop in enemies if troop.is_alive]
+        allies = self.battlefield.living_troops_for(player)
         if target_index is not None:
             if target_index < 0 or target_index >= len(living):
                 return None
             target = living[target_index]
-            return target if attacker.can_reach(target) else None
+            return target if can_strike(attacker, allies, target, living) else None
 
-        reachable = [troop for troop in living if attacker.can_reach(troop)]
+        reachable = [troop for troop in living if can_strike(attacker, allies, troop, living)]
         if not reachable:
             return None
         return min(reachable, key=lambda troop: (troop.lane != Lane.FRONT, troop.health))
+
+    def _advance_into_range(
+        self,
+        player: Player,
+        attacker: Troop,
+        enemies: list[Troop],
+    ) -> list[BattleEvent]:
+        """Quem nao alcanca, avanca: a tropa gasta a acao subindo para a frente.
+
+        Sem isso, uma unidade de corpo a corpo deixada na retaguarda perderia
+        todas as rodadas parada, porque o modo automatico nao tem ordem de
+        reposicionamento -- so recrutar e atacar.
+        """
+        living = [troop for troop in enemies if troop.is_alive]
+        if attacker.lane != Lane.BACK or not living:
+            return []
+
+        allies = self.battlefield.living_troops_for(player)
+        attacker.lane = Lane.FRONT
+        would_strike = any(can_strike(attacker, allies, troop, living) for troop in living)
+        if not would_strike:
+            attacker.lane = Lane.BACK
+            return []
+
+        return [
+            BattleEvent(
+                event_type="unit_moved",
+                round_number=self.round_number,
+                player=player,
+                actor=attacker.name,
+                message=f"{attacker.name} advanced to the front lane.",
+                metadata={"lane": attacker.lane.value, "reason": "out_of_range"},
+            )
+        ]
 
     def _apply_attack_effects(
         self,

@@ -9,6 +9,7 @@ from battle_simulator.models import (
     Base,
     Guardian,
     Lane,
+    Pikeman,
     Medic,
     Role,
     Soldier,
@@ -16,6 +17,7 @@ from battle_simulator.models import (
     Tank,
     Troop,
     TroopFactory,
+    can_strike,
     TroopKind,
 )
 from battle_simulator.strategies import AggressiveBot, BalancedBot, DefensiveBot
@@ -60,12 +62,28 @@ class TroopTest(unittest.TestCase):
         self.assertEqual(applied, 1)
         self.assertEqual(guardian.health, guardian.max_hp - 1)
 
-    def test_range_controls_target_access(self):
-        soldier = Soldier("Soldier", lane=Lane.FRONT)
-        archer = Archer("Archer", lane=Lane.BACK)
+    def test_reach_counts_rows_from_the_attacker_lane(self):
+        """Alcance conta a partir de onde a tropa esta, nao so de onde o alvo esta."""
+        alvo = Soldier("Alvo", lane=Lane.FRONT)
+        deles = [alvo, Archer("Retaguarda deles", lane=Lane.BACK)]
 
-        self.assertFalse(soldier.can_reach(archer))
-        self.assertTrue(archer.can_reach(soldier))
+        espada_na_frente = Soldier("Espada", lane=Lane.FRONT)
+        espada_no_fundo = Soldier("Espada atras", lane=Lane.BACK)
+        lanca_no_fundo = Pikeman("Lanca", lane=Lane.BACK)
+        meus = [espada_na_frente, espada_no_fundo, lanca_no_fundo]
+
+        self.assertTrue(can_strike(espada_na_frente, meus, alvo, deles))
+        self.assertFalse(can_strike(espada_no_fundo, meus, alvo, deles))
+        self.assertTrue(can_strike(lanca_no_fundo, meus, alvo, deles))
+
+    def test_rear_rank_steps_up_when_the_front_falls(self):
+        """Sem ninguem na frente, quem esta atras vira a linha de frente."""
+        sozinho_atras = Archer("Sozinho", lane=Lane.BACK)
+        espada = Soldier("Espada", lane=Lane.FRONT)
+
+        self.assertTrue(can_strike(espada, [espada], sozinho_atras, [sozinho_atras]))
+        acompanhado = [Guardian("Escudo", lane=Lane.FRONT), sozinho_atras]
+        self.assertFalse(can_strike(espada, [espada], sozinho_atras, acompanhado))
 
     def test_shield_reduces_next_damage(self):
         guardian = Guardian("Guardian")
@@ -171,21 +189,46 @@ class BattleEngineTest(unittest.TestCase):
         self.assertTrue(any("does not have enough resources" in event.message for event in events))
 
     def test_out_of_range_attack_does_not_damage_backline(self):
+        """Com a frente inimiga de pe, a espada nao alcanca a retaguarda."""
         battlefield = Battlefield(
             troops_one=[Soldier("Soldier", lane=Lane.FRONT)],
-            troops_two=[Archer("Archer", lane=Lane.BACK)],
+            troops_two=[Guardian("Guardian", lane=Lane.FRONT), Archer("Archer", lane=Lane.BACK)],
         )
         engine = BattleEngine(battlefield)
 
         events = engine.play_round(
             {
-                Player.ONE: TurnPlan(attacks=(AttackOrder(attacker_index=0, target_index=0),)),
+                Player.ONE: TurnPlan(attacks=(AttackOrder(attacker_index=0, target_index=1),)),
                 Player.TWO: TurnPlan(),
             }
         )
 
-        self.assertEqual(engine.battlefield.troops_two[0].health, 3)
+        self.assertEqual(engine.battlefield.troops_two[1].health, 3)
         self.assertTrue(any(event.event_type == "out_of_range" for event in events))
+
+    def test_troop_without_reach_advances_instead_of_wasting_the_round(self):
+        """O modo automatico nao tem ordem de mover: quem nao alcanca, avanca."""
+        atrasado = Soldier("Atrasado", lane=Lane.BACK)
+        battlefield = Battlefield(
+            troops_one=[Guardian("Escudo", lane=Lane.FRONT), atrasado],
+            troops_two=[Soldier("Inimigo", lane=Lane.FRONT)],
+        )
+        engine = BattleEngine(battlefield)
+
+        events = engine.play_round(
+            {
+                Player.ONE: TurnPlan(attacks=(AttackOrder(attacker_index=1, target_index=0),)),
+                Player.TWO: TurnPlan(),
+            }
+        )
+
+        self.assertEqual(atrasado.lane, Lane.FRONT)
+        self.assertTrue(
+            any(
+                event.event_type == "unit_moved" and event.actor == "Atrasado"
+                for event in events
+            )
+        )
 
     def test_archer_applies_bleed_effect(self):
         battlefield = Battlefield(

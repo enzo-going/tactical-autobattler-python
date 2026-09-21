@@ -4,7 +4,7 @@ import random
 from abc import ABC, abstractmethod
 
 from battle_simulator.engine import AttackOrder, Battlefield, Player, RecruitOrder, TurnPlan
-from battle_simulator.models import Lane, TROOP_COSTS, Role, Troop, TroopKind
+from battle_simulator.models import Lane, TROOP_COSTS, Role, Troop, TroopKind, can_strike
 
 
 class Strategy(ABC):
@@ -68,7 +68,7 @@ class AggressiveBot(Strategy):
             budget -= TROOP_COSTS[TroopKind.SOLDIER]
 
         attacks = tuple(
-            AttackOrder(index, _weakest_reachable_target_index(troop, enemies))
+            AttackOrder(index, _weakest_reachable_target_index(troop, enemies, troops))
             for index, troop in enumerate(troops)
         )
         return TurnPlan(recruits=tuple(recruits), attacks=attacks)
@@ -87,7 +87,9 @@ class DefensiveBot(Strategy):
         for troop_kind, lane in (
             (TroopKind.GUARDIAN, Lane.FRONT),
             (TroopKind.ARCHER, Lane.BACK),
-            (TroopKind.ARCHER, Lane.BACK),
+            # A lanca golpeia a frente inimiga sem sair de tras do escudo: e a
+            # unidade que da sentido ofensivo a segunda fileira.
+            (TroopKind.PIKEMAN, Lane.BACK),
             (TroopKind.SOLDIER, Lane.FRONT),
         ):
             if budget >= TROOP_COSTS[troop_kind]:
@@ -148,7 +150,7 @@ class RandomBot(Strategy):
 
         attacks = []
         for attacker_index, troop in enumerate(troops):
-            reachable = _reachable_enemies(troop, enemies)
+            reachable = _reachable_enemies(troop, enemies, troops)
             target_index = None
             if reachable:
                 target = self._random.choice(reachable)
@@ -177,13 +179,15 @@ def _needs_unit(recruits: list[RecruitOrder], troop_kind: TroopKind, max_count: 
 
 def _attack_orders(troops: list[Troop], enemies: list[Troop]) -> tuple[AttackOrder, ...]:
     return tuple(
-        AttackOrder(index, _best_target_index(troop, enemies))
+        AttackOrder(index, _best_target_index(troop, enemies, troops))
         for index, troop in enumerate(troops)
     )
 
 
-def _best_target_index(troop: Troop, enemies: list[Troop]) -> int | None:
-    reachable = _reachable_enemies(troop, enemies)
+def _best_target_index(
+    troop: Troop, enemies: list[Troop], allies: list[Troop] | None = None
+) -> int | None:
+    reachable = _reachable_enemies(troop, enemies, allies)
     if not reachable:
         return None
     target = min(reachable, key=lambda enemy: (enemy.health, enemy.lane != Lane.FRONT))
@@ -197,12 +201,19 @@ def _weakest_target_index(enemies: list[Troop]) -> int | None:
     return enemies.index(min(living, key=lambda troop: troop.health))
 
 
-def _weakest_reachable_target_index(troop: Troop, enemies: list[Troop]) -> int | None:
-    reachable = _reachable_enemies(troop, enemies)
+def _weakest_reachable_target_index(
+    troop: Troop, enemies: list[Troop], allies: list[Troop] | None = None
+) -> int | None:
+    reachable = _reachable_enemies(troop, enemies, allies)
     if not reachable:
         return None
     return enemies.index(min(reachable, key=lambda enemy: enemy.health))
 
 
-def _reachable_enemies(troop: Troop, enemies: list[Troop]) -> list[Troop]:
-    return [enemy for enemy in enemies if enemy.is_alive and troop.can_reach(enemy)]
+def _reachable_enemies(
+    troop: Troop, enemies: list[Troop], allies: list[Troop] | None = None
+) -> list[Troop]:
+    """Inimigos ao alcance, contando fileiras a partir da posicao do atacante."""
+    living = [enemy for enemy in enemies if enemy.is_alive]
+    allies = [ally for ally in (allies or []) if ally.is_alive] or [troop]
+    return [enemy for enemy in living if can_strike(troop, allies, enemy, living)]

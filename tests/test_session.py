@@ -2,7 +2,16 @@ import json
 import unittest
 
 from battle_simulator.engine import Player
-from battle_simulator.models import Archer, Guardian, Lane, Medic, Soldier, StatusEffect, Tank
+from battle_simulator.models import (
+    Archer,
+    Guardian,
+    Lane,
+    Medic,
+    Pikeman,
+    Soldier,
+    StatusEffect,
+    Tank,
+)
 from battle_simulator.session import TacticalSession
 from web import playground
 
@@ -78,16 +87,45 @@ class TacticalSessionTest(unittest.TestCase):
         self.assertNotIn("Soldier 1", game.state()["legal_actions"])
 
     def test_frontline_blocks_melee_but_not_archers(self):
+        """Da retaguarda, o arco alcanca a frente inimiga; a espada nao alcanca nada.
+
+        E, com a frente inimiga de pe, nem o arco chega a retaguarda deles: sao
+        tres fileiras de distancia.
+        """
         game = self.combat(
             [Soldier("Soldier 1"), Archer("Archer 1")], [Guardian("Guardian 1"), Archer("Archer 2")]
         )
         actions = game.state()["legal_actions"]
+        self.assertIn({"action": "attack", "target": "Guardian 1"}, actions["Soldier 1"])
         self.assertNotIn({"action": "attack", "target": "Archer 2"}, actions["Soldier 1"])
-        self.assertIn({"action": "attack", "target": "Archer 2"}, actions["Archer 1"])
+        self.assertIn({"action": "attack", "target": "Guardian 1"}, actions["Archer 1"])
+        self.assertNotIn({"action": "attack", "target": "Archer 2"}, actions["Archer 1"])
         before = game.state()
         with self.assertRaises(ValueError):
             self.act(game, "Soldier 1", "attack", target="Archer 2")
         self.assertEqual(game.state(), before)
+
+    def test_pike_strikes_from_the_second_row_and_the_sword_does_not(self):
+        """A lanca e o motivo de existir retaguarda ofensiva.
+
+        So ha segunda fileira quando alguem ocupa a primeira: com o esquadrao
+        inteiro atras, a retaguarda vira a propria linha de frente.
+        """
+        game = self.combat(
+            [
+                Guardian("Guardian 2", lane=Lane.FRONT),
+                Pikeman("Pikeman 1", lane=Lane.BACK),
+                Soldier("Soldier 1", lane=Lane.BACK),
+            ],
+            [Guardian("Guardian 1", lane=Lane.FRONT), Archer("Archer 2", lane=Lane.BACK)],
+        )
+        actions = game.state()["legal_actions"]
+        self.assertIn({"action": "attack", "target": "Guardian 1"}, actions["Pikeman 1"])
+        self.assertNotIn({"action": "attack", "target": "Guardian 1"}, actions["Soldier 1"])
+        self.assertFalse(
+            [a for a in actions["Soldier 1"] if a["action"] == "attack"],
+            "espada guardada atras nao deveria ter alvo nenhum",
+        )
 
     def test_exposed_backline_is_reachable_by_melee(self):
         game = self.combat([Soldier("Soldier 1")], [Archer("Archer 2")])
