@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from enum import Enum
 
@@ -28,6 +29,7 @@ class TroopKind(str, Enum):
     GUARDIAN = "guardian"
     MEDIC = "medic"
     TANK = "tank"
+    PIKEMAN = "pikeman"
 
 
 @dataclass
@@ -98,8 +100,9 @@ class Troop:
     def is_alive(self) -> bool:
         return self.health > 0
 
-    def can_reach(self, target: "Troop") -> bool:
-        return self.range >= lane_distance(target.lane)
+    def reaches(self, rows: int) -> bool:
+        """Alcance em fileiras. Uma lanca de alcance 2 fura a segunda linha."""
+        return self.range >= rows
 
     def attack_troop(self, target: "Troop") -> int:
         return target.receive_damage(self.attack)
@@ -207,6 +210,21 @@ class Medic(Troop):
         )
 
 
+class Pikeman(Troop):
+    def __init__(self, name: str, lane: Lane = Lane.BACK):
+        super().__init__(
+            name=name,
+            max_hp=5,
+            attack=3,
+            defense=1,
+            speed=3,
+            range=2,
+            cost=4,
+            role=Role.ASSAULT,
+            lane=lane,
+        )
+
+
 class Tank(Troop):
     def __init__(self, name: str, lane: Lane = Lane.FRONT):
         super().__init__(
@@ -243,12 +261,50 @@ class TroopFactory:
             return Medic(name=f"Medic {number}", lane=lane or Lane.BACK)
         if kind == TroopKind.TANK:
             return Tank(name=f"Tank {number}", lane=lane or Lane.FRONT)
+        if kind == TroopKind.PIKEMAN:
+            return Pikeman(name=f"Pikeman {number}", lane=lane or Lane.BACK)
 
         raise ValueError(f"Unsupported troop kind: {kind}")
 
 
-def lane_distance(lane: Lane) -> int:
-    return 1 if lane == Lane.FRONT else 2
+def rank_in_formation(troop: Troop, allies: Iterable[Troop]) -> int:
+    """Fileira efetiva da tropa: 1 e a linha de frente.
+
+    A retaguarda sobe quando nao ha mais ninguem vivo na frente -- quem esta
+    atras vira a linha de frente, como acontece quando uma fileira cai.
+    """
+    if troop.lane == Lane.FRONT:
+        return 1
+    return 2 if any(ally.lane == Lane.FRONT and ally.is_alive for ally in allies) else 1
+
+
+def rows_between(
+    attacker: Troop,
+    attacker_allies: Iterable[Troop],
+    target: Troop,
+    target_allies: Iterable[Troop],
+) -> int:
+    """Fileiras entre duas tropas, contadas a partir de onde cada uma esta.
+
+    Frente contra frente e 1. Da retaguarda para a frente inimiga, 2 -- por isso
+    uma espada guardada atras nao alcanca nada, e uma lanca alcanca.
+    """
+    attacker_allies = list(attacker_allies)
+    target_allies = list(target_allies)
+    return (
+        rank_in_formation(attacker, attacker_allies)
+        + rank_in_formation(target, target_allies)
+        - 1
+    )
+
+
+def can_strike(
+    attacker: Troop,
+    attacker_allies: Iterable[Troop],
+    target: Troop,
+    target_allies: Iterable[Troop],
+) -> bool:
+    return attacker.reaches(rows_between(attacker, attacker_allies, target, target_allies))
 
 
 TROOP_COSTS = {
@@ -257,4 +313,5 @@ TROOP_COSTS = {
     TroopKind.GUARDIAN: Guardian(name="preview").cost,
     TroopKind.MEDIC: Medic(name="preview").cost,
     TroopKind.TANK: Tank(name="preview").cost,
+    TroopKind.PIKEMAN: Pikeman(name="preview").cost,
 }

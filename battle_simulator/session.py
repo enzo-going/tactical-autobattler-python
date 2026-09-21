@@ -10,7 +10,15 @@ from battle_simulator.engine import (
     RecruitOrder,
     TurnPlan,
 )
-from battle_simulator.models import Lane, Role, StatusEffect, TROOP_COSTS, Troop, TroopKind
+from battle_simulator.models import (
+    Lane,
+    Role,
+    StatusEffect,
+    TROOP_COSTS,
+    Troop,
+    TroopKind,
+    can_strike,
+)
 from battle_simulator.tournament import STRATEGIES
 
 
@@ -142,8 +150,18 @@ class TacticalSession:
         return [t for t in self.field.living_troops_for(player) if t.name not in self.acted]
 
     def _reachable(self, actor: Troop, enemy: Player) -> list[Troop]:
-        front = any(t.lane == Lane.FRONT for t in self.field.living_troops_for(enemy))
-        return [t for t in self.field.living_troops_for(enemy) if actor.can_reach(t) or not front]
+        """Alvos ao alcance, contando as fileiras a partir de onde o ator esta.
+
+        A retaguarda sobe sozinha quando a frente cai, entao a regra antiga de
+        "sem frente, todo mundo alcanca" virou consequencia da formacao em vez
+        de excecao.
+        """
+        allies = self.field.living_troops_for(self.owner_of(actor))
+        enemies = self.field.living_troops_for(enemy)
+        return [t for t in enemies if can_strike(actor, allies, t, enemies)]
+
+    def owner_of(self, actor: Troop) -> Player:
+        return Player.ONE if actor in self.field.troops_one else Player.TWO
 
     def _choices(self, player: Player, actor: Troop) -> list[dict]:
         if actor.has_effect(StatusEffect.STUN):
