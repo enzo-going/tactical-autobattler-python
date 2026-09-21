@@ -168,10 +168,14 @@ class TacticalSession:
             return [{"action": "wait"}]
         allies = self.field.living_troops_for(player)
         enemies = self.field.living_troops_for(player.opponent)
+        # Arma recarregando nao golpeia nem conjura; proteger, reposicionar e
+        # esperar continuam disponiveis, senao a rodada vira tempo morto.
+        pronta = actor.is_loaded(self.engine.round_number)
         choices = [
-            {"action": "attack", "target": t.name} for t in self._reachable(actor, player.opponent)
+            {"action": "attack", "target": t.name}
+            for t in (self._reachable(actor, player.opponent) if pronta else [])
         ]
-        if not enemies:
+        if pronta and not enemies:
             choices.append({"action": "attack", "target": "base"})
         choices.extend(
             [
@@ -180,7 +184,7 @@ class TacticalSession:
                 {"action": "wait"},
             ]
         )
-        if actor.role == Role.SUPPORT:
+        if actor.role == Role.SUPPORT and pronta:
             choices.extend(
                 {"action": "heal", "target": t.name} for t in allies if t.health < t.max_hp
             )
@@ -217,6 +221,7 @@ class TacticalSession:
                         self.acted.add(enemy.name)
                         self._event("unit_stunned", player.opponent, enemy.name)
             actor.damage_dealt += amount
+            actor.start_reload(self.engine.round_number)
             self.engine.stats.record_damage(player, amount)
         elif action in ("heal", "guard"):
             ally = next(
@@ -224,6 +229,7 @@ class TacticalSession:
             )
             if action == "heal":
                 self._event("heal", player, actor.name, ally.name, ally.heal(2))
+                actor.start_reload(self.engine.round_number)
             else:
                 ally.add_effect(StatusEffect.SHIELD, 2)
                 self._event("shield", player, actor.name, ally.name)

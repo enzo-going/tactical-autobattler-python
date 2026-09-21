@@ -206,8 +206,8 @@ class BattleEngine:
                 "player_two": self._base_state(Player.TWO),
             },
             "troops": {
-                "player_one": self._troop_states(Player.ONE),
-                "player_two": self._troop_states(Player.TWO),
+                "player_one": self.troop_states(Player.ONE),
+                "player_two": self.troop_states(Player.TWO),
             },
             "stats": {
                 "player_one": self._stats_state(Player.ONE),
@@ -219,7 +219,8 @@ class BattleEngine:
         base = self.battlefield.base_for(player)
         return {"name": base.name, "health": base.health, "resources": base.resources}
 
-    def _troop_states(self, player: Player) -> list[dict]:
+    def troop_states(self, player: Player) -> list[dict]:
+        """Ficha das tropas de um lado, como sai no relatorio e nos snapshots."""
         return [
             {
                 "name": troop.name,
@@ -231,6 +232,8 @@ class BattleEngine:
                 "defense": troop.defense,
                 "speed": troop.speed,
                 "range": troop.range,
+                "reload": troop.reload,
+                "reloading": troop.reload_left(self.round_number),
                 "cost": troop.cost,
                 "effects": {effect.value: duration for effect, duration in troop.effects.items()},
                 "damage_dealt": troop.damage_dealt,
@@ -427,6 +430,8 @@ class BattleEngine:
         return self._perform_attack(player, attacker, order.target_index)
 
     def _perform_support_action(self, player: Player, attacker: Troop) -> list[BattleEvent]:
+        if not attacker.is_loaded(self.round_number):
+            return []
         allies = [
             troop
             for troop in self.battlefield.living_troops_for(player)
@@ -438,6 +443,7 @@ class BattleEngine:
         healed = target.heal(2)
         if healed <= 0:
             return []
+        attacker.start_reload(self.round_number)
         return [
             BattleEvent(
                 event_type="heal",
@@ -486,9 +492,23 @@ class BattleEngine:
         enemies = self.battlefield.living_troops_for(player.opponent)
         enemy_base = self.battlefield.base_for(player.opponent)
 
+        if not attacker.is_loaded(self.round_number):
+            faltam = attacker.reload_left(self.round_number)
+            return [
+                BattleEvent(
+                    event_type="reloading",
+                    round_number=self.round_number,
+                    player=player,
+                    actor=attacker.name,
+                    amount=faltam,
+                    message=f"{attacker.name} is reloading for {faltam} more round(s).",
+                )
+            ]
+
         if not enemies:
             applied = enemy_base.receive_damage(attacker.attack)
             attacker.damage_dealt += applied
+            attacker.start_reload(self.round_number)
             self.stats.record_damage(player, applied)
             return [
                 BattleEvent(
@@ -530,6 +550,7 @@ class BattleEngine:
 
         applied = target.receive_damage(attacker.attack)
         attacker.damage_dealt += applied
+        attacker.start_reload(self.round_number)
         self.stats.record_damage(player, applied)
         events = [
             BattleEvent(

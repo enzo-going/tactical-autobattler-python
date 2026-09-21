@@ -206,6 +206,54 @@ class BattleEngineTest(unittest.TestCase):
         self.assertEqual(engine.battlefield.troops_two[1].health, 3)
         self.assertTrue(any(event.event_type == "out_of_range" for event in events))
 
+    def test_heavy_weapon_waits_its_reload_before_striking_again(self):
+        """Martelo de recarga 1 golpeia, espera uma rodada e volta a golpear."""
+        martelo = Tank("Martelo", lane=Lane.FRONT)
+        alvo = Guardian("Alvo", lane=Lane.FRONT)
+        alvo.max_hp = 99
+        alvo.current_hp = 99
+        battlefield = Battlefield(troops_one=[martelo], troops_two=[alvo])
+        engine = BattleEngine(battlefield)
+
+        tipos = []
+        for _ in range(4):
+            eventos = engine.play_round(
+                {
+                    Player.ONE: TurnPlan(attacks=(AttackOrder(attacker_index=0, target_index=0),)),
+                    Player.TWO: TurnPlan(),
+                }
+            )
+            tipos.append(
+                [e.event_type for e in eventos if e.actor == "Martelo" and e.event_type in
+                 {"unit_attack", "reloading"}]
+            )
+
+        self.assertEqual(
+            [t[0] for t in tipos],
+            ["unit_attack", "reloading", "unit_attack", "reloading"],
+        )
+
+    def test_light_weapon_strikes_every_round(self):
+        """Recarga 0 e golpe a cada rodada: a espada nao espera."""
+        espada = Soldier("Espada", lane=Lane.FRONT)
+        alvo = Guardian("Alvo", lane=Lane.FRONT)
+        alvo.max_hp = 99
+        alvo.current_hp = 99
+        engine = BattleEngine(Battlefield(troops_one=[espada], troops_two=[alvo]))
+
+        golpes = 0
+        for _ in range(3):
+            eventos = engine.play_round(
+                {
+                    Player.ONE: TurnPlan(attacks=(AttackOrder(attacker_index=0, target_index=0),)),
+                    Player.TWO: TurnPlan(),
+                }
+            )
+            golpes += sum(
+                1 for e in eventos if e.actor == "Espada" and e.event_type == "unit_attack"
+            )
+        self.assertEqual(golpes, 3)
+
     def test_troop_without_reach_advances_instead_of_wasting_the_round(self):
         """O modo automatico nao tem ordem de mover: quem nao alcanca, avanca."""
         atrasado = Soldier("Atrasado", lane=Lane.BACK)
