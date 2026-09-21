@@ -15,7 +15,9 @@ vanguarda e retaguarda, cada função com arte própria.
 > no site após merge e conclusão do workflow Pages. Para testar uma branch,
 > siga as instruções locais abaixo.
 
-![Combate interativo: escolha de unidade, ordem e alvo](docs/images/interactive-desktop.png)
+![Dois exércitos em formação no campo de batalha, com vanguarda e retaguarda de cada lado](docs/images/campo.svg)
+
+<sub>O cenário e o elenco acima são os arquivos do próprio jogo, compostos por `tools/make_key_art.py`.</sub>
 
 ## O campo
 
@@ -77,11 +79,21 @@ diferenças de regras, contrato de comandos e processo de migração.
 | Guardião | 4 | Resiste a golpes e pode proteger um aliado |
 | Médico | 5 | Pode curar 2 de vida de um aliado, inclusive a si mesmo |
 | Tanque | 5 | Ataque forte que atordoa o alvo |
+| Lanceiro | 4 | Alcance 2: golpeia a vanguarda rival sem sair da retaguarda |
 
 Todas as peças podem atacar, proteger a si mesmas, trocar de linha ou esperar.
-Cada ordem consome a ação. A vanguarda impede ataques corpo a corpo à retaguarda;
-sem tropas na frente, o fundo fica exposto. Unidades de alcance 2 atingem ambas
-as linhas mesmo com a vanguarda ocupada.
+Cada ordem consome a ação.
+
+O alcance é contado **em fileiras, a partir de onde a tropa está**: vanguarda
+contra vanguarda é uma fileira, e da sua retaguarda até a vanguarda rival são
+duas. Espada, escudo e martelo — alcance 1 — só lutam na linha de frente:
+guardados atrás, não alcançam ninguém e gastam a ação avançando. O Lanceiro e o
+Arqueiro, de alcance 2, golpeiam a vanguarda rival sem sair da retaguarda, mas
+nem eles chegam ao fundo inimigo enquanto a vanguarda rival estiver de pé — são
+três fileiras. Quando uma vanguarda cai inteira, a retaguarda daquele lado vira
+a nova linha de frente e fica exposta a todos.
+
+É a formação, e não só a ficha da unidade, que decide a batalha.
 
 A seed define quem abre a primeira rodada; a prioridade alterna nas seguintes.
 Os estilos rivais mudam as compras. Durante o combate, todos usam a mesma
@@ -116,13 +128,6 @@ depender de arrastar peças, hover ou precisão do mouse.
 Há foco de teclado visível, rótulos de vida e ações, avisos de turno anunciados
 por leitores de tela, manual e preferência de movimento reduzido. O diário
 mostra os seis eventos mais recentes e permite abrir todo o histórico.
-
-<details>
-<summary>Ver a interface no celular</summary>
-
-<img src="docs/images/interactive-mobile.png" alt="Tabuleiro e painel de ordens em uma tela de 390 pixels" width="320">
-
-</details>
 
 ## Arquitetura Python / POO
 

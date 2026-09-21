@@ -7,7 +7,7 @@
 - Testes automatizados, CI e publicação via GitHub Pages.
 - Interface de replay usando o próprio pacote Python no navegador.
 
-## Fase II — jogo interativo (0.3, implementada nesta versão)
+## Fase II — jogo interativo (0.3, concluída)
 
 - Sessão entre comandos, com preparação, combate, revisão e desfecho.
 - Recrutamento manual, duas linhas e limite de oito tropas.
@@ -46,19 +46,25 @@ Já entregue:
   papel e cor de pano indicando o exército.
 - Reação visível: respiração parada, golpe, dano e cura, com interruptor para
   desligar o movimento.
+- Alcance contado em fileiras a partir de quem ataca, com a retaguarda subindo
+  quando a vanguarda cai, e o Lanceiro como a arma de haste que golpeia da
+  segunda linha (0.4).
 
-Próximos passos na mesma direção — agora do lado das regras, não do desenho:
+Próximos passos na mesma direção — do lado das regras:
 
-1. Alcance por fileira: lança e pique atingindo duas linhas à frente, o que dá
-   sentido tático a posicionar fundo e frente.
-2. Tempo de recarga por arma, e conjuração mais lenta que o golpe comum, para a
+1. Tempo de recarga por arma, e conjuração mais lenta que o golpe comum, para a
    ordem das ações virar decisão em vez de consequência da velocidade.
-3. Unidades que ocupam dois espaços — cavalaria forte, mas vulnerável a lanças.
-4. Facções com forças e fraquezas próprias, em vez de um só elenco espelhado.
-5. Estados visíveis na arte: sangramento, escudo e atordoamento como marcas na
+2. Unidades que ocupam dois espaços — cavalaria forte, mas vulnerável a lanças.
+   A referência é explícita: cavalo morre para lança.
+3. Facções com forças e fraquezas próprias, em vez de um só elenco espelhado.
+4. Estados visíveis na arte: sangramento, escudo e atordoamento como marcas na
    figura, não apenas como texto embaixo dela.
-6. Campanha: sequência de confrontos com um esquadrão que persiste entre
+5. Campanha: sequência de confrontos com um esquadrão que persiste entre
    partidas. Depende de salvar/retomar sessão, que já está na lista acima.
+
+Pendência de equilíbrio, anterior a esta fase: o estilo `defensive` perde todas
+as batalhas do torneio, e perdia antes do alcance por fileira. É composição, não
+alcance — merece medida e PR próprio.
 
 ## Depois, se fizer sentido
 

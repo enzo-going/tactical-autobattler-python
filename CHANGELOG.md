@@ -1,12 +1,30 @@
 # Changelog
 
-## Não lançado
+## 0.4.0 — Capítulo III: a linha decide
+
+### Regras
+
+- **O alcance passa a ser contado em fileiras, a partir de quem ataca.** Antes
+  só a fileira do alvo contava, e uma espada guardada na retaguarda batia como a
+  que estava na linha de choque. Agora vanguarda contra vanguarda é uma fileira,
+  e da retaguarda até a vanguarda rival são duas: quem tem alcance 1 precisa
+  estar na frente para lutar.
+- A retaguarda sobe sozinha quando a vanguarda cai — a regra antiga de "sem
+  vanguarda, todos alcançam o fundo" virou consequência da formação.
+- **Lanceiro**, alcance 2, custo 4: golpeia a vanguarda rival sem sair da
+  retaguarda. É a peça que torna a segunda fileira uma posição ofensiva.
+- No modo automático, que não tem ordem de reposicionamento, quem não alcança
+  gasta a ação avançando em vez de ficar parado.
+- Medido em 480 batalhas: a vantagem de quem abre a rodada caiu de +16,7 p.p.
+  para 0,0 — a posição passou a pesar mais que a iniciativa.
 
 ### Interface
 
-Nada disso saiu em versão ainda: as três passagens de cor desta rodada estão
-resumidas aqui pelo estado final, não pelo caminho.
-
+- Manual com a seção de alcance e formação, no lugar do texto que descrevia a
+  regra antiga.
+- Os módulos Python que o navegador busca em tempo de execução passam a carregar
+  versionados: sem isso, quem já tinha aberto o jogo continuava jogando com o
+  motor antigo em cache.
 - **Paleta neutra.** As superfícies perdem a matiz própria — ardósia em vez do
   oliva antigo e do marrom que veio depois. A única cor que sobra na tela é a
   que significa alguma coisa: azul é o seu lado, vermelho é o rival, latão é
