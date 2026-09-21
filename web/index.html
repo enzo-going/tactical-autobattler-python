@@ -12,14 +12,14 @@
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%239dccec' d='M4 4h6v6h4V4h4v6h4V4h6v24H4z'/%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="characters.css?v=field-1" />
-    <link rel="stylesheet" href="game.css?v=field-1" />
+    <link rel="stylesheet" href="characters.css?v=fileiras-1" />
+    <link rel="stylesheet" href="game.css?v=fileiras-1" />
     <script
       defer
       src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"
     ></script>
-    <script defer src="characters.js?v=field-1"></script>
-    <script defer src="game.js?v=field-1"></script>
+    <script defer src="characters.js?v=fileiras-1"></script>
+    <script defer src="game.js?v=fileiras-1"></script>
   </head>
   <body>
     <a class="skip" href="#battlefield">Ir ao campo</a>
@@ -284,10 +284,23 @@
         O Médico pode curar um aliado; o Guardião pode proteger outra peça. Você
         decide quando usar essas habilidades.
       </p>
+      <h3>Alcance e formação</h3>
       <p>
-        A vanguarda bloqueia ataques corpo a corpo à retaguarda. Arqueiros e
-        Médicos alcançam as duas linhas. Sem vanguarda, todas as peças podem
-        alcançar o fundo.
+        O alcance é contado <b>em fileiras, a partir de onde a tropa está</b>.
+        Vanguarda contra vanguarda é uma fileira; da sua retaguarda até a
+        vanguarda rival são duas.
+      </p>
+      <p>
+        Por isso espada, escudo e martelo — alcance 1 — só lutam na linha de
+        frente: guardados atrás, não alcançam ninguém e precisam avançar. O
+        <b>Lanceiro</b>, de alcance 2, golpeia a vanguarda rival sem sair da
+        retaguarda, e o Arqueiro faz o mesmo de longe. Nem eles chegam à
+        retaguarda inimiga enquanto a vanguarda rival estiver de pé: são três
+        fileiras.
+      </p>
+      <p>
+        Quando uma vanguarda cai inteira, a retaguarda daquele lado vira a nova
+        linha de frente — e passa a ser alcançável por todo mundo.
       </p>
       <h3>Efeitos</h3>
       <p>
