@@ -105,6 +105,44 @@ class TacticalSessionTest(unittest.TestCase):
             self.act(game, "Soldier 1", "attack", target="Archer 2")
         self.assertEqual(game.state(), before)
 
+    def test_reload_blocks_the_weapon_but_not_the_rest_of_the_turn(self):
+        """Arma recarregando tira o golpe da lista, nao a rodada inteira."""
+        martelo = Tank("Martelo 1", lane=Lane.FRONT)
+        game = self.combat(
+            [martelo, Soldier("Escudeiro 1", lane=Lane.FRONT)],
+            [Guardian("Muralha 1", lane=Lane.FRONT)],
+        )
+        # Sem renda o rival nao recruta, e o teste mede so a recarga.
+        game.field.base_two.resource_income = 0
+
+        self.assertTrue(
+            [a for a in game.state()["legal_actions"]["Martelo 1"] if a["action"] == "attack"]
+        )
+        self.act(game, "Martelo 1", "attack", target="Muralha 1")
+
+        rodada = game.engine.round_number
+        # Recarga 1: fora nesta rodada e na proxima, pronta na seguinte.
+        self.assertFalse(martelo.is_loaded(rodada))
+        self.assertFalse(martelo.is_loaded(rodada + 1))
+        self.assertTrue(martelo.is_loaded(rodada + 2))
+
+        # Fecha a rodada com as outras pecas so esperando e comeca a seguinte.
+        while game.phase == "combat":
+            pronta = next(iter(game.state()["legal_actions"]), None)
+            if pronta is None:
+                break
+            self.act(game, pronta, "wait")
+        game.command({"type": "next"})
+        if game.phase == "recruit":
+            game.command({"type": "begin"})
+
+        acoes = game.state()["legal_actions"].get("Martelo 1", [])
+        self.assertFalse(
+            [a for a in acoes if a["action"] == "attack"],
+            "martelo recarregando nao deveria oferecer golpe",
+        )
+        self.assertTrue([a for a in acoes if a["action"] in {"guard", "move", "wait"}])
+
     def test_pike_strikes_from_the_second_row_and_the_sword_does_not(self):
         """A lanca e o motivo de existir retaguarda ofensiva.
 

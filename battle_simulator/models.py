@@ -75,6 +75,10 @@ class Troop:
     cost: int
     role: Role
     lane: Lane = Lane.FRONT
+    # Rodadas de espera depois de usar a arma. Zero e golpe a cada rodada.
+    reload: int = 0
+    # Rodada a partir da qual a arma volta a estar pronta. Zero e sempre pronta.
+    ready_round: int = 0
     current_hp: int | None = None
     effects: dict[StatusEffect, int] = field(default_factory=dict)
     damage_dealt: int = 0
@@ -103,6 +107,20 @@ class Troop:
     def reaches(self, rows: int) -> bool:
         """Alcance em fileiras. Uma lanca de alcance 2 fura a segunda linha."""
         return self.range >= rows
+
+    def is_loaded(self, round_number: int) -> bool:
+        """A arma esta pronta nesta rodada?
+
+        Vale para golpe e para conjuracao -- o que recarrega e a saida da
+        tropa. Proteger, reposicionar e esperar continuam livres.
+        """
+        return round_number >= self.ready_round
+
+    def reload_left(self, round_number: int) -> int:
+        return max(0, self.ready_round - round_number)
+
+    def start_reload(self, round_number: int) -> None:
+        self.ready_round = round_number + self.reload + 1
 
     def attack_troop(self, target: "Troop") -> int:
         return target.receive_damage(self.attack)
@@ -160,6 +178,7 @@ class Soldier(Troop):
             speed=4,
             range=1,
             cost=2,
+            reload=0,
             role=Role.ASSAULT,
             lane=lane,
         )
@@ -175,6 +194,7 @@ class Archer(Troop):
             speed=5,
             range=2,
             cost=3,
+            reload=0,
             role=Role.RANGED,
             lane=lane,
         )
@@ -190,6 +210,7 @@ class Guardian(Troop):
             speed=2,
             range=1,
             cost=4,
+            reload=0,
             role=Role.DEFENDER,
             lane=lane,
         )
@@ -205,6 +226,7 @@ class Medic(Troop):
             speed=3,
             range=2,
             cost=5,
+            reload=1,
             role=Role.SUPPORT,
             lane=lane,
         )
@@ -220,6 +242,7 @@ class Pikeman(Troop):
             speed=3,
             range=2,
             cost=4,
+            reload=0,
             role=Role.ASSAULT,
             lane=lane,
         )
@@ -235,6 +258,7 @@ class Tank(Troop):
             speed=1,
             range=1,
             cost=5,
+            reload=1,
             role=Role.ASSAULT,
             lane=lane,
         )

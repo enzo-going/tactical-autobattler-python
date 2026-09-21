@@ -283,8 +283,8 @@ def _build_report(engine: BattleEngine, result) -> dict:
             "player_two": _base_snapshot(battlefield.base_for(Player.TWO)),
         },
         "troops_remaining": {
-            "player_one": [_troop_snapshot(troop) for troop in battlefield.troops_for(Player.ONE)],
-            "player_two": [_troop_snapshot(troop) for troop in battlefield.troops_for(Player.TWO)],
+            "player_one": engine.troop_states(Player.ONE),
+            "player_two": engine.troop_states(Player.TWO),
         },
         "round_snapshots": engine.round_snapshots,
         "event_count": len(result.events),
@@ -300,22 +300,6 @@ def _base_snapshot(base) -> dict:
     }
 
 
-def _troop_snapshot(troop) -> dict:
-    return {
-        "name": troop.name,
-        "role": troop.role.value,
-        "lane": troop.lane.value,
-        "max_hp": troop.max_hp,
-        "current_hp": troop.health,
-        "attack": troop.attack,
-        "defense": troop.defense,
-        "speed": troop.speed,
-        "range": troop.range,
-        "cost": troop.cost,
-        "effects": {effect.value: duration for effect, duration in troop.effects.items()},
-        "damage_dealt": troop.damage_dealt,
-        "damage_received": troop.damage_received,
-    }
 
 
 if __name__ == "__main__":
