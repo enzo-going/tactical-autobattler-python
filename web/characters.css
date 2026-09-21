@@ -1,0 +1,11 @@
+/* Shared original cast: cloth differentiates armies, equipment identifies roles. */
+.character { --cloth: #4d7ead; --cloth-dark: #354b6d; display: inline-block; overflow: visible; }
+.enemy-character,.side.red .character { --cloth: #a15368; --cloth-dark: #633949; }
+.character .figure-body { transform-origin: 58px 110px; }
+.piece:not(.spent) .figure-body { animation: stand-breathe 3.6s ease-in-out infinite; }
+.piece:nth-child(even) .figure-body { animation-delay: -.9s; }
+.piece[data-kind="tank"] .figure-body { animation-duration: 4.4s; }
+.piece.enemy-piece .character { transform: scaleX(-1); }
+@keyframes stand-breathe { 50% { transform: translateY(-1.8px) rotate(-.7deg); } }
+@media (prefers-reduced-motion: reduce) { .character * { animation: none !important; } }
+body.motion-paused .character * { animation: none !important; }

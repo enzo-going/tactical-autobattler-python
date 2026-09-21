@@ -535,7 +535,9 @@ function makeUnitNode(unit) {
   const node = el("div", "unit");
   node.dataset.name = unit.name;
 
-  node.appendChild(el("div", "unit-icon", UNITS[unit.kind] ? UNITS[unit.kind].icon : "•"));
+  const art = el("div", "unit-icon");
+  art.innerHTML = BattleArt.portrait(unit.kind, unit.owner === 2);
+  node.appendChild(art);
 
   const info = el("div", "unit-info");
   const top = el("div", "unit-top");
@@ -1345,7 +1347,9 @@ function buildManual() {
     card.appendChild(el("div", "cost-badge", `🪙 ${unit.cost}`));
 
     const head = el("div", "head");
-    head.appendChild(el("div", "em", meta.icon));
+    const art = el("div", "em");
+    art.innerHTML = BattleArt.portrait(unit.kind);
+    head.appendChild(art);
     const title = el("div");
     title.appendChild(el("div", "nm", meta.name));
     title.appendChild(el("div", "role", ROLE_PT[unit.role] || unit.role));

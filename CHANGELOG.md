@@ -25,6 +25,15 @@ resumidas aqui pelo estado final, não pelo caminho.
   aparecia azul. O aviso de vida baixa e crítica continua em latão e vermelho.
 - Contraste conferido par a par, em três famílias: texto sobre a superfície,
   superfície contra superfície e um lado contra o outro.
+- **O campo vira cenário.** O tabuleiro deixa de ser uma grade e passa a ser uma
+  paisagem em SVG, com as quatro linhas de formação viradas uma para a outra,
+  como nos auto-battlers de formação de navegador que inspiraram o projeto.
+- **Elenco original em vetor**: um desenho por função, com equipamento que
+  identifica o papel e cor de pano que identifica o exército. As figuras
+  respiram paradas, reagem ao golpe e à cura; o botão Animações desliga tudo.
+- O laboratório usa o mesmo elenco no replay e no manual, sobre o mesmo cenário.
+- Números de dano sobem sobre a tropa atingida, em vez de só aparecerem no
+  diário de combate.
 
 ### Documentação
 

@@ -1323,3 +1323,19 @@ body::before, .commander::before { display: none; }
     transition-duration: .001ms !important;
   }
 }
+
+/* Same illustrated world and original cast as the interactive field. */
+body { background: radial-gradient(ellipse at 50% 0, #2b3444, transparent 65%), #11151d; }
+:root { --panel: #202735; --panel-2: #293243; --panel-3: #303b4d; --line: #465164; --text: #ede9dc; --muted: #b6bdc9; --blue: #9dccec; --red: #efabb1; --gold: #d1be8b; }
+.arena { background: linear-gradient(#17213055, #172130b0), url("battlefield.svg") center/cover; border: 1px solid #8491a4; }
+.arena .lane { background: #17213070; }
+.arena .unit { background: #1d2a3be8; border-color: #6b8095; grid-template-columns: 58px minmax(0,1fr); }
+.unit-icon .character { width: 58px; height: 66px; }
+.unit-card .em .character { width: 78px; height: 90px; }
+.unit-card, .commander, .fort { border-radius: 4px; box-shadow: inset 0 1px #becbd61c; }
+.masthead h1, .commander-name, .unit-card .nm { font-family: Georgia, serif; text-transform: none; }
+.side.red .character { transform: scaleX(-1); }
+@media (max-width: 600px) {
+  .arena .unit { grid-template-columns: 48px minmax(0,1fr); }
+  .unit-icon .character { width: 48px; height: 56px; }
+}

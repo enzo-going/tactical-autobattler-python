@@ -3,8 +3,9 @@
 [![Tests](https://github.com/enzo-going/tactical-autobattler-python/actions/workflows/tests.yml/badge.svg)](https://github.com/enzo-going/tactical-autobattler-python/actions/workflows/tests.yml)
 [![Pages](https://github.com/enzo-going/tactical-autobattler-python/actions/workflows/pages.yml/badge.svg)](https://github.com/enzo-going/tactical-autobattler-python/actions/workflows/pages.yml)
 
-Um pequeno jogo tático em turnos feito em Python. Recrute um esquadrão, escolha
-a ação de cada unidade e abra caminho até o forte adversário.
+Um pequeno jogo tático em turnos feito em Python. Recrute um esquadrão, forme a
+linha e abra caminho até o forte adversário. As tropas ficam de pé no campo, em
+vanguarda e retaguarda, cada função com arte própria.
 
 **[Jogar no navegador](https://enzo-going.github.io/tactical-autobattler-python/)** ·
 [Laboratório de simulação](https://enzo-going.github.io/tactical-autobattler-python/simulator.html) ·
@@ -15,6 +16,21 @@ a ação de cada unidade e abra caminho até o forte adversário.
 > siga as instruções locais abaixo.
 
 ![Combate interativo: escolha de unidade, ordem e alvo](docs/images/interactive-desktop.png)
+
+## O campo
+
+A partida acontece sobre um cenário desenhado à mão em SVG — serra, neblina e um
+forte em ruínas entre os dois estandartes — e não sobre uma grade neutra. Cada
+lado ocupa duas linhas de formação, vanguarda e retaguarda, viradas uma para a
+outra: a leitura do campo é a mesma dos auto-battlers de formação de navegador
+que inspiraram o projeto.
+
+O elenco é vetorial e original, um desenho por função — soldado, arqueiro,
+guardião, médico e tanque —, com equipamento que identifica o papel e a cor do
+pano identificando o exército. As figuras respiram paradas, reagem ao golpe e à
+cura, e o botão **Animações** desliga tudo isso para quem preferir o campo
+imóvel. Nada disso depende de imagem externa: são os mesmos arquivos que o
+laboratório usa no replay.
 
 ## Capítulo II — sob seu comando
 
