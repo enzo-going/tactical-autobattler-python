@@ -15,6 +15,7 @@ const NAMES = {
   guardian: "Guardião",
   medic: "Médico",
   tank: "Tanque",
+  pikeman: "Lanceiro",
 };
 const DESCRIPTIONS = {
   soldier: "Linha de frente · baixo custo",
@@ -22,6 +23,7 @@ const DESCRIPTIONS = {
   guardian: "Resistência · protege aliados",
   medic: "Suporte · cura 2 de vida",
   tank: "Impacto · atordoa o alvo",
+  pikeman: "Alcance 2 · golpeia da retaguarda",
 };
 const STYLES = {
   balanced: "Equilibrado",
@@ -49,7 +51,7 @@ const label = (name) =>
   name === "base"
     ? "Forte rival"
     : String(name || "").replace(
-        /^(Soldier|Archer|Guardian|Medic|Tank)/,
+        /^(Soldier|Archer|Guardian|Medic|Tank|Pikeman)/,
         (v) => NAMES[v.toLowerCase()],
       );
 const esc = (text) =>
@@ -73,8 +75,13 @@ function button(text, fn, className = "") {
   b.addEventListener("click", fn);
   return b;
 }
+// Mesma versao declarada no HTML: os modulos Python tambem precisam dela, ou o
+// navegador continua rodando o motor antigo que ficou em cache.
+const ASSET_VERSION =
+  document.querySelector('script[src*="game.js"]')?.src.split("?v=")[1] || "";
+const versioned = (path) => (ASSET_VERSION ? `${path}?v=${ASSET_VERSION}` : path);
 async function source(path) {
-  const response = await fetch(path);
+  const response = await fetch(versioned(path));
   if (!response.ok) throw new Error(`Não foi possível carregar ${path}.`);
   return response.text();
 }

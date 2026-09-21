@@ -69,8 +69,13 @@ const UNITS = {
   guardian: { name: "Guardião", icon: "🛡️" },
   medic: { name: "Médico", icon: "➕" },
   tank: { name: "Tanque", icon: "🪓" },
+  pikeman: { name: "Lanceiro", icon: "🔱" },
 };
 
+// Mesma versao declarada no HTML, para o motor Python nao ficar preso em cache.
+const ASSET_VERSION =
+  document.querySelector('script[src*="app.js"]')?.src.split("?v=")[1] || "";
+const versioned = (path) => (ASSET_VERSION ? `${path}?v=${ASSET_VERSION}` : path);
 const ROLE_PT = { assault: "Assalto", defender: "Defensor", ranged: "Alcance", support: "Suporte" };
 const LANE_PT = { front: "frente", back: "fundo" };
 const EFFECT_PT = { bleed: "sangramento", shield: "escudo", stun: "atordoamento" };
@@ -226,7 +231,7 @@ async function boot() {
 
     const sources = await Promise.all(
       MODULES.map((name) =>
-        fetch(`battle_simulator/${name}`).then((response) => {
+        fetch(versioned(`battle_simulator/${name}`)).then((response) => {
           if (!response.ok) throw new Error(`Falha ao baixar ${name} (HTTP ${response.status})`);
           return response.text();
         })
@@ -236,7 +241,7 @@ async function boot() {
       pyodide.FS.writeFile(`/app/battle_simulator/${name}`, sources[index]);
     });
 
-    const bridgeSource = await fetch("playground.py").then((response) => response.text());
+    const bridgeSource = await fetch(versioned("playground.py")).then((response) => response.text());
     pyodide.FS.writeFile("/app/playground.py", bridgeSource);
 
     bridge = await pyodide.runPythonAsync(`
