@@ -72,14 +72,14 @@ diferenças de regras, contrato de comandos e processo de migração.
    conta o dano de golpes causado (sem sangramento). Persistindo a igualdade,
    há empate.
 
-| Unidade | Custo | O que oferece |
-| --- | ---: | --- |
-| Soldado | 2 | Linha de frente barata |
-| Arqueiro | 3 | Alcança as duas linhas e causa sangramento |
-| Guardião | 4 | Resiste a golpes e pode proteger um aliado |
-| Médico | 5 | Pode curar 2 de vida de um aliado, inclusive a si mesmo |
-| Tanque | 5 | Ataque forte que atordoa o alvo |
-| Lanceiro | 4 | Alcance 2: golpeia a vanguarda rival sem sair da retaguarda |
+| Unidade | Custo | Alcance | Recarga | O que oferece |
+| --- | ---: | :---: | :---: | --- |
+| Soldado | 2 | 1 | — | Linha de frente barata |
+| Arqueiro | 3 | 2 | — | Atinge de longe e causa sangramento |
+| Guardião | 4 | 1 | — | Resiste a golpes e pode proteger um aliado |
+| Médico | 5 | 2 | 1 rodada | Cura 2 de vida; a conjuração demora |
+| Tanque | 5 | 1 | 1 rodada | Golpe pesado que atordoa o alvo |
+| Lanceiro | 4 | 2 | — | Golpeia a vanguarda rival sem sair da retaguarda |
 
 Todas as peças podem atacar, proteger a si mesmas, trocar de linha ou esperar.
 Cada ordem consome a ação.
@@ -93,7 +93,13 @@ nem eles chegam ao fundo inimigo enquanto a vanguarda rival estiver de pé — s
 três fileiras. Quando uma vanguarda cai inteira, a retaguarda daquele lado vira
 a nova linha de frente e fica exposta a todos.
 
-É a formação, e não só a ficha da unidade, que decide a batalha.
+Cada arma também tem a sua **cadência**. O martelo do Tanque e a conjuração do
+Médico gastam a rodada seguinte recarregando — nessa rodada a peça ainda pode
+proteger, reposicionar ou esperar, mas não golpear nem curar. Por isso o
+esquadrão rende mais quando mistura cadências: enquanto o martelo recarrega, a
+linha de frente sustenta o dano.
+
+É a formação e o tempo, e não só a ficha da unidade, que decidem a batalha.
 
 A seed define quem abre a primeira rodada; a prioridade alterna nas seguintes.
 Os estilos rivais mudam as compras. Durante o combate, todos usam a mesma

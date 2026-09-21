@@ -50,10 +50,13 @@ Já entregue:
   quando a vanguarda cai, e o Lanceiro como a arma de haste que golpeia da
   segunda linha (0.4).
 
+- Recarga por arma: martelo pesado e conjuração esperam uma rodada (0.5).
+
 Próximos passos na mesma direção — do lado das regras:
 
-1. Tempo de recarga por arma, e conjuração mais lenta que o golpe comum, para a
-   ordem das ações virar decisão em vez de consequência da velocidade.
+1. Cadência para as armas de alcance, junto com uma revisão da renda por rodada.
+   Medido e adiado: com o arco recarregando, a vazão de dano cai abaixo do ritmo
+   de reforço e nenhuma batalha termina antes do limite de rodadas.
 2. Unidades que ocupam dois espaços — cavalaria forte, mas vulnerável a lanças.
    A referência é explícita: cavalo morre para lança.
 3. Facções com forças e fraquezas próprias, em vez de um só elenco espelhado.
