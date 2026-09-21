@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.5.0 — Cadência
+
+### Regras
+
+- **Recarga por arma.** O martelo do Tanque e a conjuração do Médico gastam a
+  rodada seguinte recarregando. Enquanto recarrega, a peça não golpeia nem cura,
+  mas continua podendo proteger, reposicionar e esperar — a rodada não vira
+  tempo morto. Vale também para o golpe no forte.
+- Espada, escudo, lança e arco seguem agindo todas as rodadas. Dar cadência ao
+  arco foi medido e reprovado: a vazão de dano cai abaixo do ritmo de reforço,
+  o campo nunca esvazia e todas as batalhas passam a terminar no limite de
+  rodadas. Fica para quando a renda por rodada for revista.
+- Medido em 480 batalhas: as batalhas continuam terminando antes do limite
+  (23,2 rodadas em média), a diferença entre quem abre a rodada e quem responde
+  segue em 0,0 p.p. e o equilíbrio entre estilos não mudou.
+
+### Interface
+
+- A peça mostra **⟳ Recarregando** com as rodadas que faltam, e a ficha da
+  unidade lista a cadência ao lado de ataque, defesa e alcance.
+- Manual com a seção de recarga.
+
+### Correções
+
+- Havia dois serializadores de tropa, um no motor e outro na CLI, e só um
+  conhecia os campos novos. O relatório passa a usar o do motor.
+
 ## 0.4.0 — Capítulo III: a linha decide
 
 ### Regras
