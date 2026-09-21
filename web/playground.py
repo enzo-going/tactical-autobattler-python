@@ -52,6 +52,7 @@ def catalog() -> str:
                 "defense": troop.defense,
                 "speed": troop.speed,
                 "range": troop.range,
+                "reload": troop.reload,
                 "cost": troop.cost,
             }
         )
