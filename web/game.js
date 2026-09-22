@@ -300,13 +300,15 @@ function renderBoard() {
           node(
             "div",
             "empty-slot",
-            side === "ally" ? "Recrute tropas para esta linha" : "O rival se prepara",
+            state.phase === "recruit" ? (side === "ally" ? "Recrute tropas para esta linha" : "O rival se prepara") : "Linha sem tropas",
           ),
         );
       for (const t of troops) {
         const choice = targets.find((c) => c.target === t.name);
         const ready = Boolean(state.legal_actions[t.name]);
         const spent = state.acted.includes(t.name);
+        const reloading = t.reload > 0 && t.reloading > 0;
+        const weaponHint = reloading ? `Arma pronta na rodada ${t.ready_round}` : "";
         const b = button(
           "",
           () => {
@@ -329,7 +331,7 @@ function renderBoard() {
         b.dataset.focus = `unit-${t.name}`;
         b.setAttribute(
           "aria-label",
-          `${label(t.name)}, ${t.current_hp} de ${t.max_hp} de vida, ${choice ? "confirmar " + ACTIONS[mode] : spent ? "já agiu" : ready ? "pronta" : "em campo"}`,
+          `${label(t.name)}, ${t.current_hp} de ${t.max_hp} de vida, ${choice ? "confirmar " + ACTIONS[mode] : spent ? "já agiu" : ready ? "ação disponível" : "em campo"}${weaponHint ? ", " + weaponHint : ""}`,
         );
         if (side === "ally")
           b.setAttribute("aria-pressed", String(selected === t.name));
@@ -337,7 +339,7 @@ function renderBoard() {
         b.dataset.unit = t.name;
         for (const effect of Object.keys(EFFECTS))
           b.classList.toggle(`status-${effect}`, Boolean(t.effects[effect]));
-        b.innerHTML = `<div class="piece-art">${portrait(kindOf(t.name), side === "enemy")}</div><div class="piece-body"><span class="piece-name">${esc(label(t.name))}</span><span class="piece-stats">ATQ ${t.attack} · DEF ${t.defense}</span><div class="hp-line"><span class="hp-track"><i style="width:${(t.current_hp / t.max_hp) * 100}%"></i></span><small>${t.current_hp}/${t.max_hp}</small></div><span class="piece-state">${choice ? "↗ Confirmar alvo" : spent ? "— Já agiu" : t.reloading > 0 ? `⟳ Recarregando ${t.reloading}` : ready ? "● Pronta" : "Em posição"}</span></div>`;
+        b.innerHTML = `<div class="piece-art">${portrait(kindOf(t.name), side === "enemy")}</div><div class="piece-body"><span class="piece-name">${esc(label(t.name))}</span><span class="piece-stats"><span>ATQ ${t.attack}</span><span>DEF ${t.defense}</span></span><div class="hp-line"><span class="hp-track"><i style="width:${(t.current_hp / t.max_hp) * 100}%"></i></span><small>${t.current_hp}/${t.max_hp}</small></div><span class="piece-state">${choice ? "↗ Confirmar alvo" : spent ? "— Já agiu" : ready ? "● Pode agir" : "Em posição"}</span>${reloading ? `<span class="weapon-state" title="${weaponHint}">⟳ Arma: R${t.ready_round}</span>` : ""}</div>`;
         const effects = Object.entries(t.effects)
           .map(([e, n]) => `${EFFECTS[e]} ${n}`)
           .join(" · ");
@@ -397,6 +399,9 @@ function renderOrders() {
   $("unit-detail").innerHTML =
     `<div class="unit-heading">${portrait(kindOf(t.name))}<div><h4>${esc(label(t.name))}</h4><small>${t.current_hp}/${t.max_hp} VIDA · ${t.lane === "front" ? "VANGUARDA" : "RETAGUARDA"}</small></div></div><p class="unit-facts">Ataque ${t.attack} · Defesa ${t.defense} · Alcance ${t.range}${t.reload ? ` · Recarga ${t.reload}` : " · Sem recarga"}<br>${DESCRIPTIONS[kindOf(t.name)]}</p>`;
   const choices = state.legal_actions[selected];
+  if (t.reload > 0 && t.reloading > 0)
+    $("unit-detail").append(node("p", "reload-hint",
+      `Recarregando. Ataque e cura voltam na rodada ${t.ready_round}. Você ainda pode proteger, reposicionar ou esperar.`));
   for (const [action, name] of Object.entries(ACTIONS)) {
     const available = choices.filter((c) => c.action === action);
     const b = button(name, () => {
@@ -553,12 +558,14 @@ function updateMotion() {
   document.body.classList.toggle("motion-paused", !motionEnabled);
   $("motion").textContent = motionEnabled ? "Animações: ligadas" : "Animações: pausadas";
   $("motion").setAttribute("aria-pressed", String(motionEnabled));
+  $("motion").disabled = motionQuery.matches;
+  $("motion").title = motionQuery.matches ? "Movimento reduzido nas preferências do sistema." : "";
 }
 $("motion").addEventListener("click", () => {
   motionEnabled = !motionEnabled;
   try { localStorage.setItem("battle-motion", motionEnabled ? "on" : "off"); } catch { /* Optional preference only. */ }
   updateMotion();
 });
-motionQuery.addEventListener("change", e => { if (e.matches) { motionEnabled = false; updateMotion(); } });
+motionQuery.addEventListener("change", e => { if (e.matches) motionEnabled = false; updateMotion(); });
 updateMotion();
 boot();

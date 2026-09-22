@@ -1331,6 +1331,7 @@ body { background: radial-gradient(ellipse at 50% 0, #2b3444, transparent 65%), 
 .arena .lane { background: #17213070; }
 .arena .unit { background: #1d2a3be8; border-color: #6b8095; grid-template-columns: 58px minmax(0,1fr); }
 .unit-icon .character { width: 58px; height: 66px; }
+.unit-cadence { grid-column: 1/-1; color: var(--gold); font-size: 11px; }
 .unit-card .em .character { width: 78px; height: 90px; }
 .unit-card, .commander, .fort { border-radius: 4px; box-shadow: inset 0 1px #becbd61c; }
 .masthead h1, .commander-name, .unit-card .nm { font-family: Georgia, serif; text-transform: none; }

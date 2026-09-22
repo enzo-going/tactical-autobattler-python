@@ -115,7 +115,7 @@ dialog { color: var(--ink); background: var(--surface); border: 2px solid #87929
   .wrap { padding: 0 20px; }.game-layout { grid-template-columns: minmax(0,1fr) 270px; gap: 12px; }.formation { gap: 4px; }.lane { padding: 5px 2px; }.piece .portrait { height: 102px; width: 90px; }.piece-art { height: 95px; }.piece-stats { font-size: 8px; }.lane-label { font-size: 8px; letter-spacing: 0; }.fort .muted { display: none; }
 }
 @media (max-width: 1000px) {
-  .game-layout { grid-template-columns: 1fr; }.command-panel { display: grid; grid-template-columns: 180px minmax(0,1fr); }.command-footer { grid-column: 1/-1; }.supplies { border-bottom: 0; border-right: 1px solid var(--line); }.supplies > div { display: block; }.supplies div span { display: block; text-align: left; }.shop { grid-template-columns: 1fr 1fr; }.shop .recruit:last-child { grid-column: 1/-1; }.piece-art { height: 112px; }.piece .portrait { height: 120px; width: 106px; }.piece-stats { font-size: 9px; }
+  .game-layout { grid-template-columns: 1fr; }.command-panel { display: grid; grid-template-columns: 180px minmax(0,1fr); }.command-footer { grid-column: 1/-1; }.supplies { border-bottom: 0; border-right: 1px solid var(--line); }.supplies > div { display: block; }.supplies div span { display: block; text-align: left; }.shop { grid-template-columns: 1fr 1fr; }.piece-art { height: 112px; }.piece .portrait { height: 120px; width: 106px; }.piece-stats { font-size: 9px; }
 }
 @media (max-width: 600px) {
   .wrap { padding: 0 10px; }.masthead { min-height: 74px; gap: 12px; }.brand { gap: 8px; font-size: 8px; letter-spacing: 2px; }.brand b { font-size: 15px; }.brand-mark { width: 30px; height: 40px; font-size: 25px; }.masthead nav { gap: 12px; font-size: 11px; }.masthead nav a:last-child { display: none; }.text-button { font-size: 11px; }
@@ -126,4 +126,12 @@ dialog { color: var(--ink); background: var(--surface); border: 2px solid #87929
   .command-panel { display: block; }.supplies { border-right: 0; border-bottom: 1px solid var(--line); }.supplies > div { display: flex; }.supplies div span { text-align: right; }.shop { grid-template-columns: 1fr; }.panel-body { padding: 16px; }.journal { padding: 14px; }.journal h3 { font-size: 17px; }.journal li { gap: 8px; }.wrap > footer { flex-direction: column; font-size: 10px; }.notice { flex-wrap: wrap; font-size: 12px; }dialog { padding: 20px; }.dialog-actions { flex-direction: column-reverse; }
 }
 @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+.piece-name { font-size: 11px; min-height: 2.4em; }
+.piece-stats, .hp-line small { font-size: 10px; }
+.piece-stats { display: flex; flex-wrap: wrap; justify-content: center; column-gap: 6px; min-height: 3em; }
+.piece-stats > span { white-space: nowrap; }
+.piece-body { min-height: 111px; }
+.piece-state, .weapon-state, .effects { font-size: 11px; line-height: 1.4; }
+.weapon-state { display: block; color: var(--gold); margin-top: 3px; }
+.reload-hint { font-size: 12px; color: var(--gold); margin: 0 0 16px; }
 body.motion-paused *,body.motion-paused *::before,body.motion-paused *::after { animation: none !important; transition: none !important; }
