@@ -95,6 +95,38 @@ class TroopTest(unittest.TestCase):
 
 
 class BattleEngineTest(unittest.TestCase):
+    def test_casualty_does_not_transfer_its_initiative_to_a_survivor(self):
+        fast = Troop("Fast", 20, 2, 0, 5, 2, 0, Role.ASSAULT)
+        middle = Troop("Middle", 20, 2, 0, 2, 2, 0, Role.ASSAULT)
+        fallen = Troop("Fallen", 1, 2, 0, 4, 2, 0, Role.ASSAULT)
+        slow = Troop("Slow", 20, 2, 0, 1, 2, 0, Role.ASSAULT)
+        engine = BattleEngine(Battlefield(troops_one=[fast, middle], troops_two=[fallen, slow]))
+        events = engine.play_round({
+            player: TurnPlan(attacks=(AttackOrder(0), AttackOrder(1))) for player in Player
+        })
+        self.assertEqual(
+            [e.actor for e in events if e.event_type == "unit_attack"],
+            ["Fast", "Middle", "Slow"],
+        )
+
+    def test_target_identity_survives_an_earlier_casualty(self):
+        first, second, third = [Soldier(name) for name in ("First", "Second", "Third")]
+        first.health = 1
+        engine = BattleEngine(Battlefield(
+            troops_one=[Archer("Archer"), Soldier("Soldier")],
+            troops_two=[first, second, third],
+        ))
+        events = engine.play_round({Player.ONE: TurnPlan(attacks=(AttackOrder(0, 0), AttackOrder(1, 1)))})
+        self.assertEqual([e.target for e in events if e.event_type == "unit_attack"], ["First", "Second"])
+
+    def test_bleeding_casualty_does_not_give_its_order_to_an_unordered_unit(self):
+        fallen, survivor = Soldier("Fallen"), Soldier("Survivor")
+        fallen.health = 1
+        fallen.add_effect(StatusEffect.BLEED, 3)
+        engine = BattleEngine(Battlefield(troops_one=[fallen, survivor]))
+        events = engine.play_round({Player.ONE: TurnPlan(attacks=(AttackOrder(0),))})
+        self.assertFalse([e for e in events if e.event_type == "base_attack"])
+
     def test_equal_speed_actions_interleave_and_priority_flips_each_round(self):
         def durable_troop(name: str) -> Troop:
             return Troop(name, 100, 1, 0, 2, 1, 0, Role.ASSAULT)

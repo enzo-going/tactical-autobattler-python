@@ -168,6 +168,8 @@ class BattleEngine:
         self.opening_initiative = Player.ONE if initiative_seed % 2 == 0 else Player.TWO
 
     def play_round(self, plans: dict[Player, TurnPlan]) -> list[BattleEvent]:
+        # Plans refer to the roster before bleeding and casualties can shift indices.
+        rosters = {player: list(self.battlefield.troops_for(player)) for player in Player}
         self.round_number += 1
         round_events = [
             BattleEvent(
@@ -181,12 +183,16 @@ class BattleEngine:
 
         for player in Player:
             round_events.extend(self._apply_recruit_orders(player, plans.get(player, TurnPlan())))
+            known = {id(troop) for troop in rosters[player]}
+            rosters[player].extend(
+                troop for troop in self.battlefield.troops_for(player) if id(troop) not in known
+            )
 
-        initiative = self._initiative_order(plans)
+        initiative = self._initiative_order(plans, rosters)
         for player, order in initiative:
             if self.battlefield.winner() is not None:
                 break
-            round_events.extend(self._perform_unit_action(player, order))
+            round_events.extend(self._perform_unit_action(player, order, rosters))
             round_events.extend(self.battlefield.remove_defeated(self.round_number))
 
         for player in Player:
@@ -234,6 +240,7 @@ class BattleEngine:
                 "range": troop.range,
                 "reload": troop.reload,
                 "reloading": troop.reload_left(self.round_number),
+                "ready_round": troop.ready_round,
                 "cost": troop.cost,
                 "effects": {effect.value: duration for effect, duration in troop.effects.items()},
                 "damage_dealt": troop.damage_dealt,
@@ -309,8 +316,6 @@ class BattleEngine:
         for player in Player:
             for troop in self.battlefield.living_troops_for(player):
                 for effect, amount in troop.tick_effects():
-                    if amount <= 0:
-                        continue
                     self.stats.damage_taken[player] += amount
                     events.append(
                         BattleEvent(
@@ -364,10 +369,12 @@ class BattleEngine:
                     return events
         return events
 
-    def _initiative_order(self, plans: dict[Player, TurnPlan]) -> list[tuple[Player, AttackOrder]]:
+    def _initiative_order(
+        self, plans: dict[Player, TurnPlan], rosters: dict[Player, list[Troop]]
+    ) -> list[tuple[Player, AttackOrder]]:
         planned: list[tuple[Player, AttackOrder, int]] = []
         for player in Player:
-            troops = list(self.battlefield.troops_for(player))
+            troops = rosters[player]
             for order in plans.get(player, TurnPlan()).attacks:
                 if order.attacker_index < 0 or order.attacker_index >= len(troops):
                     continue
@@ -395,9 +402,11 @@ class BattleEngine:
                         initiative.append(queues[player].popleft())
         return initiative
 
-    def _perform_unit_action(self, player: Player, order: AttackOrder) -> list[BattleEvent]:
+    def _perform_unit_action(
+        self, player: Player, order: AttackOrder, rosters: dict[Player, list[Troop]]
+    ) -> list[BattleEvent]:
         events: list[BattleEvent] = []
-        attackers = self.battlefield.troops_for(player)
+        attackers = rosters[player]
         if order.attacker_index < 0 or order.attacker_index >= len(attackers):
             return events
 
@@ -427,7 +436,17 @@ class BattleEngine:
             if guard_events:
                 return guard_events
 
-        return self._perform_attack(player, attacker, order.target_index)
+        target_index = order.target_index
+        if target_index is not None:
+            planned_enemies = rosters[player.opponent]
+            living = self.battlefield.living_troops_for(player.opponent)
+            if 0 <= target_index < len(planned_enemies):
+                target = planned_enemies[target_index]
+                # Keep a living target's identity; reselect if that target has fallen.
+                target_index = next((i for i, troop in enumerate(living) if troop is target), None)
+            else:
+                target_index = len(living)  # Preserve invalid-order reporting.
+        return self._perform_attack(player, attacker, target_index)
 
     def _perform_support_action(self, player: Player, attacker: Troop) -> list[BattleEvent]:
         if not attacker.is_loaded(self.round_number):
@@ -453,6 +472,7 @@ class BattleEngine:
                 target=target.name,
                 amount=healed,
                 message=f"{attacker.name} healed {target.name} for {healed} HP.",
+                metadata={"ready_round": attacker.ready_round},
             )
         ]
 
@@ -519,6 +539,7 @@ class BattleEngine:
                     target=enemy_base.name,
                     amount=applied,
                     message=f"{attacker.name} attacked {enemy_base.name} base for {applied} damage.",
+                    metadata={"ready_round": attacker.ready_round},
                 )
             ]
 
@@ -562,6 +583,7 @@ class BattleEngine:
                 amount=applied,
                 message=f"{attacker.name} attacked {target.name} for {applied} damage.",
                 metadata={
+                    "ready_round": attacker.ready_round,
                     "attack": attacker.attack,
                     "target_defense": target.defense,
                     "attacker_lane": attacker.lane.value,
