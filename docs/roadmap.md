@@ -24,11 +24,20 @@ Veja os critérios e detalhes em [Fase II](phase-two.md).
 1. Playtests: duração, clareza, utilidade das unidades e vantagem de abrir a
    rodada. Medir o modo interativo separadamente do simulador.
 2. Salvar/retomar sessão com versão de esquema e migração de regras explícitas.
-3. Desfazer compras durante a preparação.
-4. Melhorar o bot: proteção, movimento e estilos próprios de combate.
+3. Ampliar cenários de treino e objetivos para testar diferentes formações.
+4. Dar aos bots estilos próprios de combate e planejamento de várias ações;
+   proteção, movimento e golpes finais básicos foram entregues na 0.7.
 5. Feedback visual breve de dano e movimentação, sem bloquear comandos nem
    prejudicar quem prefere movimento reduzido.
 6. Expandir verificações para Firefox, Safari e leitores de tela.
+
+## Preparação tática (0.7, concluída)
+
+- Formação editável sem custo entre combates, sem curar ou limpar efeitos.
+- Devolução integral de recrutas da preparação atual; veteranos preservados.
+- Previsão de dano, cura e efeitos calculada pelo motor antes da confirmação.
+- Rival usa avanço, proteção e oportunidades de golpe final.
+- [Medição do modo interativo](gameplay.md) com política de jogador fixa.
 
 ## Fase III — as peças ganham vida (direção)
 

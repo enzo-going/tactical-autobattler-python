@@ -57,6 +57,17 @@ recrutamento e ordens automáticas. Seus resultados medem balanceamentos distint
 A [documentação da fase II](docs/phase-two.md) registra decisões de arquitetura,
 diferenças de regras, contrato de comandos e processo de migração.
 
+## Decisões mais claras — 0.7
+
+- **Monte e revise.** Selecione tropas no campo para trocar de linha gratuitamente
+  na preparação. Devolva recrutas recém-comprados pelo custo integral; veteranos
+  mantêm vida e efeitos e não podem ser vendidos.
+- **Compare antes de atacar.** Os alvos mostram dano imediato, vida restante,
+  golpe final e efeitos. Defesa e escudo entram no cálculo do próprio motor.
+- **O rival aproveita a vez.** Avança quando está sem alcance, usa proteção
+  durante a recarga e pode salvar aliados de um golpe fatal. A comparação com
+  a versão anterior está em [Jogabilidade e medição](docs/gameplay.md).
+
 ## Como jogar
 
 1. **Prepare.** Comece com 10 suprimentos e recrute até 8 unidades. Escolha a
@@ -104,8 +115,9 @@ linha de frente sustenta o dano.
 
 A seed define quem abre a primeira rodada; a prioridade alterna nas seguintes.
 Os estilos rivais mudam as compras. Durante o combate, todos usam a mesma
-heurística: unidade mais rápida disponível, cura se possível, ataque ao alvo
-alcançável com menos vida. Você escolhe livremente a ordem de suas peças.
+heurística: unidade mais rápida disponível, golpe final quando possível, cura,
+proteção contra golpe fatal e ataque ao alvo alcançável com menos vida. Sem
+ataque, pode avançar ou se proteger. Você escolhe a ordem de suas peças.
 
 ## Rodar localmente
 
