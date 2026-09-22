@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.7.0 — Preparação tática
+
+- Troque livremente a linha das tropas antes do combate, incluindo veteranos,
+  sem gastar ação ou limpar vida, efeitos e recarga. Durante o combate, mover
+  continua consumindo a ação.
+- Devolva recrutas comprados na preparação atual pelo custo integral. Não é
+  possível vender veteranos ou devolver depois de iniciar o combate.
+- Alvos mostram dano, vida restante, golpe final, efeitos e cura antes da
+  confirmação. A previsão vem do Python e não consome escudos.
+- O rival aproveita golpes finais, protege contra ameaças, avança quando está
+  sem alcance e usa a recarga para se defender quando necessário.
+- Regras interativas identificadas como `tactical-v3`; laboratório continua
+  em `auto-v2`, com os mesmos atributos, custos, renda e estratégias automáticas.
+- [Medição interativa](docs/gameplay.md): 60 partidas por versão, mesma política
+  de jogador; esperas rivais caíram de 198 para 107 e a média ficou em 9,88 rodadas.
+
 ## 0.6.0 — Revisão de formação
 
 - Ordens automáticas mantêm a identidade de atacante e alvo após baixas,

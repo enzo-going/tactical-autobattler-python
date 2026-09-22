@@ -35,7 +35,10 @@ não consomem recursos, unidades, ações ou números de identificação.
 - Recrutar desconta recursos imediatamente. A posição pode ser escolhida.
 - Limite de oito tropas vivas por lado, sem limite individual por linha.
 - O jogador pode poupar, inclusive começar sem recrutar.
-- As compras não têm desfazer nesta versão.
+- `deploy` troca a linha de uma tropa própria, sem custo nem resposta rival.
+- `return` devolve apenas recrutas da preparação atual, com reembolso integral.
+  A identidade não é reutilizada; veteranos não podem ser devolvidos. Ao entrar
+  em combate, todas as devoluções ficam bloqueadas.
 - Ao confirmar, o rival escolhe compras considerando o campo atual. Não são
   compras secretas simultâneas; o bot vê sua composição.
 - Os estilos `balanced`, `aggressive`, `defensive`, `economy` e `random`
@@ -59,11 +62,12 @@ lados, a rodada acaba normalmente, sem espera infinita.
 | `move` | A outra linha | Troca a posição e gasta a ação |
 | `wait` | Sem alvo | Abre mão da ação nesta rodada |
 
-O bot usa a unidade pronta mais rápida; ataque desempata a velocidade. Médicos
-priorizam cura do aliado com menor proporção de vida. Caso contrário, ele
-escolhe o inimigo alcançável com menos HP, ataca a base desprotegida ou espera.
-Essa política é compartilhada por todos os estilos de recrutamento. O bot não
-planeja movimento nem escolhe proteção nesta primeira versão interativa.
+O bot usa a unidade pronta mais rápida; ataque desempata a velocidade. Prioriza
+um golpe final, cura e proteção que impeça um golpe fatal pendente; depois ataca
+o alvo alcançável com menos HP. Sem ataque, avança de trás para a frente se a
+arma estiver pronta, ou protege a si mesmo contra ameaças e sangramento. Evita
+reaplicar escudo já ativo. Essa política é comum aos estilos de recrutamento;
+ainda não há planejamento de várias ações nem personalidades de combate distintas.
 
 ### 3. Revisão (`review`)
 
@@ -128,6 +132,10 @@ state = game.command({"type": "act", "actor": actor, **choices[0]})
 
 `state()` inclui fase, rodada, bases, tropas, ações consumidas, ações válidas,
 eventos, estatísticas e desfecho. Ler o estado não avança a partida.
+`refundable` lista recrutas que podem ser devolvidos; `formation_warnings` aponta
+armas de alcance 1 bloqueadas atrás de aliados. `action_previews` fornece dano,
+vida restante, golpe final, efeitos e cura, sem alterar vida ou consumir escudo.
+A previsão descreve apenas a ordem escolhida, antes da resposta rival.
 
 `web/playground.py` oferece `new_game`, `game_command` e `game_report`, retornando
 JSON. A sessão é única por interpretador/aba. JavaScript monta botões e traduz
@@ -141,9 +149,13 @@ antes de alterar o estado.
 ## Relatórios e reprodução
 
 O simulador mantém seu formato. O novo modo exporta um formato próprio,
-identificado por `schema_version: 1`, `mode: interactive` e `ruleset: tactical-v2`,
+identificado por `schema_version: 1`, `mode: interactive` e `ruleset: tactical-v3`,
 com configuração, comandos aceitos, estado e snapshots por rodada. `ready_round`
 identifica a rodada em que a arma estará disponível; `reload` é a espera da arma.
+
+A 0.6 usava `tactical-v2`; a 0.7 muda para `tactical-v3` por acrescentar comandos
+de preparação e mudar decisões do rival. Use a versão original para reproduzir
+relatórios anteriores.
 
 O identificador anterior `tactical-v1` foi reutilizado por engano até a 0.5.0,
 apesar das mudanças de alcance e recarga. Relatórios antigos exigem o código da
