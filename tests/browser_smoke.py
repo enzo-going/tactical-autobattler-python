@@ -49,6 +49,14 @@ def main():
         page.wait_for_function("!document.querySelector('#new').disabled", timeout=120000)
         assert page.locator("#phase-title").inner_text() == "Prepare seu esquadrão."
         page.get_by_role("button", name="Recrutar Guardião, 4 suprimentos", exact=True).click()
+        page.get_by_role("button", name="Mover para retaguarda · grátis", exact=True).click()
+        assert page.locator("#ally-back .piece").count() == 1
+        assert page.locator("#resources").inner_text() == "6"
+        assert page.evaluate("state.acted.length") == 0
+        page.get_by_role("button", name="Devolver recruta · +4 suprimentos", exact=True).click()
+        assert page.locator("#resources").inner_text() == "10"
+        assert page.locator(".ally-lane .piece").count() == 0
+        page.get_by_role("button", name="Recrutar Guardião, 4 suprimentos", exact=True).click()
         page.get_by_role("button", name="Recrutar Arqueiro, 3 suprimentos", exact=True).click()
         page.get_by_role("button", name="Recrutar Soldado, 2 suprimentos", exact=True).click()
         assert page.locator("#resources").inner_text() == "1"
@@ -57,6 +65,8 @@ def main():
         page.locator("#advance").click()
         assert page.evaluate("state.phase") == "combat"
         page.locator("#actions button", has_text="Atacar").click()
+        assert "dano" in page.locator("#targets button").first.inner_text()
+        assert page.locator(".target-preview").count() > 0
         page.screenshot(path=str(output / "desktop-combat.png"), full_page=True)
         before = page.evaluate("JSON.stringify(state)")
         page.wait_for_timeout(1100)
@@ -92,7 +102,7 @@ def main():
         downloaded.value.save_as(str(output / "report.json"))
         report = json.loads((output / "report.json").read_text())
         assert report["state"]["phase"] == "finished"
-        assert report["commands"] and report["ruleset"] == "tactical-v2"
+        assert report["commands"] and report["ruleset"] == "tactical-v3"
         page.locator("#new").click()
         page.locator("#seed").fill("0")
         page.locator("#rounds").fill("3")
