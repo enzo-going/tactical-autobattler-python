@@ -1,4 +1,4 @@
-"""Optional real-browser checks. Run the local site on port 8765 first.
+"""Real-browser checks. Assemble _site first; a local server starts automatically.
 
 Requires Playwright for Python and Edge (or set BROWSER_CHANNEL to chromium).
 Does not replace Python unit tests; exercises the actual CDN/Pyodide bridge.
@@ -6,20 +6,45 @@ Does not replace Python unit tests; exercises the actual CDN/Pyodide bridge.
 
 import json
 import os
+from contextlib import contextmanager
+from functools import partial
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from threading import Thread
 
 from playwright.sync_api import sync_playwright
+
+
+@contextmanager
+def site_url():
+    if os.getenv("SITE_URL"):
+        yield os.environ["SITE_URL"].rstrip("/")
+        return
+
+    class QuietHandler(SimpleHTTPRequestHandler):
+        def log_message(self, *args):
+            pass
+
+    server = ThreadingHTTPServer(("127.0.0.1", 0), partial(QuietHandler, directory=str(Path("_site").resolve())))
+    thread = Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield f"http://127.0.0.1:{server.server_port}"
+    finally:
+        server.shutdown()
+        server.server_close()
+        thread.join()
 
 
 def main():
     output = Path("_site/qa")
     output.mkdir(parents=True, exist_ok=True)
     errors = []
-    with sync_playwright() as playwright:
+    with site_url() as url, sync_playwright() as playwright:
         browser = playwright.chromium.launch(channel=os.getenv("BROWSER_CHANNEL", "msedge"))
         page = browser.new_page(viewport={"width": 1440, "height": 1100}, device_scale_factor=1)
         page.on("pageerror", lambda error: errors.append(str(error)))
-        page.goto("http://127.0.0.1:8765/")
+        page.goto(url + "/")
         page.locator("#new").wait_for(state="visible")
         page.wait_for_function("!document.querySelector('#new').disabled", timeout=120000)
         assert page.locator("#phase-title").inner_text() == "Prepare seu esquadrão."
@@ -67,7 +92,7 @@ def main():
         downloaded.value.save_as(str(output / "report.json"))
         report = json.loads((output / "report.json").read_text())
         assert report["state"]["phase"] == "finished"
-        assert report["commands"] and report["ruleset"] == "tactical-v1"
+        assert report["commands"] and report["ruleset"] == "tactical-v2"
         page.locator("#new").click()
         page.locator("#seed").fill("0")
         page.locator("#rounds").fill("3")
@@ -90,12 +115,33 @@ def main():
         assert page.locator("#help-dialog").is_visible()
         page.keyboard.press("Escape")
         assert not page.locator("#help-dialog").is_visible()
+        # Heavy weapons remain selectable while reloading, with defensive orders.
+        page.locator("#new").click()
+        page.locator("#opponent").select_option("economy")
+        page.locator("#seed").fill("0")
+        page.get_by_role("button", name="Começar partida", exact=True).click()
+        page.get_by_role("button", name="Recrutar Tanque, 5 suprimentos", exact=True).click()
+        page.get_by_role("button", name="Recrutar Guardião, 4 suprimentos", exact=True).click()
+        page.locator("#advance").click()
+        page.locator('.piece[data-kind="tank"]').click()
+        page.locator("#actions button", has_text="Atacar").click()
+        page.locator("#targets button").first.click()
+        assert "Arma: R3" in page.locator('.piece[data-kind="tank"] .weapon-state').inner_text()
+        page.locator("#actions button", has_text="Esperar").click()
+        page.locator("#targets button").first.click()
+        page.locator("#advance").click()
+        page.locator("#advance").click()
+        page.locator('.ally-lane .piece[data-kind="tank"]').click()
+        assert page.locator("#actions button", has_text="Atacar").is_disabled()
+        assert page.locator("#actions button", has_text="Proteger").is_enabled()
+        assert "rodada 3" in page.locator(".reload-hint").inner_text()
+        page.screenshot(path=str(output / "reload-mobile.png"), full_page=True)
         page.emulate_media(reduced_motion="reduce")
         page.reload()
         page.wait_for_function("!document.querySelector('#new').disabled", timeout=120000)
         assert page.evaluate("state.phase") == "recruit"
         # Legacy lab still imports the bridge, runs battle and tournament.
-        page.goto("http://127.0.0.1:8765/simulator.html")
+        page.goto(url + "/simulator.html")
         page.wait_for_function("!document.querySelector('#b-run').disabled", timeout=120000)
         page.locator("#b-rounds").fill("3")
         page.locator("#b-run").click()
@@ -115,7 +161,7 @@ def main():
         # An unavailable CDN must leave help usable and expose an explicit retry.
         offline = browser.new_page(viewport={"width": 390, "height": 844})
         offline.route("https://cdn.jsdelivr.net/**", lambda route: route.abort())
-        offline.goto("http://127.0.0.1:8765/")
+        offline.goto(url + "/")
         offline.locator("#retry").wait_for(state="visible")
         assert offline.locator("#advance").is_disabled()
         offline.get_by_role("button", name="Como jogar", exact=True).click()

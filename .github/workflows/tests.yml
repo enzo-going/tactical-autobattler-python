@@ -41,6 +41,36 @@ jobs:
         run: |
           node --check web/game.js
           node --check web/app.js
+          node --check web/characters.js
+          node --check web/replay-state.js
+
+      - name: Compare replay with Python snapshots
+        run: node --test tests/replay.test.cjs
 
       - name: Assemble both web entry points
         run: python tools/build_site.py
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install browser test dependencies
+        run: |
+          python -m pip install playwright==1.63.0
+          python -m playwright install --with-deps chromium
+      - name: Assemble and play both web entry points
+        env:
+          BROWSER_CHANNEL: chromium
+        run: |
+          python tools/build_site.py
+          python tests/browser_smoke.py
+      - name: Keep browser screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: browser-qa
+          path: _site/qa
