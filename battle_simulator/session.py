@@ -26,7 +26,7 @@ class TacticalSession:
     """Recruit, alternate unit actions, review, repeat. Names are stable unit IDs."""
 
     roster_limit = 8
-    ruleset = "tactical-v2"
+    ruleset = "tactical-v3"
 
     def __init__(self, opponent: str = "balanced", seed: int = 11, max_rounds: int = 20):
         if opponent not in STRATEGIES:
@@ -47,6 +47,7 @@ class TacticalSession:
         self.reason = ""
         self.acted: set[str] = set()
         self.commands: list[dict] = []
+        self.refundable: set[str] = set()
         self.engine.round_number = 1
         self._event("round_started")
 
@@ -91,6 +92,28 @@ class TacticalSession:
             if not self.field.base_one.can_afford(TROOP_COSTS[troop_kind]):
                 raise ValueError("Suprimentos insuficientes.")
             self._recruit(Player.ONE, troop_kind, lane)
+            self.refundable.add(self.field.troops_one[-1].name)
+        elif kind in ("deploy", "return") and self.phase == "recruit":
+            actor = next((t for t in self.field.troops_one if t.name == command.get("actor")), None)
+            if actor is None:
+                raise ValueError("Selecione uma unidade do seu esquadrão.")
+            if kind == "return":
+                if actor.name not in self.refundable:
+                    raise ValueError("Só recrutas comprados nesta preparação podem ser devolvidos.")
+                self.field.troops_one.remove(actor)
+                self.refundable.remove(actor.name)
+                self.field.base_one.resources += actor.cost
+                self.engine.stats.units_recruited[Player.ONE] -= 1
+                self._event("unit_returned", Player.ONE, actor.name, amount=actor.cost)
+            else:
+                try:
+                    lane = Lane(command.get("lane"))
+                except (ValueError, TypeError):
+                    raise ValueError("Escolha uma linha válida.") from None
+                if lane == actor.lane:
+                    raise ValueError("A unidade já está nessa linha.")
+                actor.lane = lane
+                self._event("unit_deployed", Player.ONE, actor.name, lane=lane.value)
         elif kind == "begin" and self.phase == "recruit":
             self._begin_combat()
         elif kind == "act" and self.phase == "combat":
@@ -125,6 +148,7 @@ class TacticalSession:
         )
 
     def _begin_combat(self) -> None:
+        self.refundable.clear()
         plan = self.bot.choose_plan(Player.TWO, self.field)
         for order in plan.recruits:
             for _ in range(order.quantity):
@@ -246,27 +270,7 @@ class TacticalSession:
             ready = self._ready(Player.TWO)
             if ready:
                 actor = max(ready, key=lambda t: (t.speed, t.attack))
-                choices = self._choices(Player.TWO, actor)
-                heals = [c for c in choices if c["action"] == "heal"]
-                attacks = [c for c in choices if c["action"] == "attack"]
-                if heals:
-                    choice = min(
-                        heals,
-                        key=lambda c: next(
-                            t.health / t.max_hp
-                            for t in self.field.troops_two
-                            if t.name == c["target"]
-                        ),
-                    )
-                elif attacks:
-                    choice = min(
-                        attacks,
-                        key=lambda c: next(
-                            (t.health for t in self.field.troops_one if t.name == c["target"]), 0
-                        ),
-                    )
-                else:
-                    choice = {"action": "wait"}
+                choice = self._enemy_choice(actor)
                 self._act(Player.TWO, actor, choice)
                 if self._check_finished():
                     return
@@ -275,6 +279,70 @@ class TacticalSession:
             if not self._ready(Player.TWO):
                 self._end_round()
                 return
+
+    def _enemy_choice(self, actor: Troop) -> dict:
+        choices = self._choices(Player.TWO, actor)
+        attacks = [c for c in choices if c["action"] == "attack"]
+        heals = [c for c in choices if c["action"] == "heal"]
+        enemies = {t.name: t for t in self.field.living_troops_for(Player.ONE)}
+        allies = {t.name: t for t in self.field.living_troops_for(Player.TWO)}
+        # Finish a vulnerable target before spending this action on support.
+        lethal = [c for c in attacks if (
+            self.field.base_one.health <= actor.attack if c["target"] == "base"
+            else enemies[c["target"]].preview_damage(actor.attack) >= enemies[c["target"]].health
+        )]
+        if lethal:
+            return lethal[0]
+        if heals:
+            return min(heals, key=lambda c: allies[c["target"]].health / allies[c["target"]].max_hp)
+        # A shield is worthwhile when it saves an ally from a pending lethal hit.
+        threats = [t for t in self._ready(Player.ONE) if t.is_loaded(self.engine.round_number)
+                   and not t.has_effect(StatusEffect.STUN)]
+        for choice in choices:
+            if choice["action"] != "guard":
+                continue
+            target = allies[choice["target"]]
+            if target.has_effect(StatusEffect.SHIELD):
+                continue
+            if any(can_strike(t, enemies.values(), target, allies.values())
+                   and max(1, t.attack - target.defense) == target.health for t in threats):
+                return choice
+        if attacks:
+            return min(attacks, key=lambda c: enemies[c["target"]].health if c["target"] != "base" else 0)
+        move = {"action": "move", "lane": "front"}
+        if actor.is_loaded(self.engine.round_number) and move in choices and enemies:
+            return move
+        guard = {"action": "guard", "target": actor.name}
+        if guard in choices and not actor.has_effect(StatusEffect.SHIELD) and (
+            actor.has_effect(StatusEffect.BLEED)
+            or any(can_strike(t, enemies.values(), actor, allies.values()) for t in threats)
+        ):
+            return guard
+        return {"action": "wait"}
+
+    def _preview(self, actor: Troop, choice: dict) -> dict:
+        preview = dict(choice)
+        target_name = choice.get("target")
+        if choice["action"] == "attack":
+            if target_name == "base":
+                target = self.field.base_two
+                damage = min(target.health, actor.attack)
+            else:
+                target = next(t for t in self.field.troops_two if t.name == target_name)
+                damage = target.preview_damage(actor.attack)
+            preview.update(damage=damage, remaining_hp=target.health - damage,
+                           defeats=damage >= target.health)
+            effects = []
+            if target_name != "base" and damage > 0 and damage < target.health:
+                if actor.role == Role.RANGED:
+                    effects.append("bleed")
+                if actor.name.startswith("Tank"):
+                    effects.append("stun")
+            preview["effects"] = effects
+        elif choice["action"] == "heal":
+            target = next(t for t in self.field.troops_one if t.name == target_name)
+            preview["healing"] = min(2, target.max_hp - target.health)
+        return preview
 
     def _check_finished(self) -> bool:
         if self.field.base_one.is_destroyed or self.field.base_two.is_destroyed:
@@ -301,6 +369,7 @@ class TacticalSession:
 
     def state(self) -> dict:
         snapshot = self.engine._capture_round_snapshot()
+        legal = {t.name: self._choices(Player.ONE, t) for t in self._ready(Player.ONE)} if self.phase == "combat" else {}
         snapshot.update(
             {
                 "phase": self.phase,
@@ -312,11 +381,17 @@ class TacticalSession:
                 "reason": self.reason,
                 "roster_limit": self.roster_limit,
                 "acted": sorted(self.acted),
-                "legal_actions": (
-                    {t.name: self._choices(Player.ONE, t) for t in self._ready(Player.ONE)}
-                    if self.phase == "combat"
-                    else {}
-                ),
+                "legal_actions": legal,
+                "refundable": sorted(self.refundable),
+                "formation_warnings": [
+                    t.name for t in self.field.troops_one
+                    if t.lane == Lane.BACK and t.range == 1
+                    and any(ally.lane == Lane.FRONT for ally in self.field.troops_one)
+                ],
+                "action_previews": {
+                    t.name: [self._preview(t, c) for c in legal[t.name]]
+                    for t in self._ready(Player.ONE) if t.name in legal
+                },
                 "events": [event.to_dict() for event in self.engine.events],
             }
         )

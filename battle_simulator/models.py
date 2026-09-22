@@ -128,13 +128,18 @@ class Troop:
     def attack_base(self, target: Base) -> int:
         return target.receive_damage(self.attack)
 
-    def receive_damage(self, amount: int, ignore_defense: bool = False) -> int:
+    def preview_damage(self, amount: int, ignore_defense: bool = False) -> int:
+        """Damage from a single hit, without consuming shields or changing health."""
         if amount < 0:
             raise ValueError("Damage cannot be negative.")
         mitigated = amount if ignore_defense else max(1, amount - self.defense)
-        if self.effects.pop(StatusEffect.SHIELD, 0) > 0:
+        if self.has_effect(StatusEffect.SHIELD):
             mitigated = max(0, mitigated - 1)
-        applied = min(self.health, mitigated)
+        return min(self.health, mitigated)
+
+    def receive_damage(self, amount: int, ignore_defense: bool = False) -> int:
+        applied = self.preview_damage(amount, ignore_defense)
+        self.effects.pop(StatusEffect.SHIELD, None)
         self.current_hp = self.health - applied
         self.damage_received += applied
         return applied
