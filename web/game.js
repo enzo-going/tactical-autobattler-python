@@ -147,7 +147,11 @@ function command(payload) {
     const count = state.events.length;
     state = JSON.parse(bridge.game_command(JSON.stringify(payload)));
     mode = null;
-    if (!state.legal_actions[selected])
+    if (state.phase === "recruit") {
+      if (payload.type === "recruit") selected = state.troops.player_one.at(-1)?.name;
+      if (!state.troops.player_one.some(t => t.name === selected))
+        selected = state.troops.player_one[0]?.name || null;
+    } else if (!state.legal_actions[selected])
       selected = Object.keys(state.legal_actions)[0] || null;
     render();
     showCombatFeedback(state.events.slice(count));
@@ -217,7 +221,7 @@ function showCombatFeedback(events) {
 }
 function phaseHint() {
   if (state.phase === "recruit")
-    return `Recrute seu esquadrão. ${state.opener === 1 ? "Você abre" : "O rival abre"} o combate nesta rodada.`;
+    return `Recrute e ajuste sua formação. ${state.opener === 1 ? "Você abre" : "O rival abre"} o combate nesta rodada.`;
   if (state.phase === "combat")
     return "Sua vez. Escolha uma unidade pronta e dê uma ordem.";
   if (state.phase === "review")
@@ -257,12 +261,14 @@ function render() {
   $("roster-count").textContent =
     `${state.troops.player_one.length} / ${state.roster_limit} unidades`;
   $("ready-count").textContent =
-    `${Object.keys(state.legal_actions).length} prontas`;
+    state.phase === "recruit" ? `${state.troops.player_one.length} em formação` : `${Object.keys(state.legal_actions).length} prontas`;
+  $("board-hint").textContent = state.phase === "recruit" ? "Selecione uma tropa para ajustar sua formação." : "Selecione uma tropa pronta para dar uma ordem.";
   $("recruit-panel").hidden = state.phase !== "recruit";
   $("orders-panel").hidden = state.phase !== "combat";
   $("review-panel").hidden = !["review", "finished"].includes(state.phase);
   renderBoard();
   renderShop();
+  renderFormation();
   renderOrders();
   renderReview();
   renderLog();
@@ -306,6 +312,7 @@ function renderBoard() {
       for (const t of troops) {
         const choice = targets.find((c) => c.target === t.name);
         const ready = Boolean(state.legal_actions[t.name]);
+        const deployable = state.phase === "recruit" && side === "ally";
         const spent = state.acted.includes(t.name);
         const reloading = t.reload > 0 && t.reloading > 0;
         const weaponHint = reloading ? `Arma pronta na rodada ${t.ready_round}` : "";
@@ -313,25 +320,26 @@ function renderBoard() {
           "",
           () => {
             if (choice) command({ type: "act", actor: selected, ...choice });
-            else if (ready) {
+            else if (ready || deployable) {
               selected = t.name;
               mode = null;
               renderBoard();
               renderOrders();
+              renderFormation();
               document
-                .querySelector("#actions button:not(:disabled)")
+                .querySelector(deployable ? "#formation-actions button" : "#actions button:not(:disabled)")
                 ?.focus({ preventScroll: true });
               if (window.matchMedia("(max-width:800px)").matches)
-                $("orders-panel").scrollIntoView({ block: "start" });
+                (deployable ? document.querySelector(".formation-edit") : $("orders-panel")).scrollIntoView({ block: "start" });
             }
           },
           `piece ${side === "enemy" ? "enemy-piece" : ""} ${spent ? "spent" : ""} ${selected === t.name ? "selected" : ""} ${choice ? "targetable" : ""}`,
         );
-        b.disabled = !choice && !ready;
+        b.disabled = !choice && !ready && !deployable;
         b.dataset.focus = `unit-${t.name}`;
         b.setAttribute(
           "aria-label",
-          `${label(t.name)}, ${t.current_hp} de ${t.max_hp} de vida, ${choice ? "confirmar " + ACTIONS[mode] : spent ? "já agiu" : ready ? "ação disponível" : "em campo"}${weaponHint ? ", " + weaponHint : ""}`,
+          `${label(t.name)}, ${t.current_hp} de ${t.max_hp} de vida, ${choice ? "confirmar " + ACTIONS[mode] : deployable ? "ajustar formação" : spent ? "já agiu" : ready ? "ação disponível" : "em campo"}${weaponHint ? ", " + weaponHint : ""}`,
         );
         if (side === "ally")
           b.setAttribute("aria-pressed", String(selected === t.name));
@@ -339,12 +347,18 @@ function renderBoard() {
         b.dataset.unit = t.name;
         for (const effect of Object.keys(EFFECTS))
           b.classList.toggle(`status-${effect}`, Boolean(t.effects[effect]));
-        b.innerHTML = `<div class="piece-art">${portrait(kindOf(t.name), side === "enemy")}</div><div class="piece-body"><span class="piece-name">${esc(label(t.name))}</span><span class="piece-stats"><span>ATQ ${t.attack}</span><span>DEF ${t.defense}</span></span><div class="hp-line"><span class="hp-track"><i style="width:${(t.current_hp / t.max_hp) * 100}%"></i></span><small>${t.current_hp}/${t.max_hp}</small></div><span class="piece-state">${choice ? "↗ Confirmar alvo" : spent ? "— Já agiu" : ready ? "● Pode agir" : "Em posição"}</span>${reloading ? `<span class="weapon-state" title="${weaponHint}">⟳ Arma: R${t.ready_round}</span>` : ""}</div>`;
+        b.innerHTML = `<div class="piece-art">${portrait(kindOf(t.name), side === "enemy")}</div><div class="piece-body"><span class="piece-name">${esc(label(t.name))}</span><span class="piece-stats"><span>ATQ ${t.attack}</span><span>DEF ${t.defense}</span></span><div class="hp-line"><span class="hp-track"><i style="width:${(t.current_hp / t.max_hp) * 100}%"></i></span><small>${t.current_hp}/${t.max_hp}</small></div><span class="piece-state">${choice ? "↗ Confirmar alvo" : deployable ? "↔ Ajustar" : spent ? "— Já agiu" : ready ? "● Pode agir" : "Em posição"}</span>${reloading ? `<span class="weapon-state" title="${weaponHint}">⟳ Arma: R${t.ready_round}</span>` : ""}</div>`;
         const effects = Object.entries(t.effects)
           .map(([e, n]) => `${EFFECTS[e]} ${n}`)
           .join(" · ");
         if (effects)
           b.querySelector(".piece-body").append(node("span", "effects", effects));
+        if (choice) {
+          const preview = previewFor(choice);
+          if (preview?.damage !== undefined)
+            b.querySelector(".piece-body").append(node("span", "target-preview",
+              `${preview.damage} dano${preview.defeats ? " · derrota" : ""}`));
+        }
         container.append(b);
       }
     }
@@ -380,6 +394,35 @@ function renderShop() {
     $("shop").append(b);
   }
 }
+function renderFormation() {
+  $("formation-panel").hidden = state.phase !== "recruit";
+  $("formation-detail").replaceChildren();
+  $("formation-actions").replaceChildren();
+  if (state.phase !== "recruit") return;
+  const unit = state.troops.player_one.find(t => t.name === selected);
+  if (!unit) return;
+  $("formation-detail").append(node("p", "formation-name", label(unit.name)));
+  if (state.formation_warnings.includes(unit.name))
+    $("formation-detail").append(node("p", "reload-hint",
+      "Alcance 1 atrás da vanguarda: esta tropa precisará avançar para atacar. Você pode ajustar agora sem gastar ação."));
+  const lane = unit.lane === "front" ? "back" : "front";
+  const move = button(`Mover para ${lane === "front" ? "vanguarda" : "retaguarda"} · grátis`,
+    () => command({ type: "deploy", actor: unit.name, lane }));
+  move.dataset.focus = "deploy";
+  $("formation-actions").append(move);
+  if (state.refundable.includes(unit.name)) {
+    const refund = button(`Devolver recruta · +${unit.cost} suprimentos`,
+      () => command({ type: "return", actor: unit.name }));
+    refund.dataset.focus = "return-recruit";
+    $("formation-actions").append(refund);
+  } else {
+    $("formation-detail").append(node("p", "hint", "Veteranos mantêm vida, efeitos e recarga. Não podem ser devolvidos."));
+  }
+}
+function previewFor(choice) {
+  return (state.action_previews[selected] || []).find(p =>
+    p.action === choice.action && p.target === choice.target && p.lane === choice.lane);
+}
 function renderOrders() {
   $("actions").replaceChildren();
   $("targets").replaceChildren();
@@ -402,6 +445,9 @@ function renderOrders() {
   if (t.reload > 0 && t.reloading > 0)
     $("unit-detail").append(node("p", "reload-hint",
       `Recarregando. Ataque e cura voltam na rodada ${t.ready_round}. Você ainda pode proteger, reposicionar ou esperar.`));
+  else if (!choices.some(c => c.action === "attack"))
+    $("unit-detail").append(node("p", "reload-hint",
+      "Sem alvo ao alcance. Reposicionar consome a ação deste turno; proteger também pode ser útil."));
   for (const [action, name] of Object.entries(ACTIONS)) {
     const available = choices.filter((c) => c.action === action);
     const b = button(name, () => {
@@ -424,12 +470,10 @@ function renderOrders() {
       : mode === "move"
         ? `Mover para a ${choice.lane === "front" ? "vanguarda" : "retaguarda"}`
         : "Confirmar: esperar nesta rodada";
-    if (mode === "attack") {
-      const target = state.troops.player_two.find(
-        (t) => t.name === choice.target,
-      );
-      if (target) text += ` · ${target.current_hp} HP`;
-    }
+    const preview = previewFor(choice);
+    if (preview?.damage !== undefined)
+      text += ` · ${preview.damage} dano · ${preview.defeats ? (choice.target === "base" ? "vence a partida" : "derrota o alvo") : `${preview.remaining_hp} vida após o golpe`}${preview.effects.length ? " · " + preview.effects.map(e => EFFECTS[e]).join(", ") : ""}`;
+    if (preview?.healing !== undefined) text += ` · +${preview.healing} vida`;
     $("targets").append(
       button(text, () => command({ type: "act", actor: selected, ...choice })),
     );
@@ -485,7 +529,10 @@ function eventText(e) {
     case "effect_damage":
       return `${t} sofreu ${e.amount} de dano por sangramento.`;
     case "unit_moved":
+    case "unit_deployed":
       return `${a} se moveu para a ${e.metadata.lane === "front" ? "vanguarda" : "retaguarda"}.`;
+    case "unit_returned":
+      return `${a} deixou a formação. ${e.amount} suprimentos devolvidos.`;
     case "unit_waited":
       return `${a} manteve posição.`;
     case "round_ended":

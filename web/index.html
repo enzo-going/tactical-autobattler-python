@@ -128,8 +128,14 @@
             <div class="board-key">
               <span><i class="key-ready"></i> Pronta</span
               ><span><i class="key-spent"></i> Já agiu</span
-              ><span>Selecione uma tropa pronta para dar uma ordem.</span>
+              ><span id="board-hint">Selecione uma tropa no campo.</span>
             </div>
+              <section id="formation-panel" class="formation-edit" hidden>
+                <h3>Ajustar formação</h3>
+                <p class="hint">Selecione uma tropa no campo. Antes do combate, trocar de linha é grátis.</p>
+                <div id="formation-detail"></div>
+                <div id="formation-actions" class="targets"></div>
+              </section>
           </section>
           <aside class="command-panel" aria-label="Comandos do esquadrão">
             <section class="supplies">
@@ -265,11 +271,16 @@
           <b>Prepare seu esquadrão.</b> Comece com 10 suprimentos. Recrute até 8
           unidades e escolha suas linhas. Cada rodada concluída rende 6
           suprimentos se a partida continuar.
+          Antes de entrar em combate, selecione tropas no campo para trocar
+          de linha sem gastar ação. Recrutas comprados nesta preparação podem
+          ser devolvidos pelo custo integral; veteranos não podem ser devolvidos.
         </li>
         <li>
           <b>Entre no combate.</b> Selecione uma peça pronta, escolha uma ordem
           e depois o alvo. O rival responde com uma unidade. Cada peça age uma
           vez.
+          A confirmação mostra dano, vida restante e efeitos do seu golpe,
+          calculados com defesa e escudo. A resposta do rival vem depois.
         </li>
         <li>
           <b>Abra caminho até o forte.</b> Elimine as tropas rivais para atacar
