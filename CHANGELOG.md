@@ -1,5 +1,12 @@
 # Changelog
 
+## Ajustes após a 0.7.0
+
+- Paleta levemente refinada no jogo e laboratório: superfícies em grafite,
+  texto marfim mais neutro, azul-aço e vermelho discreto para os exércitos.
+  Efeitos, botões e matriz de torneios seguem as mesmas cores; contraste
+  reforçado nos textos secundários e controles do laboratório.
+
 ## 0.7.0 — Preparação tática
 
 - Troque livremente a linha das tropas antes do combate, incluindo veteranos,

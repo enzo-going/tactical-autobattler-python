@@ -1,6 +1,6 @@
 /* Shared original cast: cloth differentiates armies, equipment identifies roles. */
-.character { --cloth: #4d7ead; --cloth-dark: #354b6d; display: inline-block; overflow: visible; }
-.enemy-character,.side.red .character { --cloth: #a15368; --cloth-dark: #633949; }
+.character { --cloth: #5888ac; --cloth-dark: #394e66; display: inline-block; overflow: visible; }
+.enemy-character,.side.red .character { --cloth: #9f5b58; --cloth-dark: #663f44; }
 .character .figure-body { transform-origin: 58px 110px; }
 .piece:not(.spent) .figure-body { animation: stand-breathe 3.6s ease-in-out infinite; }
 .piece:nth-child(even) .figure-body { animation-delay: -.9s; }

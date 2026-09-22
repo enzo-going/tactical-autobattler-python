@@ -18,23 +18,23 @@
   --panel-2: #23282d;
   --panel-3: #2e343a;
   --line: #333940;
-  --line-strong: #8d949b;
+  --line-strong: #84919f;
 
   --text: #f1f3f5;
   --muted: #bcc2c8;
-  --dim: #8f969d;
+  --dim: #a5afbd;
 
   /* Azul e azul de novo: e o lado do jogador, como no tabuleiro. */
   --blue: #7ab8ea;
-  --blue-soft: #a8d2f2;
+  --blue-soft: #c2dcec;
   --red: #e58a8a;
-  --red-soft: #f0b4b4;
+  --red-soft: #f0c3bc;
   --gold: #cbb27c;
-  --gold-soft: #e0cb97;
+  --gold-soft: #e3d3b1;
   /* Escala de vida: cheia (azul) -> baixa (latao) -> critica (terracota) */
-  --ok: #4a86c0;
+  --ok: #92bfe0;
   /* Escudo: o quarto acento das cartas de efeito */
-  --shield: #a99ad2;
+  --shield: #afbadb;
   --neutral: #bcc2c8;
 
   --font-display: "Segoe UI Semibold", "Segoe UI", system-ui, sans-serif;
@@ -247,7 +247,7 @@ h1, h2, h3, .display {
   transition: filter .15s, transform .08s, border-color .15s;
 }
 
-.btn:hover { filter: brightness(1.25); }
+.btn:hover { filter: brightness(1.08); }
 .btn:active { transform: translateY(1px); }
 .btn:disabled { opacity: .4; cursor: not-allowed; filter: none; }
 
@@ -1076,7 +1076,7 @@ pre.json {
 
 .plinth.p1 { --accent: var(--gold); padding-bottom: 30px; }
 .plinth.p2 { --accent: #cfd8e8; }
-.plinth.p3 { --accent: #d08a4f; }
+.plinth.p3 { --accent: #b39787; }
 
 .plinth .medal { font-size: 1.8rem; }
 .plinth .em { font-size: 2rem; }
@@ -1325,11 +1325,11 @@ body::before, .commander::before { display: none; }
 }
 
 /* Same illustrated world and original cast as the interactive field. */
-body { background: radial-gradient(ellipse at 50% 0, #2b3444, transparent 65%), #11151d; }
-:root { --panel: #202735; --panel-2: #293243; --panel-3: #303b4d; --line: #465164; --text: #ede9dc; --muted: #b6bdc9; --blue: #9dccec; --red: #efabb1; --gold: #d1be8b; }
-.arena { background: linear-gradient(#17213055, #172130b0), url("battlefield.svg") center/cover; border: 1px solid #8491a4; }
+body { background: radial-gradient(ellipse at 50% 0, #30353e, transparent 65%), #15171c; }
+:root { --panel: #252932; --panel-2: #2e343e; --panel-3: #363e4a; --line: #49535f; --text: #f1eee8; --muted: #c0c5cf; --blue: #a3ccea; --red: #e7aaa5; --gold: #cdbb95; }
+.arena { background: linear-gradient(#20252c44, #161d28a6), url("battlefield.svg") center/cover; border: 1px solid #84919f; }
 .arena .lane { background: #17213070; }
-.arena .unit { background: #1d2a3be8; border-color: #6b8095; grid-template-columns: 58px minmax(0,1fr); }
+.arena .unit { background: #202b37ee; border-color: #6b8095; grid-template-columns: 58px minmax(0,1fr); }
 .unit-icon .character { width: 58px; height: 66px; }
 .unit-cadence { grid-column: 1/-1; color: var(--gold); font-size: 11px; }
 .unit-card .em .character { width: 78px; height: 90px; }
