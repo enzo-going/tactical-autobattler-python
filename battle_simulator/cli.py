@@ -257,6 +257,7 @@ def _print_state(engine: BattleEngine) -> None:
 def _build_report(engine: BattleEngine, result) -> dict:
     battlefield = engine.battlefield
     return {
+        "ruleset": "auto-v2",
         "winner": None if result.winner is None else battlefield.base_for(result.winner).name,
         "rounds_played": result.rounds_played,
         "opening_initiative": engine.battlefield.base_for(engine.opening_initiative).name,

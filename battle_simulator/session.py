@@ -26,6 +26,7 @@ class TacticalSession:
     """Recruit, alternate unit actions, review, repeat. Names are stable unit IDs."""
 
     roster_limit = 8
+    ruleset = "tactical-v2"
 
     def __init__(self, opponent: str = "balanced", seed: int = 11, max_rounds: int = 20):
         if opponent not in STRATEGIES:
@@ -170,12 +171,12 @@ class TacticalSession:
         enemies = self.field.living_troops_for(player.opponent)
         # Arma recarregando nao golpeia nem conjura; proteger, reposicionar e
         # esperar continuam disponiveis, senao a rodada vira tempo morto.
-        pronta = actor.is_loaded(self.engine.round_number)
+        loaded = actor.is_loaded(self.engine.round_number)
         choices = [
             {"action": "attack", "target": t.name}
-            for t in (self._reachable(actor, player.opponent) if pronta else [])
+            for t in (self._reachable(actor, player.opponent) if loaded else [])
         ]
-        if pronta and not enemies:
+        if loaded and not enemies:
             choices.append({"action": "attack", "target": "base"})
         choices.extend(
             [
@@ -184,7 +185,7 @@ class TacticalSession:
                 {"action": "wait"},
             ]
         )
-        if actor.role == Role.SUPPORT and pronta:
+        if actor.role == Role.SUPPORT and loaded:
             choices.extend(
                 {"action": "heal", "target": t.name} for t in allies if t.health < t.max_hp
             )
@@ -325,7 +326,7 @@ class TacticalSession:
         return {
             "schema_version": 1,
             "mode": "interactive",
-            "ruleset": "tactical-v1",
+            "ruleset": self.ruleset,
             "config": {"opponent": self.opponent, "seed": self.seed, "max_rounds": self.max_rounds},
             "commands": self.commands,
             "state": self.state(),
