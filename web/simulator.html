@@ -229,9 +229,12 @@
   <!-- ================================= MANUAL ================================ -->
   <section class="panel" id="p-manual" role="tabpanel" aria-labelledby="tab-manual" hidden>
     <p class="note" style="margin-top:0">
-      Ficha técnica lida de <code>battle_simulator/models.py</code> quando a página carrega.
-      Alcance 1 atinge só a linha de frente; alcance 2 alcança também o fundo. Em velocidade igual,
-      os lados intercalam ações e a prioridade muda a cada rodada.
+      O alcance conta as fileiras dos dois lados: frente contra frente é 1;
+      fundo contra frente é 2; fundo contra fundo é 3. Uma retaguarda sem
+      vanguarda viva conta como frente. Quem não alcança avança, gastando a ação.
+      Em velocidade igual, os lados intercalam ações e a prioridade muda a cada rodada.
+      Tanque e Médico esperam uma rodada depois de usar a arma ou curar;
+      o replay mostra em qual rodada voltam a estar prontos.
     </p>
 
     <h2 class="section-title">Unidades</h2>
@@ -249,7 +252,7 @@
         <div class="em">🛡️</div>
         <div class="nm">Escudo</div>
         <div class="src">Guardião, sobre o aliado de frente mais ferido</div>
-        <p>Absorve 1 de dano do próximo golpe recebido pelo aliado protegido.</p>
+        <p>Absorve 1 do próximo dano, inclusive sangramento, e expira após duas viradas de rodada.</p>
       </div>
       <div class="effect-card" style="--accent: var(--gold)">
         <div class="em">💫</div>
@@ -261,7 +264,7 @@
         <div class="em">➕</div>
         <div class="nm">Cura</div>
         <div class="src">Médico, sobre o aliado com menor HP proporcional</div>
-        <p>Recupera 2 de HP em vez de atacar — o Médico nunca ataca enquanto houver ferido.</p>
+        <p>Quando pronto, recupera 2 de HP em vez de atacar se houver ferido. Depois espera uma rodada para conjurar novamente.</p>
       </div>
     </div>
 
@@ -276,6 +279,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"></script>
-<script src="app.js?v=fileiras-1"></script>
+<script src="replay-state.js?v=review-1"></script>
+<script src="app.js?v=review-1"></script>
 </body>
 </html>

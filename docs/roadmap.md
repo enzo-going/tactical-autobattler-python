@@ -55,7 +55,7 @@ Já entregue:
 Próximos passos na mesma direção — do lado das regras:
 
 1. Cadência para as armas de alcance, junto com uma revisão da renda por rodada.
-   Medido e adiado: com o arco recarregando, a vazão de dano cai abaixo do ritmo
+   Reavaliar após a correção das ordens automáticas. Na medição anterior: com o arco recarregando, a vazão de dano cai abaixo do ritmo
    de reforço e nenhuma batalha termina antes do limite de rodadas.
 2. Unidades que ocupam dois espaços — cavalaria forte, mas vulnerável a lanças.
    A referência é explícita: cavalo morre para lança.
@@ -65,9 +65,11 @@ Próximos passos na mesma direção — do lado das regras:
 5. Campanha: sequência de confrontos com um esquadrão que persiste entre
    partidas. Depende de salvar/retomar sessão, que já está na lista acima.
 
-Pendência de equilíbrio, anterior a esta fase: o estilo `defensive` perde todas
-as batalhas do torneio, e perdia antes do alcance por fileira. É composição, não
-alcance — merece medida e PR próprio.
+Pendência de equilíbrio: revisar composições depois da correção das ordens
+automáticas. A conclusão anterior sobre o estilo defensivo era afetada por
+ações transferidas entre tropas após baixas. Na [nova amostra de 600 batalhas](review-formation.md),
+o defensivo vence 62,1%; o agressivo domina com 87,1%. Isso pede ajuste medido
+próprio e não valida o equilíbrio do modo interativo.
 
 ## Depois, se fizer sentido
 

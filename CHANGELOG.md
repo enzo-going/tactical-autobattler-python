@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.6.0 — Revisão de formação
+
+- Ordens automáticas mantêm a identidade de atacante e alvo após baixas,
+  inclusive mortes por sangramento. Uma tropa não herda a iniciativa de outra;
+  se o alvo planejado morreu, o motor seleciona um novo alvo válido.
+- Replay acompanha avanço entre fileiras, recarga e escudo consumido por
+  sangramento, com testes contra snapshots produzidos pelo motor Python.
+- Recarga mostra a rodada de retorno da arma, separada da ação disponível;
+  textos das peças mais legíveis, manual e laboratório alinhados às regras.
+- Relatórios identificam as regras atuais (`tactical-v2` / `auto-v2`). **Relatório
+  gerado por versão anterior não é lido por esta:** não há migração automática,
+  e reproduzi-lo exige o código da versão que o gerou. O build
+  atualiza o cache de recursos e módulos Python pelo conteúdo e lê a versão
+  do rodapé em `pyproject.toml`.
+- CI passa a jogar e exportar uma partida em Chromium, além dos testes Python
+  e de replay. Capturas ficam disponíveis como artefato.
+- [Nova medição de 600 batalhas](docs/review-formation.md): os resultados anteriores
+  eram afetados pela troca de identidade das ordens. Nenhum atributo ou custo
+  foi alterado nesta revisão.
+
 ## 0.5.0 — Cadência
 
 ### Regras
