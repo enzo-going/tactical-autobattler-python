@@ -1,5 +1,8 @@
 # Notas de balanceamento: iniciativa
 
+> Registro histórico da fase I. Estes números não descrevem o motor atual.
+> Veja a [revisão das ordens e nova medição](review-formation.md).
+
 ## Problema observado
 
 Até esta revisão, a iniciativa era ordenada apenas por velocidade. Como a

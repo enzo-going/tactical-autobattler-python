@@ -206,7 +206,7 @@
         <span
           >Um pequeno jogo de estratégia de
           <a href="https://github.com/enzo-going">Enzo Going</a>.</span
-        ><span>Python · Código aberto · v0.3</span>
+        ><span>Python · Código aberto · <span data-app-version>v0.5.0</span></span>
       </footer>
     </div>
     <dialog id="setup-dialog" aria-labelledby="setup-title">
@@ -294,21 +294,22 @@
         Por isso espada, escudo e martelo — alcance 1 — só lutam na linha de
         frente: guardados atrás, não alcançam ninguém e precisam avançar. O
         <b>Lanceiro</b>, de alcance 2, golpeia a vanguarda rival sem sair da
-        retaguarda, e o Arqueiro faz o mesmo de longe. Nem eles chegam à
-        retaguarda inimiga enquanto a vanguarda rival estiver de pé: são três
-        fileiras.
+        retaguarda, e o Arqueiro faz o mesmo de longe. De trás, não atingem o
+        fundo rival protegido: são três fileiras. Na própria vanguarda, uma
+        arma de alcance 2 também atinge o fundo rival.
       </p>
       <p>
-        Quando uma vanguarda cai inteira, a retaguarda daquele lado vira a nova
-        linha de frente — e passa a ser alcançável por todo mundo.
+        Sem vanguarda viva, a retaguarda daquele lado conta como frente para
+        medir alcance, sem mudar sua posição de recrutamento. Reforçar a
+        vanguarda volta a proteger as tropas de trás.
       </p>
       <h3>Recarga</h3>
       <p>
         Nem toda arma golpeia na mesma cadência. Espada, escudo, lança e arco
         agem todas as rodadas. O martelo pesado do Tanque e a conjuração do
-        Médico gastam a rodada seguinte recarregando — a peça mostra
-        <b>⟳ Recarregando</b> e, nessa rodada, pode proteger, reposicionar ou
-        esperar, mas não golpear nem curar.
+        Médico gastam a rodada seguinte recarregando. Se agem na rodada 1,
+        a peça mostra <b>⟳ Arma: R3</b>: na rodada 2 pode proteger, reposicionar ou
+        esperar, mas não golpear nem curar. A arma volta na rodada 3.
       </p>
       <p>
         Por isso o esquadrão rende mais quando mistura cadências: enquanto o

@@ -91,8 +91,10 @@ recrutamento e snapshots permanecem dentro do mesmo pacote.
 | Assunto | Simulador / laboratório | Sessão interativa |
 | --- | --- | --- |
 | Execução | Planos simultâneos por rodada, resolvidos por velocidade | Uma unidade por lado alternadamente |
-| Identidade das ordens | Índices dos planos automáticos | Nomes únicos da fábrica, estáveis após baixas |
-| Alcance 1 | Atinge frente; não alcança fundo | Atinge fundo quando não há frente viva |
+| Identidade das ordens | Índices vinculados às tropas antes das baixas; alvo morto permite nova seleção | Nomes únicos da fábrica, estáveis após baixas |
+| Alcance | Conta as fileiras dos dois lados; retaguarda sem frente viva conta como frente | Mesma regra |
+| Movimento sem alcance | Avança automaticamente, gastando a ação | Jogador escolhe reposicionar |
+| Recarga | Tanque e Médico esperam uma rodada após usar a arma ou curar | Mesma espera; proteger e mover seguem disponíveis |
 | Médico / Guardião | Suporte automático antes do ataque | Ordens explícitas do jogador |
 | Recrutas | Dependem das ordens no plano daquela rodada | Podem agir imediatamente |
 | Limite de tropas | Sem o teto do novo modo | Oito por lado |
@@ -139,8 +141,15 @@ antes de alterar o estado.
 ## Relatórios e reprodução
 
 O simulador mantém seu formato. O novo modo exporta um formato próprio,
-identificado por `schema_version: 1`, `mode: interactive` e `ruleset: tactical-v1`,
-com configuração, comandos aceitos, estado e snapshots por rodada.
+identificado por `schema_version: 1`, `mode: interactive` e `ruleset: tactical-v2`,
+com configuração, comandos aceitos, estado e snapshots por rodada. `ready_round`
+identifica a rodada em que a arma estará disponível; `reload` é a espera da arma.
+
+O identificador anterior `tactical-v1` foi reutilizado por engano até a 0.5.0,
+apesar das mudanças de alcance e recarga. Relatórios antigos exigem o código da
+versão que os produziu: esse identificador sozinho não distingue suas regras.
+Não há migração automática desses relatórios. O simulador agora identifica
+suas ordens estáveis como `auto-v2`.
 
 ```python
 import json
@@ -148,7 +157,7 @@ from pathlib import Path
 from battle_simulator.session import TacticalSession
 
 report = json.loads(Path("partida.json").read_text(encoding="utf-8"))
-assert report["ruleset"] == "tactical-v1"
+assert report["ruleset"] == TacticalSession.ruleset
 game = TacticalSession(**report["config"])
 for command in report["commands"]:
     game.command(command)
@@ -178,15 +187,16 @@ acadêmico.
 
 ## Direção visual e verificação
 
-O tabuleiro substitui o replay como centro da experiência. Tons de terra e
-oliva, silhuetas SVG feitas no código, bordas simples e fontes locais reduzem
-a ornamentação. A abertura é recolhida quando o combate começa.
+O campo usa pedra, ferro e azul acinzentado, com estandartes azuis e vinho,
+figuras vetoriais de corpo inteiro e equipamento por função. A abertura é
+recolhida quando o combate começa. Os textos de estado têm contraste com placas
+escuras; a disponibilidade de ação e a rodada de recarga aparecem separadamente.
 
 No celular, alvos são botões de confirmação; não é necessário arrastar peças
 nem depender de tooltips. Selecionar uma tropa leva aos comandos em telas
 estreitas. O histórico fica abaixo do campo.
 
-Validação desta etapa:
+Validação original da fase II (0.3):
 
 - 57 testes Python, incluindo 25 novos testes da sessão e ponte web.
 - Partida completa com o Python real via Pyodide, sem mock do motor.
@@ -194,6 +204,10 @@ Validação desta etapa:
 - Layout em 320, 375, 390, 768, 1024 e 1440 pixels; ordens no layout móvel.
 - Simulação automática e torneio executados no laboratório.
 
-O teste opcional está em `tests/browser_smoke.py`. Não substitui playtests
+O teste está em `tests/browser_smoke.py` e agora roda no CI com Chromium. Não substitui playtests
 humanos, auditoria completa com leitor de tela nem testes em Safari/Firefox.
 O [roadmap](roadmap.md) separa entregas desta fase das melhorias futuras.
+
+O build gera uma chave de cache pelo conteúdo de todos os recursos web e módulos
+Python. As duas páginas e o motor carregado por elas usam a mesma chave; o
+rodapé recebe a versão de `pyproject.toml`.

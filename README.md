@@ -28,7 +28,7 @@ outra: a leitura do campo é a mesma dos auto-battlers de formação de navegado
 que inspiraram o projeto.
 
 O elenco é vetorial e original, um desenho por função — soldado, arqueiro,
-guardião, médico e tanque —, com equipamento que identifica o papel e a cor do
+guardião, médico, tanque e lanceiro —, com equipamento que identifica o papel e a cor do
 pano identificando o exército. As figuras respiram paradas, reagem ao golpe e à
 cura, e o botão **Animações** desliga tudo isso para quem preferir o campo
 imóvel. Nada disso depende de imagem externa: são os mesmos arquivos que o
@@ -50,9 +50,9 @@ uma ordem a cada decisão. Nenhum cronômetro avança o campo.
 | Play, pause e velocidade | Preparação, ações alternadas e revisão |
 | Relatório de uma simulação | Histórico de comandos e estado da partida |
 
-O laboratório continua disponível com simulações, replays, torneios e regras
-da fase anterior. O jogo interativo tem regras próprias de alternância e avanço
-de linha; resultados dos dois modos não medem o mesmo balanceamento.
+O laboratório continua disponível com simulações, replays e torneios. Os dois
+modos compartilham alcance por fileiras e recarga; diferem em alternância,
+recrutamento e ordens automáticas. Seus resultados medem balanceamentos distintos.
 
 A [documentação da fase II](docs/phase-two.md) registra decisões de arquitetura,
 diferenças de regras, contrato de comandos e processo de migração.
@@ -84,14 +84,15 @@ diferenças de regras, contrato de comandos e processo de migração.
 Todas as peças podem atacar, proteger a si mesmas, trocar de linha ou esperar.
 Cada ordem consome a ação.
 
-O alcance é contado **em fileiras, a partir de onde a tropa está**: vanguarda
-contra vanguarda é uma fileira, e da sua retaguarda até a vanguarda rival são
-duas. Espada, escudo e martelo — alcance 1 — só lutam na linha de frente:
-guardados atrás, não alcançam ninguém e gastam a ação avançando. O Lanceiro e o
-Arqueiro, de alcance 2, golpeiam a vanguarda rival sem sair da retaguarda, mas
-nem eles chegam ao fundo inimigo enquanto a vanguarda rival estiver de pé — são
-três fileiras. Quando uma vanguarda cai inteira, a retaguarda daquele lado vira
-a nova linha de frente e fica exposta a todos.
+O alcance é contado **em fileiras, a partir de onde a tropa está**: frente
+contra frente é 1, fundo contra frente é 2, e fundo contra fundo é 3. Se um lado
+não tem vanguarda viva, sua retaguarda conta como frente para medir a distância,
+sem mudar a posição de recrutamento. Reforçar a vanguarda volta a proteger o fundo.
+
+Uma arma de alcance 1 atrás de aliados na frente precisa avançar para atingir
+as tropas rivais. No jogo você dá a ordem **Reposicionar**; no laboratório o
+avanço é automático e gasta a ação. Armas de alcance 2 podem atingir o fundo
+rival quando estão na própria frente, ou a frente rival quando estão atrás.
 
 Cada arma também tem a sua **cadência**. O martelo do Tanque e a conjuração do
 Médico gastam a rodada seguinte recarregando — nessa rodada a peça ainda pode
@@ -199,19 +200,24 @@ python -m unittest discover -s tests
 python -m compileall battle_simulator tests web/playground.py tools
 node --check web/game.js
 node --check web/app.js
+node --check web/characters.js
+node --check web/replay-state.js
+node --test tests/replay.test.cjs
 ```
 
-Node é necessário somente para as verificações de sintaxe JavaScript acima.
+Node executa as verificações de JavaScript e compara o replay com snapshots
+do motor Python, inclusive depois de buscar outra posição na linha do tempo.
 O CI verifica Python 3.10 e 3.12, incluindo a instalação e a execução dos
 comandos de console fora da pasta dos fontes.
 Os testes Python cobrem modos anteriores, comandos inválidos, custos, limite
 de esquadrão, alcance, alvos estáveis, habilidades, efeitos, renda, desempate,
 fim de partida e reprodução determinística do histórico.
 
-O teste de navegador é opcional. Com o servidor local aberto:
+O CI também joga uma partida real em Chromium. Para executar localmente:
 
 ```bash
-python -m pip install playwright
+python -m pip install playwright==1.63.0
+python tools/build_site.py
 python tests/browser_smoke.py
 ```
 
@@ -219,7 +225,9 @@ Por padrão usa Edge instalado. Para Chromium, execute
 `python -m playwright install chromium` e defina `BROWSER_CHANNEL=chromium`
 no ambiente. Ele percorre uma partida real com Pyodide, exportação, reinício,
 seis larguras de tela, ações no celular e o laboratório. Playwright é uma
-dependência de desenvolvimento, não do jogo.
+dependência de desenvolvimento, não do jogo. O script abre e encerra seu próprio
+servidor; `SITE_URL` permite verificar uma publicação existente. Capturas e
+relatório ficam em `_site/qa` e nos artefatos do CI.
 
 ## Limites desta versão
 
