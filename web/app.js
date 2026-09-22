@@ -81,7 +81,7 @@ const LANE_PT = { front: "frente", back: "fundo" };
 const EFFECT_PT = { bleed: "sangramento", shield: "escudo", stun: "atordoamento" };
 const EFFECT_ICON = { bleed: "🩸", shield: "🛡️", stun: "💫" };
 const SIDE_PT = { 1: "Azul", 2: "Vermelho" };
-const SIDE_COLOR = { 1: "#4d9dff", 2: "#ff5566" };
+const SIDE_COLOR = { 1: "#80b1d4", 2: "#c8817a" };
 
 const EVENT_ICON = {
   unit_recruited: "➕",
@@ -544,7 +544,7 @@ function lunge(node, owner) {
 function animateEvent(event) {
   const actorNode = event.actor ? nodesByUnit.get(event.actor) : null;
   const targetNode = event.target ? nodesByUnit.get(event.target) : null;
-  const color = SIDE_COLOR[event.player] || "#f5c451";
+  const color = SIDE_COLOR[event.player] || "#cdbb95";
 
   switch (event.type) {
     case "round_started":
@@ -844,7 +844,7 @@ function showVictory() {
   const finalState = buildState(replay.events, replay.events.length);
   const mvp = mvpOf(finalState);
 
-  box.style.setProperty("--faction", side ? SIDE_COLOR[side] : "#f5c451");
+  box.style.setProperty("--faction", side ? SIDE_COLOR[side] : "#cdbb95");
   box.innerHTML = "";
 
   const inner = el("div", "victory-inner");
@@ -1180,7 +1180,7 @@ function matchupMatrix(summary) {
       const cell = cells[rowName][colName];
       const rate = cell.games ? cell.wins / cell.games : 0;
       const node = el("div", "mcell");
-      node.style.background = `hsl(${Math.round(rate * 140)}, 52%, ${Math.round(11 + rate * 13)}%)`;
+      node.style.background = `hsl(212, 20%, ${Math.round(14 + rate * 18)}%)`;
       node.appendChild(el("div", "pct", `${(rate * 100).toFixed(0)}%`));
       node.appendChild(el("div", "raw", `${cell.wins}/${cell.games}`));
       grid.appendChild(node);
