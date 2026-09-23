@@ -57,6 +57,20 @@ recrutamento e ordens automáticas. Seus resultados medem balanceamentos distint
 A [documentação da fase II](docs/phase-two.md) registra decisões de arquitetura,
 diferenças de regras, contrato de comandos e processo de migração.
 
+## A linha decide o fim — 0.8
+
+- **Linha rompida.** Sem ninguém vivo na vanguarda rival, a sua vanguarda pode
+  atacar o forte. A retaguarda rival continua defendendo, ao alcance da sua.
+- **Dano excedente.** O golpe que derruba uma tropa leva ao forte o que sobrar
+  depois de defesa e escudo. A confirmação mostra quanto chega.
+- **A tela avisa.** A faixa de vanguarda vazia vira aviso: linha rival rompida,
+  ou o seu forte exposto — já na preparação.
+
+Antes, 9 em cada 10 partidas terminavam no desempate, porque o forte só
+apanhava com o campo vazio. Agora metade termina com um forte destruído. Os
+números, o método e o que a regra ainda não resolve estão em
+[Ritmo: linha rompida e dano excedente](docs/ritmo.md).
+
 ## Decisões mais claras — 0.7
 
 - **Monte e revise.** Selecione tropas no campo para trocar de linha gratuitamente
@@ -78,10 +92,11 @@ diferenças de regras, contrato de comandos e processo de migração.
 3. **Reorganize.** Quando todas as unidades agirem, confira o resultado da
    rodada. Se a partida continuar, ambos recebem 6 suprimentos e o jogo espera
    você avançar.
-4. **Vença.** Elimine as tropas para atacar o forte rival. Destruir a base vence
-   a partida. No limite de rodadas, vence a base com mais vida; em igualdade,
-   conta o dano de golpes causado (sem sangramento). Persistindo a igualdade,
-   há empate.
+4. **Vença.** Derrube a vanguarda rival: com a linha rompida, a sua vanguarda
+   pode atacar o forte. O golpe que derruba uma tropa leva o excedente ao forte.
+   Destruir o forte vence a partida. No limite de rodadas, vence a base com mais
+   vida; em igualdade, conta o dano de golpes causado (sem sangramento).
+   Persistindo a igualdade, há empate.
 
 | Unidade | Custo | Alcance | Recarga | O que oferece |
 | --- | ---: | :---: | :---: | --- |
@@ -115,8 +130,9 @@ linha de frente sustenta o dano.
 
 A seed define quem abre a primeira rodada; a prioridade alterna nas seguintes.
 Os estilos rivais mudam as compras. Durante o combate, todos usam a mesma
-heurística: unidade mais rápida disponível, golpe final quando possível, cura,
-proteção contra golpe fatal e ataque ao alvo alcançável com menos vida. Sem
+heurística: unidade mais rápida disponível, golpe que vence a partida, golpe
+final quando possível, cura, proteção contra golpe fatal e ataque ao alvo
+alcançável com menos vida. Sem
 ataque, pode avançar ou se proteger. Você escolhe a ordem de suas peças.
 
 ## Rodar localmente

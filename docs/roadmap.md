@@ -39,6 +39,15 @@ Veja os critérios e detalhes em [Fase II](phase-two.md).
 - Rival usa avanço, proteção e oportunidades de golpe final.
 - [Medição do modo interativo](gameplay.md) com política de jogador fixa.
 
+## Ritmo: linha rompida (0.8, concluída)
+
+- O forte recebe golpe pela vanguarda quando a vanguarda inimiga está vazia.
+- O excedente de um golpe letal atravessa até o forte, com previsão na confirmação.
+- A faixa de vanguarda vazia avisa brecha e forte exposto.
+- [Medição com exércitos sorteados](ritmo.md): partidas decididas de 9,3% para 50,8%.
+- Pendente: o domínio passou do Lanceiro para Tanque e Guardião, e o Médico
+  segue a pior compra. O próximo ajuste é de equilíbrio, não de ritmo.
+
 ## Fase III — as peças ganham vida (direção)
 
 A referência são os auto-battlers de formação que rodavam no navegador: dois

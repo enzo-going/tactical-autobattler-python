@@ -56,7 +56,7 @@ lados, a rodada acaba normalmente, sem espera infinita.
 
 | Ordem | Alvo / condição | Consequência |
 | --- | --- | --- |
-| `attack` | Inimigo alcançável; base apenas sem tropas inimigas | Dano e efeitos da unidade |
+| `attack` | Inimigo alcançável; forte sem tropas inimigas, ou pela vanguarda com a vanguarda inimiga vazia | Dano e efeitos da unidade; o excedente de um golpe letal vai ao forte |
 | `guard` | A própria peça; Guardião também escolhe aliados | Escudo que reduz o próximo dano em 1 |
 | `heal` | Médico, aliado ferido ou ele mesmo | Recupera até 2 HP, sem exceder o máximo |
 | `move` | A outra linha | Troca a posição e gasta a ação |
@@ -149,19 +149,20 @@ antes de alterar o estado.
 ## Relatórios e reprodução
 
 O simulador mantém seu formato. O novo modo exporta um formato próprio,
-identificado por `schema_version: 1`, `mode: interactive` e `ruleset: tactical-v3`,
+identificado por `schema_version: 1`, `mode: interactive` e `ruleset: tactical-v4`,
 com configuração, comandos aceitos, estado e snapshots por rodada. `ready_round`
 identifica a rodada em que a arma estará disponível; `reload` é a espera da arma.
 
 A 0.6 usava `tactical-v2`; a 0.7 muda para `tactical-v3` por acrescentar comandos
-de preparação e mudar decisões do rival. Use a versão original para reproduzir
-relatórios anteriores.
+de preparação e mudar decisões do rival; a 0.8 muda para `tactical-v4` (e o
+simulador para `auto-v3`) com a linha rompida e o dano excedente. Use a versão
+original para reproduzir relatórios anteriores.
 
 O identificador anterior `tactical-v1` foi reutilizado por engano até a 0.5.0,
 apesar das mudanças de alcance e recarga. Relatórios antigos exigem o código da
 versão que os produziu: esse identificador sozinho não distingue suas regras.
-Não há migração automática desses relatórios. O simulador agora identifica
-suas ordens estáveis como `auto-v2`.
+Não há migração automática desses relatórios. O simulador identificou suas
+ordens estáveis como `auto-v2` até a 0.7; desde a 0.8, `auto-v3`.
 
 ```python
 import json

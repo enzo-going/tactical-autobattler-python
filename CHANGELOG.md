@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.8.0 — Linha rompida
+
+- Com a vanguarda rival vazia, a sua vanguarda pode atacar o forte. A
+  retaguarda rival continua defendendo e segue ao alcance da sua retaguarda.
+- O golpe que derruba uma tropa leva ao forte o dano que sobrar depois de
+  defesa e escudo. Alvos mostram o excedente e quando ele vence a partida.
+- A faixa de vanguarda vazia avisa "Linha rompida" no rival e "Vanguarda vazia"
+  no seu lado, inclusive na preparação; a orientação da rodada repete o aviso.
+- O rival prioriza o golpe que vence a partida, inclusive pelo excedente.
+- O registro distingue golpe pela brecha, excedente e ataque com o campo vazio,
+  e passa a falar "forte rival" e "seu forte" em vez do nome interno da base.
+- Regras interativas `tactical-v4`; laboratório `auto-v3`.
+- [Medição](docs/ritmo.md) com 8.000 exércitos sorteados, teto de 8 e 20
+  rodadas: forte destruído em 50,8% das partidas, antes 9,3%; média de 19,42
+  para 16,53 rodadas. O equilíbrio muda de dono — Tanque e Guardião passam a
+  pesar mais que o Lanceiro — e o Médico continua a pior compra.
+
 ## 0.7.1 — Paleta refinada
 
 - Paleta levemente refinada no jogo e laboratório: superfícies em grafite,
