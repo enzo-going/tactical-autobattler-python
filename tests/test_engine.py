@@ -19,6 +19,8 @@ from battle_simulator.models import (
     TroopFactory,
     can_assault_base,
     can_strike,
+    needs_triage,
+    triage,
     TroopKind,
 )
 from battle_simulator.strategies import AggressiveBot, BalancedBot, DefensiveBot
@@ -108,6 +110,27 @@ class TroopTest(unittest.TestCase):
         fallen = Guardian("Fallen", lane=Lane.FRONT)
         fallen.current_hp = 0
         self.assertTrue(can_assault_base(front, [fallen, Archer("Enemy", lane=Lane.BACK)]))
+
+    def test_triage_heals_three_and_clears_bleed_and_stun(self):
+        soldier = Soldier("Soldier")
+        soldier.current_hp = 1
+        soldier.add_effect(StatusEffect.BLEED, 3)
+        soldier.add_effect(StatusEffect.STUN, 1)
+        soldier.add_effect(StatusEffect.SHIELD, 2)
+
+        healed, cleansed = triage(soldier)
+
+        self.assertEqual((healed, soldier.health), (3, 4))
+        self.assertEqual(cleansed, [StatusEffect.BLEED, StatusEffect.STUN])
+        self.assertEqual(set(soldier.effects), {StatusEffect.SHIELD})
+
+    def test_triage_targets_wounds_bleed_and_stun_but_not_a_shield(self):
+        healthy = Soldier("Soldier")
+        self.assertFalse(needs_triage(healthy))
+        healthy.add_effect(StatusEffect.SHIELD, 2)
+        self.assertFalse(needs_triage(healthy))
+        healthy.add_effect(StatusEffect.BLEED, 2)
+        self.assertTrue(needs_triage(healthy))
 
     def test_shield_reduces_next_damage(self):
         guardian = Guardian("Guardian")
@@ -366,6 +389,23 @@ class BattleEngineTest(unittest.TestCase):
 
         self.assertGreater(soldier.health, 2)
         self.assertTrue(any(event.event_type == "heal" for event in events))
+
+    def test_medic_treats_every_round_without_reload(self):
+        # Vida 2: o sangramento tira 1 no inicio da rodada, antes da triagem.
+        soldier = Soldier("Soldier")
+        soldier.current_hp = 2
+        soldier.add_effect(StatusEffect.BLEED, 3)
+        engine = BattleEngine(Battlefield(troops_one=[Medic("Medic"), soldier]))
+        plan = {Player.ONE: TurnPlan(attacks=(AttackOrder(attacker_index=0),)), Player.TWO: TurnPlan()}
+
+        first = engine.play_round(plan)
+        soldier.current_hp = 2
+        second = engine.play_round(plan)
+
+        heals = [event for event in first + second if event.event_type == "heal"]
+        self.assertEqual(len(heals), 2)
+        self.assertEqual(heals[0].metadata["cleansed"], ["bleed"])
+        self.assertFalse(any(event.event_type == "reloading" for event in second))
 
     def test_tank_stuns_target_next_action(self):
         battlefield = Battlefield(

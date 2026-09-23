@@ -108,7 +108,10 @@ globalThis.BattleReplay = {
           break;
 
         case "heal":
-          if (target) target.hp = Math.min(target.maxHp, target.hp + event.amount);
+          if (target) {
+            target.hp = Math.min(target.maxHp, target.hp + event.amount);
+            for (const effect of event.metadata.cleansed || []) delete target.effects[effect];
+          }
           if (actor) actor.readyRound = event.metadata.ready_round ?? actor.readyRound;
           break;
 
