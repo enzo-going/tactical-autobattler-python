@@ -1,6 +1,6 @@
 # Changelog
 
-## Ajustes após a 0.7.0
+## 0.7.1 — Paleta refinada
 
 - Paleta levemente refinada no jogo e laboratório: superfícies em grafite,
   texto marfim mais neutro, azul-aço e vermelho discreto para os exércitos.
