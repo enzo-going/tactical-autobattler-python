@@ -63,6 +63,8 @@ meter::-webkit-meter-bar { background: var(--track); border: 0; border-radius: 0
 .lane-label span:last-child { color: #c4d9ee; }.enemy-lane .lane-label span:last-child { color: #e8bcb7; }
 .units { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: end; gap: 8px 2px; min-height: 260px; align-content: start; }
 .empty-slot { min-height: 260px; display: grid; place-items: center; grid-column: 1/-1; padding: 15px 8px; text-align: center; font: italic 12px var(--display); color: #dbe2e8; border: 1px dashed #c7d2dc55; border-radius: 3px; background: #17233338; text-shadow: 0 1px 3px #000; }
+.empty-slot.breach-open { color: var(--ally); border-color: var(--ally); font-style: normal; }
+.empty-slot.breach-exposed { color: var(--foe); border-color: var(--foe); font-style: normal; }
 .frontier { position: absolute; left: 50%; top: 142px; bottom: 15px; border-left: 1px dashed #dee3d055; pointer-events: none; }
 .frontier b { position: absolute; top: -26px; left: 0; transform: translateX(-50%); color: #e4e6dc; background: #172130b3; padding: 4px 10px; font: 9px var(--mono); letter-spacing: 1px; white-space: nowrap; }
 .piece { --team: var(--ally); position: relative; min-width: 0; width: 100%; padding: 0; border: 1px solid transparent; background: transparent; border-radius: 5px; color: var(--ink); text-align: center; box-shadow: none; }

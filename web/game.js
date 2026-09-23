@@ -221,9 +221,9 @@ function showCombatFeedback(events) {
 }
 function phaseHint() {
   if (state.phase === "recruit")
-    return `Recrute e ajuste sua formação. ${state.opener === 1 ? "Você abre" : "O rival abre"} o combate nesta rodada.`;
+    return `Recrute e ajuste sua formação. ${state.opener === 1 ? "Você abre" : "O rival abre"} o combate nesta rodada.${lineHint()}`;
   if (state.phase === "combat")
-    return "Sua vez. Escolha uma unidade pronta e dê uma ordem.";
+    return `Sua vez. Escolha uma unidade pronta e dê uma ordem.${lineHint()}`;
   if (state.phase === "review")
     return "Rodada encerrada. Confira o campo e prepare seus próximos reforços.";
   return state.winner === 1
@@ -231,6 +231,24 @@ function phaseHint() {
     : state.winner === 2
       ? "Derrota. Uma nova tentativa começa com outro plano."
       : "Empate. A fronteira segue em disputa.";
+}
+// Vanguarda vazia abre o forte: a do rival para a sua vanguarda, a sua para a dele.
+function lineHint() {
+  let hint = "";
+  if (state.phase === "combat" && state.open_lines.player_two)
+    hint += " A linha rival está rompida: sua vanguarda pode atacar o forte.";
+  if (state.open_lines.player_one && state.troops.player_one.length)
+    hint += " Sua vanguarda está vazia: o forte fica exposto.";
+  return hint;
+}
+function emptyLane(side, lane) {
+  if (lane === "front" && side === "enemy" && state.phase === "combat" && state.open_lines.player_two)
+    return node("div", "empty-slot breach-open", "Linha rompida · sua vanguarda alcança o forte");
+  if (lane === "front" && side === "ally" && state.phase !== "finished"
+      && state.open_lines.player_one && state.troops.player_one.length)
+    return node("div", "empty-slot breach-exposed", "Vanguarda vazia · a vanguarda rival alcança seu forte");
+  return node("div", "empty-slot",
+    state.phase === "recruit" ? (side === "ally" ? "Recrute tropas para esta linha" : "O rival se prepara") : "Linha sem tropas");
 }
 function render() {
   document.body.classList.toggle(
@@ -301,14 +319,7 @@ function renderBoard() {
       const container = $(side + "-" + lane);
       container.replaceChildren();
       const troops = state.troops[key].filter((t) => t.lane === lane);
-      if (!troops.length)
-        container.append(
-          node(
-            "div",
-            "empty-slot",
-            state.phase === "recruit" ? (side === "ally" ? "Recrute tropas para esta linha" : "O rival se prepara") : "Linha sem tropas",
-          ),
-        );
+      if (!troops.length) container.append(emptyLane(side, lane));
       for (const t of troops) {
         const choice = targets.find((c) => c.target === t.name);
         const ready = Boolean(state.legal_actions[t.name]);
@@ -357,7 +368,7 @@ function renderBoard() {
           const preview = previewFor(choice);
           if (preview?.damage !== undefined)
             b.querySelector(".piece-body").append(node("span", "target-preview",
-              `${preview.damage} dano${preview.defeats ? " · derrota" : ""}`));
+              `${preview.damage} dano${preview.defeats ? " · derrota" : ""}${preview.overflow ? ` · +${preview.overflow} forte` : ""}`));
         }
         container.append(b);
       }
@@ -472,7 +483,7 @@ function renderOrders() {
         : "Confirmar: esperar nesta rodada";
     const preview = previewFor(choice);
     if (preview?.damage !== undefined)
-      text += ` · ${preview.damage} dano · ${preview.defeats ? (choice.target === "base" ? "vence a partida" : "derrota o alvo") : `${preview.remaining_hp} vida após o golpe`}${preview.effects.length ? " · " + preview.effects.map(e => EFFECTS[e]).join(", ") : ""}`;
+      text += ` · ${preview.damage} dano · ${preview.defeats ? (choice.target === "base" ? "vence a partida" : "derrota o alvo") : `${preview.remaining_hp} vida após o golpe`}${preview.overflow ? ` · +${preview.overflow} no forte${preview.wins ? ", vence a partida" : ""}` : ""}${preview.effects.length ? " · " + preview.effects.map(e => EFFECTS[e]).join(", ") : ""}`;
     if (preview?.healing !== undefined) text += ` · +${preview.healing} vida`;
     $("targets").append(
       button(text, () => command({ type: "act", actor: selected, ...choice })),
@@ -514,8 +525,15 @@ function eventText(e) {
     case "unit_recruited":
       return `${a} chegou à ${e.metadata.lane === "front" ? "vanguarda" : "retaguarda"}.`;
     case "unit_attack":
-    case "base_attack":
       return `${a} causou ${e.amount} de dano a ${t}.`;
+    case "base_attack": {
+      const fort = e.player === 1 ? "ao forte rival" : "ao seu forte";
+      if (e.metadata?.overflow)
+        return `O golpe de ${a} atravessou: ${e.amount} de dano ${fort}.`;
+      if (e.metadata?.line_broken)
+        return `${a} passou pela linha rompida: ${e.amount} de dano ${fort}.`;
+      return `${a} causou ${e.amount} de dano ${fort}.`;
+    }
     case "unit_defeated":
       return `${a} caiu em combate.`;
     case "heal":

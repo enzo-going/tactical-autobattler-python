@@ -611,8 +611,14 @@ function describe(event) {
       return `${side} recrutou <b>${actor}</b> na linha de ${LANE_PT[event.metadata.lane] || event.metadata.lane} por ${event.amount} recursos`;
     case "unit_attack":
       return `${actor} atacou ${target} causando <span class="amt">${event.amount}</span> de dano`;
-    case "base_attack":
-      return `${actor} atingiu a base ${SIDE_PT[event.player === 1 ? 2 : 1]} causando <span class="amt">${event.amount}</span> de dano`;
+    case "base_attack": {
+      const base = SIDE_PT[event.player === 1 ? 2 : 1];
+      if (event.metadata?.overflow)
+        return `O golpe de ${actor} atravessou até a base ${base}: <span class="amt">${event.amount}</span> de dano excedente`;
+      if (event.metadata?.line_broken)
+        return `${actor} passou pela linha rompida e atingiu a base ${base} causando <span class="amt">${event.amount}</span> de dano`;
+      return `${actor} atingiu a base ${base} causando <span class="amt">${event.amount}</span> de dano`;
+    }
     case "unit_defeated":
       return `${actor} foi derrotado`;
     case "effect_damage":
