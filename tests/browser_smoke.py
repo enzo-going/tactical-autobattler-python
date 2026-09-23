@@ -102,7 +102,7 @@ def main():
         downloaded.value.save_as(str(output / "report.json"))
         report = json.loads((output / "report.json").read_text())
         assert report["state"]["phase"] == "finished"
-        assert report["commands"] and report["ruleset"] == "tactical-v3"
+        assert report["commands"] and report["ruleset"] == "tactical-v4"
         page.locator("#new").click()
         page.locator("#seed").fill("0")
         page.locator("#rounds").fill("3")

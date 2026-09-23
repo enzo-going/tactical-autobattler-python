@@ -206,10 +206,62 @@ class TacticalSessionTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.act(game, "Soldier 1", "attack", target="base")
 
-    def test_base_is_only_target_when_enemy_army_is_empty(self):
+    def test_fort_is_not_a_target_while_the_enemy_vanguard_stands(self):
         game = self.combat([Tank("Tank 1")], [Soldier("Soldier 1")])
         with self.assertRaises(ValueError):
             self.act(game, "Tank 1", "attack", target="base")
+
+    def test_broken_line_lets_the_vanguard_choose_the_fort(self):
+        game = self.combat([Soldier("Soldier 1")], [Archer("Archer 2", lane=Lane.BACK)])
+        legal = game.state()["legal_actions"]["Soldier 1"]
+        self.assertIn({"action": "attack", "target": "base"}, legal)
+        self.assertIn({"action": "attack", "target": "Archer 2"}, legal)
+        self.assertTrue(game.state()["open_lines"]["player_two"])
+
+        self.act(game, "Soldier 1", "attack", target="base")
+
+        self.assertEqual(game.field.base_two.health, 26)
+        strike = next(e for e in game.engine.events if e.event_type == "base_attack")
+        self.assertTrue(strike.metadata["line_broken"])
+
+    def test_rear_rank_cannot_use_the_breach(self):
+        game = self.combat([Archer("Archer 1", lane=Lane.BACK)], [Archer("Archer 2", lane=Lane.BACK)])
+        with self.assertRaises(ValueError):
+            self.act(game, "Archer 1", "attack", target="base")
+
+    def test_lethal_hit_previews_and_carries_overflow(self):
+        soldier = Soldier("Soldier 2")
+        soldier.current_hp = 1
+        game = self.combat([Tank("Tank 1")], [soldier, Archer("Archer 3", lane=Lane.BACK)])
+        preview = next(p for p in game.state()["action_previews"]["Tank 1"] if p.get("target") == "Soldier 2")
+        self.assertEqual((preview["defeats"], preview["overflow"], preview["wins"]), (True, 3, False))
+
+        self.act(game, "Tank 1", "attack", target="Soldier 2")
+
+        self.assertEqual(game.field.base_two.health, 25)
+        spill = next(e for e in game.engine.events if e.event_type == "base_attack")
+        self.assertTrue(spill.metadata["overflow"])
+
+    def test_overflow_that_finishes_the_fort_is_previewed_as_a_win(self):
+        soldier = Soldier("Soldier 2")
+        soldier.current_hp = 1
+        game = self.combat([Tank("Tank 1")], [soldier])
+        game.field.base_two.health = 2
+        preview = next(p for p in game.state()["action_previews"]["Tank 1"] if p.get("target") == "Soldier 2")
+        self.assertEqual((preview["overflow"], preview["wins"]), (2, True))
+
+        self.act(game, "Tank 1", "attack", target="Soldier 2")
+
+        self.assertEqual(game.phase, "finished")
+        self.assertEqual(game.winner, Player.ONE)
+
+    def test_rival_breaks_through_an_empty_player_vanguard(self):
+        game = self.combat([Archer("Archer 1", lane=Lane.BACK)], [Soldier("Soldier 2")])
+        if "Archer 1" in game.state()["legal_actions"]:
+            self.act(game, "Archer 1", "wait")
+
+        self.assertTrue(game.state()["open_lines"]["player_one"])
+        self.assertEqual(game.field.base_one.health, 26)
 
     def test_stun_consumes_pending_action_once(self):
         enemy = Guardian("Guardian 2")
