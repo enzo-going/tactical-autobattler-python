@@ -57,6 +57,17 @@ recrutamento e ordens automáticas. Seus resultados medem balanceamentos distint
 A [documentação da fase II](docs/phase-two.md) registra decisões de arquitetura,
 diferenças de regras, contrato de comandos e processo de migração.
 
+## O Médico que salva — 0.9
+
+- **Triagem.** O Médico trata um aliado por ação, todas as rodadas: cura 3,
+  estanca o sangramento e desfaz o atordoamento.
+- **Vale para quem sangra.** Um aliado sangrando ou atordoado pode ser tratado
+  mesmo com a vida cheia, e a confirmação mostra o que será removido.
+
+Antes, investir no Médico era a pior compra do jogo. Dez funções foram medidas
+antes da escolha — curar em área rendeu menos do que curar um. O preço é ritmo:
+curar prolonga o combate. Os números estão em [Médico: triagem](docs/triagem.md).
+
 ## A linha decide o fim — 0.8
 
 - **Linha rompida.** Sem ninguém vivo na vanguarda rival, a sua vanguarda pode
@@ -103,7 +114,7 @@ números, o método e o que a regra ainda não resolve estão em
 | Soldado | 2 | 1 | — | Linha de frente barata |
 | Arqueiro | 3 | 2 | — | Atinge de longe e causa sangramento |
 | Guardião | 4 | 1 | — | Resiste a golpes e pode proteger um aliado |
-| Médico | 5 | 2 | 1 rodada | Cura 2 de vida; a conjuração demora |
+| Médico | 5 | 2 | — | Triagem: cura 3, estanca sangramento e desfaz atordoamento |
 | Tanque | 5 | 1 | 1 rodada | Golpe pesado que atordoa o alvo |
 | Lanceiro | 4 | 2 | — | Golpeia a vanguarda rival sem sair da retaguarda |
 
@@ -120,11 +131,11 @@ as tropas rivais. No jogo você dá a ordem **Reposicionar**; no laboratório o
 avanço é automático e gasta a ação. Armas de alcance 2 podem atingir o fundo
 rival quando estão na própria frente, ou a frente rival quando estão atrás.
 
-Cada arma também tem a sua **cadência**. O martelo do Tanque e a conjuração do
-Médico gastam a rodada seguinte recarregando — nessa rodada a peça ainda pode
-proteger, reposicionar ou esperar, mas não golpear nem curar. Por isso o
-esquadrão rende mais quando mistura cadências: enquanto o martelo recarrega, a
-linha de frente sustenta o dano.
+Cada arma também tem a sua **cadência**. O martelo do Tanque gasta a rodada
+seguinte recarregando — nessa rodada ele ainda pode proteger, reposicionar ou
+esperar, mas não golpear. Por isso o esquadrão rende mais quando mistura
+cadências: enquanto o martelo recarrega, a linha de frente sustenta o dano, e a
+triagem do Médico trata quem apanhou.
 
 É a formação e o tempo, e não só a ficha da unidade, que decidem a batalha.
 

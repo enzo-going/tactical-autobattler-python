@@ -58,7 +58,7 @@ lados, a rodada acaba normalmente, sem espera infinita.
 | --- | --- | --- |
 | `attack` | Inimigo alcançável; forte sem tropas inimigas, ou pela vanguarda com a vanguarda inimiga vazia | Dano e efeitos da unidade; o excedente de um golpe letal vai ao forte |
 | `guard` | A própria peça; Guardião também escolhe aliados | Escudo que reduz o próximo dano em 1 |
-| `heal` | Médico, aliado ferido ou ele mesmo | Recupera até 2 HP, sem exceder o máximo |
+| `heal` | Médico, aliado ferido, sangrando ou atordoado, ou ele mesmo | Triagem: recupera até 3 HP, sem exceder o máximo, e remove sangramento e atordoamento |
 | `move` | A outra linha | Troca a posição e gasta a ação |
 | `wait` | Sem alvo | Abre mão da ação nesta rodada |
 
@@ -98,7 +98,7 @@ recrutamento e snapshots permanecem dentro do mesmo pacote.
 | Identidade das ordens | Índices vinculados às tropas antes das baixas; alvo morto permite nova seleção | Nomes únicos da fábrica, estáveis após baixas |
 | Alcance | Conta as fileiras dos dois lados; retaguarda sem frente viva conta como frente | Mesma regra |
 | Movimento sem alcance | Avança automaticamente, gastando a ação | Jogador escolhe reposicionar |
-| Recarga | Tanque e Médico esperam uma rodada após usar a arma ou curar | Mesma espera; proteger e mover seguem disponíveis |
+| Recarga | O Tanque espera uma rodada após golpear (o Médico também esperava até a 0.8) | Mesma espera; proteger e mover seguem disponíveis |
 | Médico / Guardião | Suporte automático antes do ataque | Ordens explícitas do jogador |
 | Recrutas | Dependem das ordens no plano daquela rodada | Podem agir imediatamente |
 | Limite de tropas | Sem o teto do novo modo | Oito por lado |
@@ -155,14 +155,15 @@ identifica a rodada em que a arma estará disponível; `reload` é a espera da a
 
 A 0.6 usava `tactical-v2`; a 0.7 muda para `tactical-v3` por acrescentar comandos
 de preparação e mudar decisões do rival; a 0.8 muda para `tactical-v4` (e o
-simulador para `auto-v3`) com a linha rompida e o dano excedente. Use a versão
-original para reproduzir relatórios anteriores.
+simulador para `auto-v3`) com a linha rompida e o dano excedente; a 0.9 muda
+para `tactical-v5` (e `auto-v4`) com a triagem do Médico. Use a versão original
+para reproduzir relatórios anteriores.
 
 O identificador anterior `tactical-v1` foi reutilizado por engano até a 0.5.0,
 apesar das mudanças de alcance e recarga. Relatórios antigos exigem o código da
 versão que os produziu: esse identificador sozinho não distingue suas regras.
 Não há migração automática desses relatórios. O simulador identificou suas
-ordens estáveis como `auto-v2` até a 0.7; desde a 0.8, `auto-v3`.
+ordens estáveis como `auto-v2` até a 0.7, `auto-v3` na 0.8 e `auto-v4` desde a 0.9.
 
 ```python
 import json

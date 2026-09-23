@@ -48,6 +48,15 @@ Veja os critérios e detalhes em [Fase II](phase-two.md).
 - Pendente: o domínio passou do Lanceiro para Tanque e Guardião, e o Médico
   segue a pior compra. O próximo ajuste é de equilíbrio, não de ritmo.
 
+## Médico: triagem (0.9, concluída)
+
+- O Médico trata um aliado por ação, sem recarga: cura 3, estanca o
+  sangramento e desfaz o atordoamento.
+- [Dez funções medidas](triagem.md) antes da escolha; curar em área rendeu menos.
+- Médico de 18,1% para 44,6%; distância entre a melhor e a pior unidade de 67,2
+  para 56,1 pontos. Custo: fortes destruídos de 50,8% para 40,6%.
+- Pendente: o Tanque segue dominante (82,9%).
+
 ## Fase III — as peças ganham vida (direção)
 
 A referência são os auto-battlers de formação que rodavam no navegador: dois

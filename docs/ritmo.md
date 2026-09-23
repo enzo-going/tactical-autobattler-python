@@ -72,6 +72,8 @@ fina e o forte exposto, e quem segura a linha — Tanque e Guardião — passa a
 decidir. A regra ganhou o propósito da vanguarda; o próximo ajuste precisa
 reduzir a distância entre as unidades, e não só trocar quem lidera.
 
+A 0.9 redesenhou o Médico a partir desta medição: ver [Médico: triagem](triagem.md).
+
 Ajustes só de número não bastaram na simulação: sobre a linha rompida, Tanque
 com ATQ 4, Guardião custando 5 ou Médico custando 3 mudaram em menos de 3 pontos
 a distância entre a melhor e a pior unidade. O Médico continua a pior compra em

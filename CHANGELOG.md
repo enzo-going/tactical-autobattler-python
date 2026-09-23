@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.9.0 — Triagem
+
+- O Médico trata um aliado por ação, sem recarga: cura 3, estanca o
+  sangramento e desfaz o atordoamento. Antes curava 2 e recarregava uma rodada.
+- Um aliado sangrando ou atordoado pode ser tratado mesmo com a vida cheia;
+  escudo não conta. A confirmação mostra o que será removido.
+- O registro, no jogo e no laboratório, diz o que foi curado e removido, e uma
+  triagem sem cura não mostra "+0" sobre a peça.
+- O Tanque passa a ser a única peça que recarrega; ajuda e manual atualizados.
+- Regras interativas `tactical-v5`; laboratório `auto-v4`.
+- [Medição](docs/triagem.md) com 8.000 exércitos sorteados e dez funções
+  candidatas: Médico de 18,1% para 44,6%, distância entre a melhor e a pior
+  unidade de 67,2 para 56,1 pontos. Custo: fortes destruídos de 50,8% para
+  40,6%, porque curar prolonga o combate. O Tanque segue dominante.
+
 ## 0.8.0 — Linha rompida
 
 - Com a vanguarda rival vazia, a sua vanguarda pode atacar o forte. A
