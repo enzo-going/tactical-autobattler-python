@@ -19,6 +19,9 @@ from battle_simulator.models import (
     TroopKind,
     can_assault_base,
     can_strike,
+    needs_triage,
+    triage,
+    triage_preview,
 )
 from battle_simulator.tournament import STRATEGIES
 
@@ -27,7 +30,7 @@ class TacticalSession:
     """Recruit, alternate unit actions, review, repeat. Names are stable unit IDs."""
 
     roster_limit = 8
-    ruleset = "tactical-v4"
+    ruleset = "tactical-v5"
 
     def __init__(self, opponent: str = "balanced", seed: int = 11, max_rounds: int = 20):
         if opponent not in STRATEGIES:
@@ -211,9 +214,7 @@ class TacticalSession:
             ]
         )
         if actor.role == Role.SUPPORT and loaded:
-            choices.extend(
-                {"action": "heal", "target": t.name} for t in allies if t.health < t.max_hp
-            )
+            choices.extend({"action": "heal", "target": t.name} for t in allies if needs_triage(t))
         if actor.role == Role.DEFENDER:
             choices.extend({"action": "guard", "target": t.name} for t in allies if t is not actor)
         return choices
@@ -260,7 +261,9 @@ class TacticalSession:
                 t for t in self.field.living_troops_for(player) if t.name == choice["target"]
             )
             if action == "heal":
-                self._event("heal", player, actor.name, ally.name, ally.heal(2))
+                healed, cleansed = triage(ally)
+                self._event("heal", player, actor.name, ally.name, healed,
+                            cleansed=[effect.value for effect in cleansed])
                 actor.start_reload(self.engine.round_number)
             else:
                 ally.add_effect(StatusEffect.SHIELD, 2)
@@ -362,7 +365,8 @@ class TacticalSession:
             preview["effects"] = effects
         elif choice["action"] == "heal":
             target = next(t for t in self.field.troops_one if t.name == target_name)
-            preview["healing"] = min(2, target.max_hp - target.health)
+            healing, cleanses = triage_preview(target)
+            preview.update(healing=healing, cleanses=[effect.value for effect in cleanses])
         return preview
 
     def _check_finished(self) -> bool:

@@ -190,8 +190,28 @@ class TacticalSessionTest(unittest.TestCase):
         ally.health = 4
         game = self.combat([Medic("Medic 1"), ally], [])
         self.act(game, "Medic 1", "heal", target="Guardian 1")
-        self.assertEqual(ally.health, 6)
+        self.assertEqual(ally.health, 7)
         self.assertIn("Medic 1", game.acted)
+
+    def test_triage_treats_a_bleeding_ally_at_full_health(self):
+        ally = Soldier("Soldier 1")
+        game = self.combat([Medic("Medic 1"), ally], [])
+        # Atordoamento pendente e consumido no inicio do combate; o que a triagem
+        # desfaz e o que cai durante a rodada, e tiraria a acao da proxima.
+        ally.add_effect(StatusEffect.BLEED, 2)
+        ally.add_effect(StatusEffect.STUN, 2)
+        preview = next(p for p in game.state()["action_previews"]["Medic 1"] if p["action"] == "heal")
+        self.assertEqual((preview["healing"], preview["cleanses"]), (0, ["bleed", "stun"]))
+
+        self.act(game, "Medic 1", "heal", target="Soldier 1")
+
+        self.assertEqual(ally.effects, {})
+        heal = next(e for e in game.engine.events if e.event_type == "heal")
+        self.assertEqual(heal.metadata["cleansed"], ["bleed", "stun"])
+
+    def test_healthy_ally_without_wounds_is_not_a_triage_target(self):
+        game = self.combat([Medic("Medic 1"), Soldier("Soldier 1")], [])
+        self.assertNotIn({"action": "heal", "target": "Soldier 1"}, game.state()["legal_actions"]["Medic 1"])
 
     def test_guardian_can_protect_an_ally(self):
         ally = Soldier("Soldier 1")
