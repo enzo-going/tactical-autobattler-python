@@ -21,7 +21,7 @@ const DESCRIPTIONS = {
   soldier: "Linha de frente · baixo custo",
   archer: "Alcance 2 · aplica sangramento",
   guardian: "Resistência · protege aliados",
-  medic: "Cura 2 · conjuração recarrega 1 rodada",
+  medic: "Triagem · cura 3, estanca e desperta · sem recarga",
   tank: "Impacto pesado · atordoa · recarga 1 rodada",
   pikeman: "Alcance 2 · golpeia da retaguarda · sem recarga",
 };
@@ -40,6 +40,8 @@ const ACTIONS = {
   wait: "Esperar",
 };
 const EFFECTS = { bleed: "Sangramento", shield: "Escudo", stun: "Atordoado" };
+const CLEANSES = { bleed: "estanca o sangramento", stun: "desfaz o atordoamento" };
+const CLEANSED = { bleed: "estancou o sangramento", stun: "desfez o atordoamento" };
 let bridge,
   catalog,
   state,
@@ -212,6 +214,7 @@ function showCombatFeedback(events) {
     totals.set(key, item);
   }
   for (const { target, amount, healing } of totals.values()) {
+    if (!amount) continue; // Triagem que so remove efeitos nao tem numero a mostrar.
     const floater = node("span", `combat-float${healing ? " healing" : ""}`, `${healing ? "+" : "−"}${amount}`);
     floater.setAttribute("aria-hidden", "true");
     target.append(floater);
@@ -455,7 +458,7 @@ function renderOrders() {
   const choices = state.legal_actions[selected];
   if (t.reload > 0 && t.reloading > 0)
     $("unit-detail").append(node("p", "reload-hint",
-      `Recarregando. Ataque e cura voltam na rodada ${t.ready_round}. Você ainda pode proteger, reposicionar ou esperar.`));
+      `Recarregando. O golpe volta na rodada ${t.ready_round}. Você ainda pode proteger, reposicionar ou esperar.`));
   else if (!choices.some(c => c.action === "attack"))
     $("unit-detail").append(node("p", "reload-hint",
       "Sem alvo ao alcance. Reposicionar consome a ação deste turno; proteger também pode ser útil."));
@@ -484,7 +487,9 @@ function renderOrders() {
     const preview = previewFor(choice);
     if (preview?.damage !== undefined)
       text += ` · ${preview.damage} dano · ${preview.defeats ? (choice.target === "base" ? "vence a partida" : "derrota o alvo") : `${preview.remaining_hp} vida após o golpe`}${preview.overflow ? ` · +${preview.overflow} no forte${preview.wins ? ", vence a partida" : ""}` : ""}${preview.effects.length ? " · " + preview.effects.map(e => EFFECTS[e]).join(", ") : ""}`;
-    if (preview?.healing !== undefined) text += ` · +${preview.healing} vida`;
+    if (preview?.healing !== undefined)
+      text += [preview.healing ? `+${preview.healing} vida` : "", ...(preview.cleanses || []).map(e => CLEANSES[e])]
+        .filter(Boolean).map(part => ` · ${part}`).join("");
     $("targets").append(
       button(text, () => command({ type: "act", actor: selected, ...choice })),
     );
@@ -536,8 +541,11 @@ function eventText(e) {
     }
     case "unit_defeated":
       return `${a} caiu em combate.`;
-    case "heal":
-      return `${a} curou ${e.amount} de vida de ${t}.`;
+    case "heal": {
+      const done = [e.amount ? `curou ${e.amount} de vida de ${t}` : `tratou ${t}`,
+        ...(e.metadata?.cleansed || []).map(effect => CLEANSED[effect])];
+      return `${a} ${done.length > 1 ? done.slice(0, -1).join(", ") + " e " + done.at(-1) : done[0]}.`;
+    }
     case "shield":
       return `${a} protegeu ${t}.`;
     case "unit_stunned":

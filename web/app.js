@@ -578,7 +578,7 @@ function animateEvent(event) {
 
     case "heal":
       pulse(targetNode, "healed", 560);
-      floatText(targetNode, `+${event.amount}`, "heal");
+      if (event.amount) floatText(targetNode, `+${event.amount}`, "heal");
       break;
 
     case "shield":
@@ -625,8 +625,11 @@ function describe(event) {
       return `${target} sofreu <span class="amt">${event.amount}</span> de ${EFFECT_PT[event.actor] || event.actor}`;
     case "effect_applied":
       return `${actor} aplicou ${EFFECT_PT[event.metadata.effect] || event.metadata.effect} em ${target}`;
-    case "heal":
-      return `${actor} curou ${target} em <span class="amt">${event.amount}</span> de HP`;
+    case "heal": {
+      const cleansed = (event.metadata?.cleansed || []).map(effect => EFFECT_PT[effect] || effect);
+      const cure = event.amount ? `curou ${target} em <span class="amt">${event.amount}</span> de HP` : `tratou ${target}`;
+      return `${actor} ${cure}${cleansed.length ? ` e removeu ${cleansed.join(" e ")}` : ""}`;
+    }
     case "shield":
       return `${actor} protegeu ${target} com escudo`;
     case "unit_stunned":
