@@ -17,6 +17,7 @@ from battle_simulator.models import (
     TROOP_COSTS,
     Troop,
     TroopKind,
+    can_assault_base,
     can_strike,
 )
 from battle_simulator.tournament import STRATEGIES
@@ -26,7 +27,7 @@ class TacticalSession:
     """Recruit, alternate unit actions, review, repeat. Names are stable unit IDs."""
 
     roster_limit = 8
-    ruleset = "tactical-v3"
+    ruleset = "tactical-v4"
 
     def __init__(self, opponent: str = "balanced", seed: int = 11, max_rounds: int = 20):
         if opponent not in STRATEGIES:
@@ -200,7 +201,7 @@ class TacticalSession:
             {"action": "attack", "target": t.name}
             for t in (self._reachable(actor, player.opponent) if loaded else [])
         ]
-        if loaded and not enemies:
+        if loaded and can_assault_base(actor, enemies):
             choices.append({"action": "attack", "target": "base"})
         choices.extend(
             [
@@ -226,14 +227,18 @@ class TacticalSession:
             return
         if action == "attack":
             target = choice["target"]
+            overflow = 0
             if target == "base":
                 base = self.field.base_for(player.opponent)
                 amount = base.receive_damage(actor.attack)
-                self._event("base_attack", player, actor.name, base.name, amount)
+                line_broken = bool(self.field.living_troops_for(player.opponent))
+                self._event("base_attack", player, actor.name, base.name, amount,
+                            line_broken=line_broken)
             else:
                 enemy = next(
                     t for t in self.field.living_troops_for(player.opponent) if t.name == target
                 )
+                overflow = enemy.overflow_damage(actor.attack)
                 amount = enemy.receive_damage(actor.attack)
                 self._event("unit_attack", player, actor.name, enemy.name, amount)
                 if amount > 0 and enemy.is_alive:
@@ -248,6 +253,8 @@ class TacticalSession:
             actor.damage_dealt += amount
             actor.start_reload(self.engine.round_number)
             self.engine.stats.record_damage(player, amount)
+            if overflow:
+                self.engine.events.extend(self.engine.overflow_onto_base(player, actor, overflow))
         elif action in ("heal", "guard"):
             ally = next(
                 t for t in self.field.living_troops_for(player) if t.name == choice["target"]
@@ -286,6 +293,15 @@ class TacticalSession:
         heals = [c for c in choices if c["action"] == "heal"]
         enemies = {t.name: t for t in self.field.living_troops_for(Player.ONE)}
         allies = {t.name: t for t in self.field.living_troops_for(Player.TWO)}
+        # Winning outright beats any other lethal hit, including a kill whose
+        # overflow finishes the player's fort.
+        fort = self.field.base_one.health
+        winning = [c for c in attacks if (
+            fort <= actor.attack if c["target"] == "base"
+            else enemies[c["target"]].overflow_damage(actor.attack) >= fort
+        )]
+        if winning:
+            return winning[0]
         # Finish a vulnerable target before spending this action on support.
         lethal = [c for c in attacks if (
             self.field.base_one.health <= actor.attack if c["target"] == "base"
@@ -324,14 +340,19 @@ class TacticalSession:
         preview = dict(choice)
         target_name = choice.get("target")
         if choice["action"] == "attack":
+            fort = self.field.base_two
             if target_name == "base":
-                target = self.field.base_two
+                target = fort
                 damage = min(target.health, actor.attack)
+                overflow = 0
             else:
                 target = next(t for t in self.field.troops_two if t.name == target_name)
                 damage = target.preview_damage(actor.attack)
+                overflow = min(fort.health, target.overflow_damage(actor.attack))
+            defeats = damage >= target.health
             preview.update(damage=damage, remaining_hp=target.health - damage,
-                           defeats=damage >= target.health)
+                           defeats=defeats, overflow=overflow,
+                           wins=(defeats if target is fort else overflow >= fort.health > 0))
             effects = []
             if target_name != "base" and damage > 0 and damage < target.health:
                 if actor.role == Role.RANGED:
@@ -383,6 +404,13 @@ class TacticalSession:
                 "acted": sorted(self.acted),
                 "legal_actions": legal,
                 "refundable": sorted(self.refundable),
+                # Vanguarda vazia: a vanguarda do outro lado pode atacar este forte.
+                "open_lines": {
+                    f"player_{name}": not any(
+                        t.lane == Lane.FRONT for t in self.field.living_troops_for(player)
+                    )
+                    for name, player in (("one", Player.ONE), ("two", Player.TWO))
+                },
                 "formation_warnings": [
                     t.name for t in self.field.troops_one
                     if t.lane == Lane.BACK and t.range == 1
