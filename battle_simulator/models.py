@@ -243,7 +243,7 @@ class Medic(Troop):
             speed=3,
             range=2,
             cost=5,
-            reload=1,
+            reload=0,
             role=Role.SUPPORT,
             lane=lane,
         )
@@ -347,6 +347,32 @@ def can_strike(
 ) -> bool:
     return attacker.reaches(rows_between(attacker, attacker_allies, target, target_allies))
 
+
+# Triagem do Medico: um aliado por acao, sem recarga. Curar em area foi medido
+# e rende menos: com o dano concentrado, raramente ha varios feridos vivos.
+TRIAGE_HEAL = 3
+TRIAGE_CLEANSES = (StatusEffect.BLEED, StatusEffect.STUN)
+
+
+def needs_triage(troop: Troop) -> bool:
+    """Ferido, sangrando ou atordoado: o que a triagem trata."""
+    return troop.is_alive and (
+        troop.health < troop.max_hp or any(troop.has_effect(effect) for effect in TRIAGE_CLEANSES)
+    )
+
+
+def triage_preview(troop: Troop) -> tuple[int, list[StatusEffect]]:
+    """Cura e efeitos que a triagem removeria, sem alterar a tropa."""
+    healing = min(TRIAGE_HEAL, troop.max_hp - troop.health)
+    return healing, [effect for effect in TRIAGE_CLEANSES if troop.has_effect(effect)]
+
+
+def triage(troop: Troop) -> tuple[int, list[StatusEffect]]:
+    """Cura ate TRIAGE_HEAL, estanca o sangramento e desfaz o atordoamento."""
+    _, cleansed = triage_preview(troop)
+    for effect in cleansed:
+        troop.effects.pop(effect, None)
+    return troop.heal(TRIAGE_HEAL), cleansed
 
 def can_assault_base(attacker: Troop, enemies: Iterable[Troop]) -> bool:
     """Diz se a tropa pode golpear o forte inimigo em vez de uma tropa.

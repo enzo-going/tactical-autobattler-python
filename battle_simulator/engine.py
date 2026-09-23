@@ -10,6 +10,8 @@ from battle_simulator.models import (
     Lane,
     can_assault_base,
     can_strike,
+    needs_triage,
+    triage,
     Role,
     StatusEffect,
     Troop,
@@ -452,17 +454,11 @@ class BattleEngine:
     def _perform_support_action(self, player: Player, attacker: Troop) -> list[BattleEvent]:
         if not attacker.is_loaded(self.round_number):
             return []
-        allies = [
-            troop
-            for troop in self.battlefield.living_troops_for(player)
-            if troop.health < troop.max_hp
-        ]
+        allies = [troop for troop in self.battlefield.living_troops_for(player) if needs_triage(troop)]
         if not allies:
             return []
         target = min(allies, key=lambda troop: troop.health / troop.max_hp)
-        healed = target.heal(2)
-        if healed <= 0:
-            return []
+        healed, cleansed = triage(target)
         attacker.start_reload(self.round_number)
         return [
             BattleEvent(
@@ -472,8 +468,11 @@ class BattleEngine:
                 actor=attacker.name,
                 target=target.name,
                 amount=healed,
-                message=f"{attacker.name} healed {target.name} for {healed} HP.",
-                metadata={"ready_round": attacker.ready_round},
+                message=f"{attacker.name} treated {target.name} for {healed} HP.",
+                metadata={
+                    "ready_round": attacker.ready_round,
+                    "cleansed": [effect.value for effect in cleansed],
+                },
             )
         ]
 
