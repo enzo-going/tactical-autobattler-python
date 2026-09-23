@@ -17,6 +17,7 @@ from battle_simulator.models import (
     Tank,
     Troop,
     TroopFactory,
+    can_assault_base,
     can_strike,
     TroopKind,
 )
@@ -84,6 +85,29 @@ class TroopTest(unittest.TestCase):
         self.assertTrue(can_strike(espada, [espada], sozinho_atras, [sozinho_atras]))
         acompanhado = [Guardian("Escudo", lane=Lane.FRONT), sozinho_atras]
         self.assertFalse(can_strike(espada, [espada], sozinho_atras, acompanhado))
+
+    def test_overflow_is_what_a_lethal_hit_leaves_after_the_troop(self):
+        soldier = Soldier("Soldier", lane=Lane.FRONT)
+        soldier.current_hp = 1
+
+        self.assertEqual(soldier.overflow_damage(5), 3)
+        self.assertEqual(soldier.overflow_damage(2), 0)
+        soldier.add_effect(StatusEffect.SHIELD, 1)
+        self.assertEqual(soldier.overflow_damage(5), 2)
+        soldier.current_hp = 4
+        self.assertEqual(soldier.overflow_damage(5), 0)
+
+    def test_only_the_vanguard_uses_a_broken_line(self):
+        front = Soldier("Soldier", lane=Lane.FRONT)
+        rear = Archer("Archer", lane=Lane.BACK)
+
+        self.assertFalse(can_assault_base(front, [Guardian("Guardian", lane=Lane.FRONT)]))
+        self.assertTrue(can_assault_base(front, [Archer("Enemy", lane=Lane.BACK)]))
+        self.assertFalse(can_assault_base(rear, [Archer("Enemy", lane=Lane.BACK)]))
+        self.assertTrue(can_assault_base(rear, []))
+        fallen = Guardian("Fallen", lane=Lane.FRONT)
+        fallen.current_hp = 0
+        self.assertTrue(can_assault_base(front, [fallen, Archer("Enemy", lane=Lane.BACK)]))
 
     def test_shield_reduces_next_damage(self):
         guardian = Guardian("Guardian")
@@ -411,6 +435,67 @@ class BattleEngineTest(unittest.TestCase):
 
         self.assertEqual(engine.battlefield.winner(), Player.ONE)
         self.assertEqual(engine.battlefield.base_two.health, 0)
+
+    def test_vanguard_strikes_the_fort_when_the_enemy_front_is_empty(self):
+        """Sem vanguarda inimiga, a espada passa pela brecha e o arqueiro fica."""
+        battlefield = Battlefield(
+            troops_one=[Soldier("Soldier", lane=Lane.FRONT)],
+            troops_two=[Archer("Archer", lane=Lane.BACK)],
+        )
+        engine = BattleEngine(battlefield)
+
+        events = engine.play_round(
+            {Player.ONE: TurnPlan(attacks=(AttackOrder(attacker_index=0, target_index=0),)), Player.TWO: TurnPlan()}
+        )
+
+        self.assertEqual(engine.battlefield.base_two.health, 26)
+        self.assertEqual(engine.battlefield.troops_two[0].health, 3)
+        strike = next(event for event in events if event.event_type == "base_attack")
+        self.assertTrue(strike.metadata["line_broken"])
+
+    def test_rear_rank_keeps_fighting_the_enemy_rear(self):
+        battlefield = Battlefield(
+            troops_one=[Archer("Archer One", lane=Lane.BACK)],
+            troops_two=[Archer("Archer Two", lane=Lane.BACK)],
+        )
+        engine = BattleEngine(battlefield)
+
+        engine.play_round({Player.ONE: TurnPlan(attacks=(AttackOrder(attacker_index=0),)), Player.TWO: TurnPlan()})
+
+        self.assertEqual(engine.battlefield.base_two.health, 28)
+        self.assertEqual(engine.battlefield.troops_two, [])
+
+    def test_lethal_hit_carries_its_overflow_onto_the_fort(self):
+        soldier = Soldier("Soldier", lane=Lane.FRONT)
+        soldier.current_hp = 1
+        battlefield = Battlefield(troops_one=[Tank("Tank")], troops_two=[soldier, Archer("Archer")])
+        engine = BattleEngine(battlefield)
+
+        events = engine.play_round({Player.ONE: TurnPlan(attacks=(AttackOrder(attacker_index=0, target_index=0),)), Player.TWO: TurnPlan()})
+
+        self.assertEqual(engine.battlefield.base_two.health, 25)
+        spill = next(event for event in events if event.event_type == "base_attack")
+        self.assertEqual((spill.actor, spill.amount, spill.metadata["overflow"]), ("Tank", 3, True))
+        self.assertEqual(engine.stats.damage_dealt[Player.ONE], 4)
+
+    def test_non_lethal_hit_does_not_reach_the_fort(self):
+        battlefield = Battlefield(troops_one=[Tank("Tank")], troops_two=[Guardian("Guardian")])
+        engine = BattleEngine(battlefield)
+
+        events = engine.play_round({Player.ONE: TurnPlan(attacks=(AttackOrder(attacker_index=0),)), Player.TWO: TurnPlan()})
+
+        self.assertEqual(engine.battlefield.base_two.health, 28)
+        self.assertFalse(any(event.event_type == "base_attack" for event in events))
+
+    def test_overflow_can_finish_the_fort_and_win(self):
+        soldier = Soldier("Soldier", lane=Lane.FRONT)
+        soldier.current_hp = 1
+        battlefield = Battlefield(base_two=Base("Red", health=2), troops_one=[Tank("Tank")], troops_two=[soldier])
+        engine = BattleEngine(battlefield)
+
+        engine.play_round({Player.ONE: TurnPlan(attacks=(AttackOrder(attacker_index=0),)), Player.TWO: TurnPlan()})
+
+        self.assertEqual(engine.battlefield.winner(), Player.ONE)
 
     def test_round_limit_uses_tiebreaker(self):
         battlefield = Battlefield(

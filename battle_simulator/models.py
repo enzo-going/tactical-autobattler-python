@@ -128,14 +128,26 @@ class Troop:
     def attack_base(self, target: Base) -> int:
         return target.receive_damage(self.attack)
 
-    def preview_damage(self, amount: int, ignore_defense: bool = False) -> int:
-        """Damage from a single hit, without consuming shields or changing health."""
+    def mitigated_damage(self, amount: int, ignore_defense: bool = False) -> int:
+        """Damage from a single hit after defense and shield, before the health cap."""
         if amount < 0:
             raise ValueError("Damage cannot be negative.")
         mitigated = amount if ignore_defense else max(1, amount - self.defense)
         if self.has_effect(StatusEffect.SHIELD):
             mitigated = max(0, mitigated - 1)
-        return min(self.health, mitigated)
+        return mitigated
+
+    def preview_damage(self, amount: int, ignore_defense: bool = False) -> int:
+        """Damage from a single hit, without consuming shields or changing health."""
+        return min(self.health, self.mitigated_damage(amount, ignore_defense))
+
+    def overflow_damage(self, amount: int, ignore_defense: bool = False) -> int:
+        """O que sobra de um golpe letal depois de derrubar a tropa.
+
+        Calcule antes de aplicar o golpe: ``receive_damage`` consome o escudo e
+        zera a vida, e o excedente sairia sempre zero.
+        """
+        return max(0, self.mitigated_damage(amount, ignore_defense) - self.health)
 
     def receive_damage(self, amount: int, ignore_defense: bool = False) -> int:
         applied = self.preview_damage(amount, ignore_defense)
@@ -334,6 +346,19 @@ def can_strike(
     target_allies: Iterable[Troop],
 ) -> bool:
     return attacker.reaches(rows_between(attacker, attacker_allies, target, target_allies))
+
+
+def can_assault_base(attacker: Troop, enemies: Iterable[Troop]) -> bool:
+    """Diz se a tropa pode golpear o forte inimigo em vez de uma tropa.
+
+    Sem ninguem vivo do outro lado, qualquer um alcanca o forte. Com a vanguarda
+    inimiga vazia, a linha esta rompida: a propria vanguarda passa pela brecha,
+    enquanto a retaguarda inimiga ainda defende e segue ao alcance da nossa.
+    """
+    living = [enemy for enemy in enemies if enemy.is_alive]
+    if not living:
+        return True
+    return attacker.lane == Lane.FRONT and not any(enemy.lane == Lane.FRONT for enemy in living)
 
 
 TROOP_COSTS = {

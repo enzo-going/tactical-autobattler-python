@@ -8,6 +8,7 @@ from typing import Protocol
 from battle_simulator.models import (
     Base,
     Lane,
+    can_assault_base,
     can_strike,
     Role,
     StatusEffect,
@@ -525,7 +526,7 @@ class BattleEngine:
                 )
             ]
 
-        if not enemies:
+        if can_assault_base(attacker, enemies):
             applied = enemy_base.receive_damage(attacker.attack)
             attacker.damage_dealt += applied
             attacker.start_reload(self.round_number)
@@ -539,7 +540,7 @@ class BattleEngine:
                     target=enemy_base.name,
                     amount=applied,
                     message=f"{attacker.name} attacked {enemy_base.name} base for {applied} damage.",
-                    metadata={"ready_round": attacker.ready_round},
+                    metadata={"ready_round": attacker.ready_round, "line_broken": bool(enemies)},
                 )
             ]
 
@@ -569,6 +570,7 @@ class BattleEngine:
                 )
             ]
 
+        overflow = target.overflow_damage(attacker.attack)
         applied = target.receive_damage(attacker.attack)
         attacker.damage_dealt += applied
         attacker.start_reload(self.round_number)
@@ -594,8 +596,36 @@ class BattleEngine:
 
         if applied > 0 and isinstance(attacker, Troop):
             events.extend(self._apply_attack_effects(player, attacker, target))
+        if overflow:
+            events.extend(self.overflow_onto_base(player, attacker, overflow))
 
         return events
+
+    def overflow_onto_base(self, player: Player, attacker: Troop, amount: int) -> list[BattleEvent]:
+        """Leva ao forte inimigo o que sobrou de um golpe que derrubou a tropa.
+
+        Sem isso, o dano alem da vida restante se perdia: com renda para repor
+        a linha a cada rodada, o forte quase nunca apanhava e a partida acabava
+        no desempate. Publico porque a sessao interativa resolve o proprio golpe.
+        """
+        enemy_base = self.battlefield.base_for(player.opponent)
+        applied = enemy_base.receive_damage(amount)
+        if not applied:
+            return []
+        attacker.damage_dealt += applied
+        self.stats.record_damage(player, applied)
+        return [
+            BattleEvent(
+                event_type="base_attack",
+                round_number=self.round_number,
+                player=player,
+                actor=attacker.name,
+                target=enemy_base.name,
+                amount=applied,
+                message=f"{attacker.name} carried {applied} overflow damage onto {enemy_base.name} base.",
+                metadata={"ready_round": attacker.ready_round, "overflow": True},
+            )
+        ]
 
     def _select_target(
         self,
