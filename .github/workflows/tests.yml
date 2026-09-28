@@ -70,7 +70,7 @@ jobs:
           python tests/browser_smoke.py
       - name: Keep browser screenshots and report
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: browser-qa
           path: _site/qa
