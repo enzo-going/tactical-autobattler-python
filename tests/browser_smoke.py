@@ -62,8 +62,21 @@ def main():
         assert page.locator("#resources").inner_text() == "1"
         assert page.locator("#shop button:enabled").count() == 0
         page.screenshot(path=str(output / "desktop-recruit.png"), full_page=True)
+        assert page.locator(".recruit-facts").count() == 6
+        saved_recruit = page.evaluate("JSON.stringify(state)")
+        page.reload()
+        page.wait_for_function("!document.querySelector('#new').disabled", timeout=120000)
+        assert page.evaluate("JSON.stringify(state)") == saved_recruit
+        assert "retomada" in page.locator("#save-status").inner_text()
         page.locator("#advance").click()
         assert page.evaluate("state.phase") == "combat"
+        before_selection = page.evaluate("JSON.stringify(state)")
+        page.locator("#ready-units button").last.click()
+        assert page.locator('#ready-units button[aria-pressed="true"]').count() == 1
+        page.locator("#actions button", has_text="Atacar").click()
+        page.locator("#cancel-order").click()
+        assert page.locator("#targets button").count() == 0
+        assert page.evaluate("JSON.stringify(state)") == before_selection
         page.locator("#actions button", has_text="Atacar").click()
         assert "dano" in page.locator("#targets button").first.inner_text()
         assert page.locator(".target-preview").count() > 0
@@ -103,11 +116,29 @@ def main():
         report = json.loads((output / "report.json").read_text())
         assert report["state"]["phase"] == "finished"
         assert report["commands"] and report["ruleset"] == "tactical-v5"
+        # Import validates first; a failed file cannot replace the current match.
+        finished_state = page.evaluate("JSON.stringify(state)")
+        page.locator("#import").click()
+        page.locator("#import-file").set_input_files({"name": "bad.json", "mimeType": "application/json", "buffer": b'{"mode":"auto"}'})
+        page.locator("#confirm-import").click()
+        page.wait_for_function("document.querySelector('#import-error').textContent.length > 0")
+        assert page.evaluate("JSON.stringify(state)") == finished_state
+        assert page.locator("#import-dialog").is_visible()
+        page.locator("#cancel-import").click()
         page.locator("#new").click()
         page.locator("#seed").fill("0")
         page.locator("#rounds").fill("3")
         page.get_by_role("button", name="Começar partida", exact=True).click()
         assert page.locator("#resources").inner_text() == "10"
+        page.locator("#import").click()
+        page.locator("#import-file").set_input_files(str(output / "report.json"))
+        page.locator("#confirm-import").click()
+        page.wait_for_function("!document.querySelector('#import-dialog').open")
+        assert page.evaluate("JSON.stringify(state)") == finished_state
+        page.locator("#new").click()
+        page.locator("#seed").fill("0")
+        page.locator("#rounds").fill("3")
+        page.get_by_role("button", name="Começar partida", exact=True).click()
         page.get_by_role("button", name="Recrutar Guardião, 4 suprimentos", exact=True).click()
         page.get_by_role("button", name="Recrutar Arqueiro, 3 suprimentos", exact=True).click()
         page.locator("#advance").click()
@@ -146,10 +177,13 @@ def main():
         assert page.locator("#actions button", has_text="Proteger").is_enabled()
         assert "rodada 3" in page.locator(".reload-hint").inner_text()
         page.screenshot(path=str(output / "reload-mobile.png"), full_page=True)
+        saved_combat = page.evaluate("JSON.stringify(state)")
         page.emulate_media(reduced_motion="reduce")
         page.reload()
         page.wait_for_function("!document.querySelector('#new').disabled", timeout=120000)
-        assert page.evaluate("state.phase") == "recruit"
+        assert page.evaluate("JSON.stringify(state)") == saved_combat
+        assert page.locator("#motion").is_disabled()
+        assert page.locator("#ready-units button").count() > 0
         # Legacy lab still imports the bridge, runs battle and tournament.
         page.goto(url + "/simulator.html")
         page.wait_for_function("!document.querySelector('#b-run').disabled", timeout=120000)
@@ -177,6 +211,36 @@ def main():
         offline.get_by_role("button", name="Como jogar", exact=True).click()
         assert offline.locator("#help-dialog").is_visible()
         offline.close()
+        # An invalid saved copy survives boot and play until explicitly replaced.
+        damaged = browser.new_page(viewport={"width": 390, "height": 844})
+        damaged.on("pageerror", lambda error: errors.append(str(error)))
+        damaged.add_init_script("localStorage.setItem('tactical-save-v1', 'broken-save')")
+        damaged.goto(url + "/")
+        damaged.wait_for_function("!document.querySelector('#new').disabled", timeout=120000)
+        assert damaged.locator("#save-recovery").is_visible()
+        damaged.get_by_role("button", name="Recrutar Soldado, 2 suprimentos", exact=True).click()
+        assert damaged.evaluate("localStorage.getItem('tactical-save-v1')") == "broken-save"
+        with damaged.expect_download() as recovery:
+            damaged.locator("#recover-save").click()
+        recovery.value.save_as(str(output / "recovered.json"))
+        assert (output / "recovered.json").read_text() == "broken-save"
+        assert damaged.evaluate("document.documentElement.scrollWidth <= innerWidth")
+        damaged.locator("#replace-save").click()
+        assert not damaged.locator("#save-recovery").is_visible()
+        assert json.loads(damaged.evaluate("localStorage.getItem('tactical-save-v1')"))["commands"]
+        damaged.close()
+        # Storage restrictions do not stop gameplay or explicit exports.
+        restricted = browser.new_page()
+        restricted.on("pageerror", lambda error: errors.append(str(error)))
+        restricted.add_init_script("Object.defineProperty(window, 'localStorage', {get() {throw new Error('blocked')}})")
+        restricted.goto(url + "/")
+        restricted.wait_for_function("!document.querySelector('#new').disabled", timeout=120000)
+        assert "indisponível" in restricted.locator("#save-status").inner_text()
+        restricted.get_by_role("button", name="Recrutar Soldado, 2 suprimentos", exact=True).click()
+        assert restricted.locator("#resources").inner_text() == "8"
+        assert restricted.locator("#export").is_enabled()
+        restricted.close()
+        assert not errors, errors
         browser.close()
     print(
         "Browser OK: complete game, download, restart, mobile actions, six widths, help, reload, battle, tournament and CDN failure."

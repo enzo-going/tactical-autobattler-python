@@ -31,6 +31,7 @@ class TacticalSession:
 
     roster_limit = 8
     ruleset = "tactical-v5"
+    max_saved_commands = 2000
 
     def __init__(self, opponent: str = "balanced", seed: int = 11, max_rounds: int = 20):
         if opponent not in STRATEGIES:
@@ -428,6 +429,56 @@ class TacticalSession:
             }
         )
         return snapshot
+
+    def checkpoint(self) -> dict:
+        """Small, portable save: replay commands instead of trusting stored objects."""
+        return {
+            "schema_version": 1,
+            "mode": "interactive",
+            "ruleset": self.ruleset,
+            "config": {"opponent": self.opponent, "seed": self.seed, "max_rounds": self.max_rounds},
+            "commands": [dict(command) for command in self.commands],
+        }
+
+    @classmethod
+    def from_report(cls, report: dict) -> TacticalSession:
+        """Validate and replay into a separate session; never mutate the live game."""
+        if not isinstance(report, dict):
+            raise ValueError("Escolha um arquivo de partida válido.")
+        if type(report.get("schema_version")) is not int or report["schema_version"] != 1:
+            raise ValueError("Formato de partida não compatível.")
+        if report.get("mode") != "interactive" or report.get("ruleset") != cls.ruleset:
+            raise ValueError("Esta partida usa outro modo ou outra versão das regras.")
+        config = report.get("config")
+        if not isinstance(config, dict) or set(config) != {"opponent", "seed", "max_rounds"}:
+            raise ValueError("Configuração da partida inválida.")
+        if not isinstance(config["opponent"], str):
+            raise ValueError("Adversário inválido.")
+        commands = report.get("commands")
+        if not isinstance(commands, list) or len(commands) > cls.max_saved_commands:
+            raise ValueError("Histórico inválido: o limite é de 2000 comandos.")
+        game = cls(**config)
+        fields = {
+            "recruit": {"type", "kind", "lane"},
+            "deploy": {"type", "actor", "lane"},
+            "return": {"type", "actor"},
+            "begin": {"type"}, "next": {"type"},
+            "act": {"type", "actor", "action", "target", "lane"},
+        }
+        for index, command in enumerate(commands, 1):
+            if (not isinstance(command, dict)
+                    or any(not isinstance(v, str) or len(v) > 100 for v in command.values())
+                    or command.get("type") not in fields
+                    or not set(command) <= fields[command["type"]]):
+                raise ValueError(f"Comando {index} inválido no arquivo.")
+            try:
+                game.command(command)
+            except ValueError as error:
+                raise ValueError(f"Comando {index}: {error}") from None
+        # Full exports also carry a snapshot: reject altered or incompatible reports.
+        if "state" in report and report["state"] != game.state():
+            raise ValueError("O estado salvo não corresponde ao histórico desta partida.")
+        return game
 
     def report(self) -> dict:
         return {

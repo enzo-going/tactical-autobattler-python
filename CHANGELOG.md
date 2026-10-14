@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.10.0 — Continue a expedição
+
+- Salvamento automático após cada ordem; recarregar retoma preparação, combate,
+  revisão ou resultado no mesmo ponto, com efeitos e recargas preservados.
+- Carregar partidas e relatórios JSON, com validação e reprodução no Python
+  antes de substituir a sessão. Arquivos inválidos preservam a partida atual.
+- Cópias locais incompatíveis são preservadas para download e só substituídas
+  por escolha explícita. Falhas de armazenamento não impedem jogar ou exportar.
+- Fichas de vida, ataque, defesa e alcance visíveis na loja, inclusive no celular.
+- Seleção de unidades prontas junto aos comandos, cancelamento da escolha de
+  alvo e aviso geral sobre tropas sem alcance na retaguarda.
+- Testes de retomada determinística, importação, armazenamento indisponível e
+  recuperação de cópia inválida. Regras continuam em `tactical-v5` / `auto-v4`.
+
 ## 0.9.0 — Triagem
 
 - O Médico trata um aliado por ação, sem recarga: cura 3, estanca o
