@@ -137,7 +137,8 @@ armas de alcance 1 bloqueadas atrás de aliados. `action_previews` fornece dano,
 vida restante, golpe final, efeitos e cura, sem alterar vida ou consumir escudo.
 A previsão descreve apenas a ordem escolhida, antes da resposta rival.
 
-`web/playground.py` oferece `new_game`, `game_command` e `game_report`, retornando
+`web/playground.py` oferece `new_game`, `game_command`, `game_report`,
+`game_save` (cópia compacta) e `load_game` (retomada validada), retornando
 JSON. A sessão é única por interpretador/aba. JavaScript monta botões e traduz
 eventos. Não reimplementa a validação de combate.
 
@@ -149,7 +150,7 @@ antes de alterar o estado.
 ## Relatórios e reprodução
 
 O simulador mantém seu formato. O novo modo exporta um formato próprio,
-identificado por `schema_version: 1`, `mode: interactive` e `ruleset: tactical-v4`,
+identificado por `schema_version: 1`, `mode: interactive` e `ruleset: tactical-v5`,
 com configuração, comandos aceitos, estado e snapshots por rodada. `ready_round`
 identifica a rodada em que a arma estará disponível; `reload` é a espera da arma.
 
@@ -171,16 +172,24 @@ from pathlib import Path
 from battle_simulator.session import TacticalSession
 
 report = json.loads(Path("partida.json").read_text(encoding="utf-8"))
-assert report["ruleset"] == TacticalSession.ruleset
-game = TacticalSession(**report["config"])
-for command in report["commands"]:
-    game.command(command)
+game = TacticalSession.from_report(report)
 assert game.state() == report["state"]
 ```
 
 A reprodução depende da mesma versão das regras e configuração, além das
-decisões humanas; a seed sozinha não descreve uma partida interativa. A interface
-ainda não importa relatórios nem retoma partidas. Recarregar perde a sessão.
+decisões humanas; a seed sozinha não descreve uma partida interativa.
+
+Desde a 0.10, a interface grava `checkpoint()` em `localStorage` após cada
+ordem aceita e retoma ao abrir. A cópia compacta contém formato, regras,
+configuração e comandos; o relatório completo continua incluindo estado e
+snapshots. `from_report()` aceita ambos e valida o estado quando presente.
+A ponte só troca a sessão depois de reconstruir toda a partida com sucesso.
+
+A importação aceita até 2 MB e 2000 comandos, apenas do modo interativo e das
+regras atuais. Uma cópia local inválida é preservada para download: iniciar uma
+nova partida, importar uma válida ou escolher salvar a partida atual permite
+substituí-la. Falhas de armazenamento aparecem na interface e não bloqueiam o
+jogo. Não há migração de regras antigas ou sincronização entre navegadores/abas.
 
 ## Migração e publicação
 

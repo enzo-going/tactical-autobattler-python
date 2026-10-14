@@ -57,6 +57,22 @@ recrutamento e ordens automáticas. Seus resultados medem balanceamentos distint
 A [documentação da fase II](docs/phase-two.md) registra decisões de arquitetura,
 diferenças de regras, contrato de comandos e processo de migração.
 
+## Continue a expedição — 0.10
+
+A partida é salva neste navegador após cada ordem aceita. Feche a aba ou
+recarregue: a preparação, o combate ou o resultado voltam no mesmo ponto.
+O aviso acima do campo informa se o salvamento está disponível.
+
+Use **Salvar partida / relatório** para baixar uma cópia JSON e **Carregar
+partida** para retomá-la em outro navegador. Relatórios interativos da 0.9
+(`tactical-v5`) também funcionam. O Python reproduz as decisões e valida o
+resultado antes de substituir a partida atual. Arquivos de outro modo ou
+outras regras são recusados. Limites: 2 MB e 2000 comandos por arquivo.
+
+As fichas da loja agora mostram vida, ataque, defesa e alcance sem depender de
+passar o mouse. No combate, escolha outra tropa pronta diretamente no painel
+de ordens e cancele a seleção de alvo sem gastar a ação.
+
 ## O Médico que salva — 0.9
 
 - **Triagem.** O Médico trata um aliado por ação, todas as rodadas: cura 3,
@@ -270,10 +286,13 @@ relatório ficam em `_site/qa` e nos artefatos do CI.
 
 ## Limites desta versão
 
-- A partida vive na memória da aba. Recarregar começa outra; não há autosave.
-- O JSON registra configuração, comandos e snapshots, mas ainda não há botão
-  de importar ou retomar. A reprodução em Python está em
-  [phase-two.md](docs/phase-two.md#relatórios-e-reprodução).
+- O salvamento é local a este navegador e endereço; limpar seus dados pode
+  apagá-lo. Não há sincronização entre dispositivos. Baixe uma cópia para
+  transportar ou guardar a partida. Evite jogar a mesma partida em várias abas.
+- Salvamentos de regras antigas não são migrados. Uma cópia local incompatível
+  permanece disponível para download até você escolher substituí-la.
+- Se o navegador bloquear o armazenamento, o jogo avisa e continua funcionando;
+  nesse caso, use a exportação manual antes de sair.
 - O mapa tem duas linhas por lado, sem deslocamento em grid.
 - Ainda não há campanha, multiplayer, áudio ou progressão persistente.
 - O equilíbrio interativo precisa de playtests; métricas antigas de torneio

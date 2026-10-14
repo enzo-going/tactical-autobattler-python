@@ -64,8 +64,12 @@
           </div>
           <div class="game-tools">
             <span id="round-label">RODADA —</span
-            ><button id="new" disabled>Nova partida</button>
+            ><button id="import" disabled>Carregar partida</button><button id="new" disabled>Nova partida</button>
           </div>
+        </div>
+        <div class="save-bar">
+          <span id="save-status" role="status">Seu progresso será salvo neste navegador.</span>
+          <span id="save-recovery" hidden><button id="recover-save">Baixar cópia anterior</button><button id="replace-save">Salvar partida atual</button></span>
         </div>
         <div
           id="announcement"
@@ -165,6 +169,7 @@
                   <option value="back">retaguarda</option>
                 </select></label
               >
+              <p id="formation-warning" class="hint" hidden></p>
               <div id="shop" class="shop"></div>
             </section>
             <section id="orders-panel" class="panel-body" hidden>
@@ -172,10 +177,12 @@
                 <h3>Suas ordens</h3>
                 <span>02 / AGIR</span>
               </div>
+              <div id="ready-units" class="ready-units" role="group" aria-label="Unidades prontas"></div>
               <div id="unit-detail"></div>
               <div id="actions" class="actions"></div>
               <p id="target-hint" class="hint"></p>
               <div id="targets" class="targets"></div>
+              <button id="cancel-order" class="text-button" hidden>Cancelar escolha de alvo</button>
             </section>
             <section id="review-panel" class="panel-body" hidden>
               <span class="eyebrow" id="result-kicker">RELATÓRIO DE CAMPO</span>
@@ -195,7 +202,7 @@
           <div class="section-heading">
             <h3>Diário de combate</h3>
             <button id="export" class="text-button" disabled>
-              Salvar relatório ↓
+              Salvar partida / relatório ↓
             </button>
           </div>
           <p id="journal-empty" class="hint">
@@ -215,6 +222,16 @@
         ><span>Python · Código aberto · <span data-app-version>v0.5.0</span></span>
       </footer>
     </div>
+    <dialog id="import-dialog" aria-labelledby="import-title">
+      <form id="import-form">
+        <span class="eyebrow">RETOMAR A EXPEDIÇÃO</span>
+        <h2 id="import-title">Seu esquadrão espera.</h2>
+        <p>Carregue uma partida ou relatório JSON exportado deste jogo. Ao confirmar, a partida atual será substituída. Você pode salvar a atual antes de continuar.</p>
+        <label>Arquivo da partida (até 2 MB)<input id="import-file" type="file" accept=".json,application/json" required /></label>
+        <p id="import-error" role="alert"></p>
+        <div class="dialog-actions"><button type="button" id="cancel-import">Voltar</button><button type="submit" id="confirm-import" class="primary">Carregar e continuar</button></div>
+      </form>
+    </dialog>
     <dialog id="setup-dialog" aria-labelledby="setup-title">
       <form id="setup-form">
         <span class="eyebrow">UMA NOVA EXPEDIÇÃO</span>
@@ -341,7 +358,9 @@
       </p>
       <p class="hint">
         Não há cronômetro. O campo só muda quando você confirma uma ordem. A
-        partida fica na memória desta aba; recarregar a página começa outra.
+        partida é salva automaticamente neste navegador após cada ordem. Recarregar
+        retoma o mesmo ponto. Use “Salvar partida / relatório” para guardar uma
+        cópia e “Carregar partida” para retomá-la em outro navegador.
       </p>
       <button id="close-help" class="primary">Entendi. Ao campo.</button>
     </dialog>

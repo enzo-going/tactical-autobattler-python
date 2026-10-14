@@ -145,3 +145,21 @@ dialog { color: var(--ink); background: var(--surface); border: 2px solid #87929
   #formation-actions { grid-column: 2; grid-row: 1/4; align-content: center; margin-top: 0; }
 }
 body.motion-paused *,body.motion-paused *::before,body.motion-paused *::after { animation: none !important; transition: none !important; }
+
+/* Save feedback and touch-friendly squad controls. */
+.game-tools { flex-wrap: wrap; justify-content: flex-end; }
+.save-bar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; color: var(--muted); font-size: 12px; }
+#save-recovery { display: flex; flex-wrap: wrap; gap: 8px; }
+#save-recovery button { font-size: 12px; }
+.recruit-facts { display: block; margin-top: 5px; font: 10px/1.6 var(--mono); color: var(--ally); }
+.ready-units { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.ready-units button { flex: 1 1 100px; padding: 7px 8px; font-size: 11px; }
+.ready-units button[aria-pressed="true"] { color: var(--ink); border-color: var(--gold); background: #4a5362; }
+#formation-warning { border-left: 2px solid var(--gold); padding: 8px; margin-bottom: 12px; }
+#import-error { color: var(--foe); }
+#cancel-order { min-height: 44px; text-decoration: underline; }
+@media (max-width: 600px) {
+  .game-bar { align-items: flex-start; flex-direction: column; }
+  .game-tools { flex-direction: row; align-items: center; justify-content: flex-start; gap: 8px; width: 100%; }
+  .game-tools > span { flex-basis: 100%; }
+}

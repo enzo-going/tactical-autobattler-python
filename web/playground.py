@@ -36,6 +36,28 @@ def game_report() -> str:
     return json.dumps(_session.report())
 
 
+def game_save() -> str:
+    if _session is None:
+        raise ValueError("Inicie uma partida primeiro.")
+    if len(_session.commands) > _session.max_saved_commands:
+        raise ValueError("O limite de 2000 comandos para retomada foi atingido.")
+    return json.dumps(_session.checkpoint())
+
+
+def load_game(payload: str) -> str:
+    global _session
+    if not isinstance(payload, str) or len(payload.encode("utf-8")) > 2 * 1024 * 1024:
+        raise ValueError("O arquivo deve ter no máximo 2 MB.")
+    try:
+        report = json.loads(payload)
+    except (ValueError, RecursionError):
+        raise ValueError("O arquivo não contém um JSON de partida válido.") from None
+    restored = TacticalSession.from_report(report)
+    result = json.dumps(restored.state())
+    _session = restored
+    return result
+
+
 def catalog() -> str:
     """Estrategias disponiveis e ficha tecnica de cada unidade."""
     factory = TroopFactory()

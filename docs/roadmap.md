@@ -23,7 +23,8 @@ Veja os critérios e detalhes em [Fase II](phase-two.md).
 
 1. Playtests: duração, clareza, utilidade das unidades e vantagem de abrir a
    rodada. Medir o modo interativo separadamente do simulador.
-2. Salvar/retomar sessão com versão de esquema e migração de regras explícitas.
+2. Definir migrações explícitas para futuras regras; salvar/retomar as regras
+   atuais foi entregue na 0.10.
 3. Ampliar cenários de treino e objetivos para testar diferentes formações.
 4. Dar aos bots estilos próprios de combate e planejamento de várias ações;
    proteção, movimento e golpes finais básicos foram entregues na 0.7.
@@ -56,6 +57,14 @@ Veja os critérios e detalhes em [Fase II](phase-two.md).
 - Médico de 18,1% para 44,6%; distância entre a melhor e a pior unidade de 67,2
   para 56,1 pontos. Custo: fortes destruídos de 50,8% para 40,6%.
 - Pendente: o Tanque segue dominante (82,9%).
+
+## Continuidade e comandos (0.10, concluída)
+
+- Autosave local e retomada por reprodução validada dos comandos.
+- Importação de partidas e relatórios das regras atuais, sem perder a sessão
+  quando o arquivo é inválido; cópias locais incompatíveis preservadas.
+- Fichas visíveis na loja e seleção de tropas prontas no painel de ordens.
+- Testes em navegador para recarga, importação e armazenamento indisponível.
 
 ## Fase III — as peças ganham vida (direção)
 
@@ -90,7 +99,8 @@ Próximos passos na mesma direção — do lado das regras:
 4. Estados visíveis na arte: sangramento, escudo e atordoamento como marcas na
    figura, não apenas como texto embaixo dela.
 5. Campanha: sequência de confrontos com um esquadrão que persiste entre
-   partidas. Depende de salvar/retomar sessão, que já está na lista acima.
+   partidas. A base de salvar/retomar uma sessão foi entregue na 0.10; a progressão
+   entre confrontos ainda precisa ser implementada.
 
 Pendência de equilíbrio: revisar composições depois da correção das ordens
 automáticas. A conclusão anterior sobre o estilo defensivo era afetada por

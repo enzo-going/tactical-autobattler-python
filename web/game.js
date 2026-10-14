@@ -106,7 +106,8 @@ async function boot() {
       'import sys\nsys.path.insert(0, "/app")\nimport playground\nplayground',
     );
     catalog = JSON.parse(bridge.catalog());
-    startGame();
+    restoreGame();
+    $("import").disabled = false;
     $("boot").hidden = true;
     $("game").setAttribute("aria-busy", "false");
     $("new").disabled = false;
@@ -119,7 +120,7 @@ async function boot() {
     $("game").setAttribute("aria-busy", "false");
   }
 }
-function startGame() {
+function startGame(persist = true) {
   state = JSON.parse(
     bridge.new_game(
       $("opponent").value,
@@ -130,6 +131,57 @@ function startGame() {
   selected = null;
   mode = null;
   render();
+  if (persist) {
+    protectedSave = null;
+    $("save-recovery").hidden = true;
+    saveGame();
+  }
+}
+const SAVE_KEY = "tactical-save-v1";
+let protectedSave = null;
+function saveGame() {
+  if (protectedSave !== null) return;
+  try {
+    localStorage.setItem(SAVE_KEY, bridge.game_save());
+    $("save-status").textContent = "✓ Partida salva neste navegador";
+  } catch (error) {
+    $("save-status").textContent = error.message?.includes("ValueError:")
+      ? errorMessage(error) + " A última cópia automática foi preservada."
+      : "Salvamento automático indisponível. Baixe uma cópia em Salvar partida / relatório.";
+  }
+}
+function acceptLoadedGame(nextState) {
+  state = nextState;
+  selected = Object.keys(state.legal_actions)[0] || state.troops.player_one[0]?.name || null;
+  mode = null;
+  $("opponent").value = state.opponent;
+  $("seed").value = state.seed;
+  $("rounds").value = state.max_rounds;
+  render();
+}
+function restoreGame() {
+  let saved;
+  try { saved = localStorage.getItem(SAVE_KEY); }
+  catch { startGame(false); saveGame(); return; }
+  if (!saved) { startGame(); return; }
+  try {
+    acceptLoadedGame(JSON.parse(bridge.load_game(saved)));
+    $("save-status").textContent = "✓ Partida retomada. Continue de onde parou.";
+  } catch (error) {
+    // Preserve original bytes until the player explicitly replaces the save.
+    protectedSave = saved;
+    startGame(false);
+    $("save-status").textContent = "Não foi possível retomar a cópia anterior. " + errorMessage(error) + " Ela foi preservada; baixe-a antes de substituir.";
+    $("save-recovery").hidden = false;
+  }
+}
+function downloadJson(contents, filename) {
+  const url = URL.createObjectURL(new Blob([contents], { type: "application/json" }));
+  const link = node("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 function errorMessage(error) {
   return (
@@ -156,6 +208,7 @@ function command(payload) {
     } else if (!state.legal_actions[selected])
       selected = Object.keys(state.legal_actions)[0] || null;
     render();
+    saveGame();
     showCombatFeedback(state.events.slice(count));
     const changes = state.events
       .slice(count)
@@ -380,6 +433,9 @@ function renderBoard() {
 }
 function renderShop() {
   $("shop").replaceChildren();
+  const warnings = state.formation_warnings.length;
+  $("formation-warning").hidden = !warnings;
+  $("formation-warning").textContent = (warnings === 1 ? "1 tropa de alcance 1 está atrás da vanguarda." : warnings + " tropas de alcance 1 estão atrás da vanguarda.") + " Ajuste a formação antes de combater.";
   for (const unit of catalog.units) {
     const b = button(
       "",
@@ -399,7 +455,7 @@ function renderShop() {
       state.phase !== "recruit" ||
       state.bases.player_one.resources < unit.cost ||
       state.troops.player_one.length >= state.roster_limit;
-    b.innerHTML = `${portrait(unit.kind)}<span><span class="recruit-name">${NAMES[unit.kind]}</span><span class="recruit-desc">${DESCRIPTIONS[unit.kind]}</span></span><span class="recruit-cost">${unit.cost} s.</span>`;
+    b.innerHTML = `${portrait(unit.kind)}<span><span class="recruit-name">${NAMES[unit.kind]}</span><span class="recruit-desc">${DESCRIPTIONS[unit.kind]}</span><span class="recruit-facts">${unit.max_hp} VIDA · ${unit.attack} ATQ · ${unit.defense} DEF · ${unit.range} ALC</span></span><span class="recruit-cost">${unit.cost} s.</span>`;
     b.setAttribute(
       "aria-label",
       `Recrutar ${NAMES[unit.kind]}, ${unit.cost} suprimentos`,
@@ -438,6 +494,21 @@ function previewFor(choice) {
     p.action === choice.action && p.target === choice.target && p.lane === choice.lane);
 }
 function renderOrders() {
+  $("ready-units").replaceChildren();
+  $("cancel-order").hidden = !mode || state.phase !== "combat";
+  for (const troop of state.troops.player_one.filter(t => state.legal_actions[t.name])) {
+    const b = button(label(troop.name) + " · " + troop.current_hp + "/" + troop.max_hp,
+      () => {
+        selected = troop.name;
+        mode = null;
+        renderBoard();
+        renderOrders();
+        document.querySelector("#actions button:not(:disabled)")?.focus({ preventScroll: true });
+      });
+    b.setAttribute("aria-pressed", String(selected === troop.name));
+    b.dataset.focus = "ready-" + troop.name;
+    $("ready-units").append(b);
+  }
   $("actions").replaceChildren();
   $("targets").replaceChildren();
   $("unit-detail").replaceChildren();
@@ -615,14 +686,50 @@ $("help").addEventListener("click", () => $("help-dialog").showModal());
 $("close-help").addEventListener("click", () => $("help-dialog").close());
 $("retry").addEventListener("click", () => location.reload());
 $("export").addEventListener("click", () => {
-  const url = URL.createObjectURL(
-    new Blob([bridge.game_report()], { type: "application/json" }),
-  );
-  const link = node("a");
-  link.href = url;
-  link.download = `tactical-${state.seed}-rodada-${state.round}.json`;
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  downloadJson(bridge.game_report(), "tactical-" + state.seed + "-rodada-" + state.round + ".json");
+});
+$("recover-save").addEventListener("click", () => downloadJson(protectedSave, "tactical-copia-anterior.json"));
+$("replace-save").addEventListener("click", () => {
+  protectedSave = null;
+  $("save-recovery").hidden = true;
+  saveGame();
+});
+$("cancel-order").addEventListener("click", () => {
+  mode = null;
+  renderBoard();
+  renderOrders();
+  document.querySelector("#actions button:not(:disabled)")?.focus({ preventScroll: true });
+});
+$("import").addEventListener("click", () => {
+  $("import-form").reset();
+  $("import-error").textContent = "";
+  $("import-dialog").showModal();
+});
+$("cancel-import").addEventListener("click", () => $("import-dialog").close());
+$("import-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const file = $("import-file").files[0];
+  if (!file || $("confirm-import").disabled) return;
+  if (file.size > 2 * 1024 * 1024) {
+    $("import-error").textContent = "O arquivo deve ter no máximo 2 MB.";
+    return;
+  }
+  $("confirm-import").disabled = true;
+  try {
+    const contents = await file.text();
+    if (!$("import-dialog").open) return;
+    acceptLoadedGame(JSON.parse(bridge.load_game(contents)));
+    protectedSave = null;
+    $("save-recovery").hidden = true;
+    saveGame();
+    $("import-dialog").close();
+    $("announcement").textContent = "Partida carregada. " + phaseHint();
+    (state.phase === "combat" ? document.querySelector("#ready-units button") : $("advance"))?.focus();
+  } catch (error) {
+    $("import-error").textContent = errorMessage(error);
+  } finally {
+    $("confirm-import").disabled = false;
+  }
 });
 const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 let motionEnabled = !motionQuery.matches;
