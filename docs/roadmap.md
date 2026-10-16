@@ -19,18 +19,13 @@
 
 Veja os critérios e detalhes em [Fase II](phase-two.md).
 
-## Próxima prioridade — jogar, observar, ajustar
+## Direção atual — jogo tático e progressão
 
-1. Playtests: duração, clareza, utilidade das unidades e vantagem de abrir a
-   rodada. Medir o modo interativo separadamente do simulador.
-2. Definir migrações explícitas para futuras regras; salvar/retomar as regras
-   atuais foi entregue na 0.10.
-3. Ampliar cenários de treino e objetivos para testar diferentes formações.
-4. Dar aos bots estilos próprios de combate e planejamento de várias ações;
-   proteção, movimento e golpes finais básicos foram entregues na 0.7.
-5. Feedback visual breve de dano e movimentação, sem bloquear comandos nem
-   prejudicar quem prefere movimento reduzido.
-6. Expandir verificações para Firefox, Safari e leitores de tela.
+A [nova direção](nova-direcao.md) substitui a prioridade anterior em autobattle.
+A 0.11 entrega turnos completos, resposta rival animada e a primeira arte
+ilustrada. Terrenos com efeitos, cartas de ordem, equipamentos e campanha
+são próximos sistemas, ainda não implementados. O ritmo e a vantagem de
+iniciativa precisam de playtests; as medições estão no documento.
 
 ## Preparação tática (0.7, concluída)
 
@@ -66,7 +61,7 @@ Veja os critérios e detalhes em [Fase II](phase-two.md).
 - Fichas visíveis na loja e seleção de tropas prontas no painel de ordens.
 - Testes em navegador para recarga, importação e armazenamento indisponível.
 
-## Fase III — as peças ganham vida (direção)
+## Direção histórica de formação — anterior à 0.11
 
 A referência são os auto-battlers de formação que rodavam no navegador: dois
 exércitos parados frente a frente, em fileiras, com a batalha resolvida pela

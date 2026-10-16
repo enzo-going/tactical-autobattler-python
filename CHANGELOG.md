@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.11.0 — Turnos completos e fronteira ilustrada
+
+- Jogador executa seu turno completo antes do rival; encerramento antecipado explícito.
+- IA resolve uma ordem por comando, com animação sequencial, 1×/2× e opção sem animações.
+- Retomada durante o turno rival; bloqueio de ordens fora de turno; regras tactical-v6.
+- Novo cenário e seis tropas ilustradas no jogo principal, com interface em tons de floresta e pergaminho.
+- Documento de direção para terrenos, cartas, exército e campanha; métricas registram que o ritmo ainda precisa de revisão.
+- Regressões de ações, efeitos, fim da partida, salvamento e recarregamento durante animação.
+
 ## 0.10.0 — Continue a expedição
 
 - Salvamento automático após cada ordem; recarregar retoma preparação, combate,

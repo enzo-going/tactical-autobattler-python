@@ -40,6 +40,8 @@ def measure():
                             purchase += 1
                         else:
                             game.command({"type": "begin"})
+                    elif game.phase == "enemy":
+                        game.command({"type": "enemy_step"})
                     elif game.phase == "review":
                         game.command({"type": "next"})
                     else:

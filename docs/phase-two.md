@@ -9,7 +9,7 @@ e reproduzia um resultado já calculado.
 
 A versão 0.3 muda o caminho principal. `TacticalSession` mantém a partida viva
 entre chamadas. A página envia um comando, o Python valida e resolve aquela
-decisão e a resposta do adversário, e a interface mostra o estado retornado.
+decisão. Desde a 0.11, o adversário possui um turno separado, e a interface mostra o estado retornado.
 Não há resultado futuro escondido nem temporizador decidindo pelo jogador.
 
 ## Ciclo da partida
@@ -19,8 +19,11 @@ stateDiagram-v2
     [*] --> recruit: nova partida
     recruit --> recruit: comprar reforço
     recruit --> combat: entrar em combate
-    combat --> combat: ordem do jogador + resposta rival
-    combat --> review: todas as peças agiram / +6 recursos
+    combat --> combat: ordem do jogador
+    combat --> enemy: última ação ou end_turn
+    enemy --> enemy: enemy_step / uma ordem rival
+    enemy --> review: ações rivais concluídas / +6 recursos
+    enemy --> finished: forte destruído ou limite de rodadas
     review --> recruit: avançar / efeitos do início da rodada
     combat --> finished: forte destruído ou limite de rodadas
     finished --> [*]
@@ -47,12 +50,15 @@ não consomem recursos, unidades, ações ou números de identificação.
 ### 2. Combate (`combat`)
 
 Cada tropa viva tem uma ação. Recrutas podem agir na mesma rodada. O jogador
-escolhe a ordem de suas tropas. A seed determina quem abre a primeira rodada
-(par: jogador; ímpar: rival); a prioridade se inverte na rodada seguinte.
+escolhe a ordem de suas tropas. Desde a 0.11, o jogador começa todas as
+rodadas. A seed continua controlando escolhas aleatórias do bot.
 
-Depois de uma ordem humana, uma unidade rival responde. Quando um lado não
-tem mais peças prontas, o outro conclui as ações restantes. Sem tropas dos dois
-lados, a rodada acaba normalmente, sem espera infinita.
+Depois da última ordem humana, a fase passa para enemy. end_turn também
+passa a vez e registra espera para cada ação humana restante. Durante enemy,
+somente enemy_step é aceito: o Python escolhe e resolve exatamente uma ordem
+rival. Não há ações humanas legais nessa fase. A interface anima a ordem
+antes de solicitar a próxima; nenhum cálculo de regras depende do tempo.
+Sem tropas prontas, os turnos vazios terminam sem espera infinita.
 
 | Ordem | Alvo / condição | Consequência |
 | --- | --- | --- |
@@ -94,7 +100,7 @@ recrutamento e snapshots permanecem dentro do mesmo pacote.
 
 | Assunto | Simulador / laboratório | Sessão interativa |
 | --- | --- | --- |
-| Execução | Planos simultâneos por rodada, resolvidos por velocidade | Uma unidade por lado alternadamente |
+| Execução | Planos simultâneos por rodada, resolvidos por velocidade | Turno completo do jogador, seguido de turno completo rival |
 | Identidade das ordens | Índices vinculados às tropas antes das baixas; alvo morto permite nova seleção | Nomes únicos da fábrica, estáveis após baixas |
 | Alcance | Conta as fileiras dos dois lados; retaguarda sem frente viva conta como frente | Mesma regra |
 | Movimento sem alcance | Avança automaticamente, gastando a ação | Jogador escolhe reposicionar |
@@ -130,12 +136,12 @@ actor, choices = next(iter(state["legal_actions"].items()))
 state = game.command({"type": "act", "actor": actor, **choices[0]})
 ```
 
-`state()` inclui fase, rodada, bases, tropas, ações consumidas, ações válidas,
+`state()` inclui fase, active_player, remaining_actions, rodada, bases, tropas, ações consumidas, ações válidas,
 eventos, estatísticas e desfecho. Ler o estado não avança a partida.
 `refundable` lista recrutas que podem ser devolvidos; `formation_warnings` aponta
 armas de alcance 1 bloqueadas atrás de aliados. `action_previews` fornece dano,
 vida restante, golpe final, efeitos e cura, sem alterar vida ou consumir escudo.
-A previsão descreve apenas a ordem escolhida, antes da resposta rival.
+A previsão descreve apenas a ordem escolhida. O rival só age após o turno humano.
 
 `web/playground.py` oferece `new_game`, `game_command`, `game_report`,
 `game_save` (cópia compacta) e `load_game` (retomada validada), retornando
@@ -150,14 +156,15 @@ antes de alterar o estado.
 ## Relatórios e reprodução
 
 O simulador mantém seu formato. O novo modo exporta um formato próprio,
-identificado por `schema_version: 1`, `mode: interactive` e `ruleset: tactical-v5`,
+identificado por `schema_version: 1`, `mode: interactive` e `ruleset: tactical-v6`,
 com configuração, comandos aceitos, estado e snapshots por rodada. `ready_round`
 identifica a rodada em que a arma estará disponível; `reload` é a espera da arma.
 
 A 0.6 usava `tactical-v2`; a 0.7 muda para `tactical-v3` por acrescentar comandos
 de preparação e mudar decisões do rival; a 0.8 muda para `tactical-v4` (e o
 simulador para `auto-v3`) com a linha rompida e o dano excedente; a 0.9 muda
-para `tactical-v5` (e `auto-v4`) com a triagem do Médico. Use a versão original
+para `tactical-v5` (e `auto-v4`) com a triagem do Médico. A 0.11 muda para tactical-v6, com end_turn e
+enemy_step registrados no histórico e retomada no turno rival. Use a versão original
 para reproduzir relatórios anteriores.
 
 O identificador anterior `tactical-v1` foi reutilizado por engano até a 0.5.0,

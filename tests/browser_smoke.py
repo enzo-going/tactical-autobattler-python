@@ -61,6 +61,8 @@ def main():
         page.get_by_role("button", name="Recrutar Soldado, 2 suprimentos", exact=True).click()
         assert page.locator("#resources").inner_text() == "1"
         assert page.locator("#shop button:enabled").count() == 0
+        page.wait_for_function("Promise.all(['frontier-field-v1.png', 'frontier-troops-v1.png'].map(src => new Promise(resolve => { const image = new Image(); image.onload = () => resolve(image.naturalWidth > 0); image.onerror = () => resolve(false); image.src = src; }))).then(results => results.every(Boolean))")
+        assert page.locator("#shop .illustrated-character").count() == 6
         page.screenshot(path=str(output / "desktop-recruit.png"), full_page=True)
         assert page.locator(".recruit-facts").count() == 6
         saved_recruit = page.evaluate("JSON.stringify(state)")
@@ -87,8 +89,29 @@ def main():
             page.evaluate("JSON.stringify(state)") == before
         ), "Battle advanced without player command"
         page.locator("#targets button").first.click()
+        assert page.evaluate("state.events.filter(e => e.player === 2 && ['unit_attack', 'base_attack'].includes(e.type)).length") == 0
+        # End early: only the enemy owns commands, and each visible order is saved.
+        page.locator("#advance").click()
+        page.locator("#enemy-speed").select_option("2")
+        page.wait_for_function("enemyPlaying && document.querySelector('.enemy-acting')")
+        assert page.locator("#new").is_disabled()
+        assert page.locator("#import").is_disabled()
+        assert page.locator("#advance").is_disabled()
+        assert page.locator(".ally-lane .piece:enabled").count() == 0
+        assert page.locator("#enemy-action").inner_text()
+        page.screenshot(path=str(output / "enemy-turn.png"), full_page=True)
+        saved_enemy = page.evaluate("JSON.parse(localStorage.getItem(SAVE_KEY))")
+        assert saved_enemy["commands"][-1]["type"] == "enemy_step"
+        page.reload()
+        page.wait_for_function("typeof state !== 'undefined' && state && state.phase !== 'enemy' && !busy && !document.querySelector('#new').disabled", timeout=120000)
+        after_resume = page.evaluate("JSON.parse(bridge.game_report())")
+        assert after_resume["commands"][:len(saved_enemy["commands"])] == saved_enemy["commands"]
+        assert len([c for c in after_resume["commands"] if c["type"] == "enemy_step"]) == len(after_resume["state"]["troops"]["player_two"])
+        # Fast playback is presentation only; the same orders still resolve.
+        page.locator("#motion").click()
         # Complete a match through visible controls, including review and recruitment.
         for _ in range(400):
+            page.wait_for_function("!busy && state.phase !== 'enemy'")
             phase = page.evaluate("state.phase")
             if phase == "finished":
                 break
@@ -115,7 +138,7 @@ def main():
         downloaded.value.save_as(str(output / "report.json"))
         report = json.loads((output / "report.json").read_text())
         assert report["state"]["phase"] == "finished"
-        assert report["commands"] and report["ruleset"] == "tactical-v5"
+        assert report["commands"] and report["ruleset"] == "tactical-v6"
         # Import validates first; a failed file cannot replace the current match.
         finished_state = page.evaluate("JSON.stringify(state)")
         page.locator("#import").click()
@@ -170,6 +193,7 @@ def main():
         assert "Arma: R3" in page.locator('.piece[data-kind="tank"] .weapon-state').inner_text()
         page.locator("#actions button", has_text="Esperar").click()
         page.locator("#targets button").first.click()
+        page.wait_for_function("!busy && state.phase !== 'enemy'")
         page.locator("#advance").click()
         page.locator("#advance").click()
         page.locator('.ally-lane .piece[data-kind="tank"]').click()

@@ -12,7 +12,7 @@ def build():
     destination = ROOT / "_site"
     destination.mkdir(exist_ok=True)
     sources = sorted(source for source in (ROOT / "web").iterdir()
-                     if source.is_file() and source.suffix in {".html", ".css", ".js", ".py", ".svg"})
+                     if source.is_file() and source.suffix in {".html", ".css", ".js", ".py", ".svg", ".png", ".webp"})
     modules = sorted((ROOT / "battle_simulator").glob("*.py"))
     project = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
     version = re.search(r'^version = "([^"]+)"', project, re.MULTILINE).group(1)
@@ -31,7 +31,7 @@ def build():
             (destination / source.name).write_text(content, encoding="utf-8")
         elif source.suffix == ".css":
             content = source.read_text(encoding="utf-8")
-            content = re.sub(r'url\("([\w.-]+\.svg)"\)',
+            content = re.sub(r'url\("([\w.-]+\.(?:svg|png|webp))"\)',
                              rf'url("\1?v={asset_version}")', content)
             (destination / source.name).write_text(content, encoding="utf-8")
         else:

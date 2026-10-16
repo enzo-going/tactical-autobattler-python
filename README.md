@@ -15,24 +15,30 @@ vanguarda e retaguarda, cada função com arte própria.
 > no site após merge e conclusão do workflow Pages. Para testar uma branch,
 > siga as instruções locais abaixo.
 
-![Dois exércitos em formação no campo de batalha, com vanguarda e retaguarda de cada lado](docs/images/campo.svg)
+![Combate da versão 0.11: exércitos ilustrados, turnos completos e ordens do jogador](docs/images/combate-0.11.png)
 
-<sub>O cenário e o elenco acima são os arquivos do próprio jogo, compostos por `tools/make_key_art.py`.</sub>
+<sub>Captura da interface real da versão 0.11. A arte e os comandos exibidos fazem parte do jogo.</sub>
 
-## O campo
+## Seu exército, seu turno — 0.11
 
-A partida acontece sobre um cenário desenhado à mão em SVG — serra, neblina e um
-forte em ruínas entre os dois estandartes — e não sobre uma grade neutra. Cada
-lado ocupa duas linhas de formação, vanguarda e retaguarda, viradas uma para a
-outra: a leitura do campo é a mesma dos auto-battlers de formação de navegador
-que inspiraram o projeto.
+O modo principal agora apresenta **Crônicas da Fronteira**. Dê todas as ordens
+do seu esquadrão antes de assistir ao turno completo do rival. A última ação
+passa a vez automaticamente; **Encerrar meu turno** dispensa as restantes.
+O rival aparece agindo uma tropa por vez, com destaque de origem e alvo,
+impacto e baixas. Escolha 1×/2× ou conclua sem animações. Recarregar durante a
+resposta rival retoma os comandos aceitos sem duplicar ataques.
 
-O elenco é vetorial e original, um desenho por função — soldado, arqueiro,
-guardião, médico, tanque e lanceiro —, com equipamento que identifica o papel e a cor do
-pano identificando o exército. As figuras respiram paradas, reagem ao golpe e à
-cura, e o botão **Animações** desliga tudo isso para quem preferir o campo
-imóvel. Nada disso depende de imagem externa: são os mesmos arquivos que o
-laboratório usa no replay.
+O campo e as seis tropas receberam uma primeira arte ilustrada, combinando
+exércitos medievais e personagens expressivos. O laboratório mantém seu
+elenco vetorial. Os arquivos do jogo são servidos com o próprio site.
+
+A [nova direção](docs/nova-direcao.md) registra referências, estudo visual,
+medições e próximos passos: terrenos, cartas de ordem, montagem de tropas e
+missões. Esses sistemas ainda não estão implementados. A troca de turnos
+sozinha não encurtou as partidas; a duração continua em revisão.
+
+Salvamentos desta versão usam tactical-v6. Cópias antigas são preservadas,
+mas precisam da versão que as criou para continuar.
 
 ## Capítulo II — sob seu comando
 
@@ -47,7 +53,7 @@ uma ordem a cada decisão. Nenhum cronômetro avança o campo.
 | Assistir à sequência pronta | Escolher unidade, ação e alvo |
 | Recrutamento automático | Comprar reforços e decidir a linha |
 | Cura e proteção automáticas | Decidir quando atacar, curar ou proteger |
-| Play, pause e velocidade | Preparação, ações alternadas e revisão |
+| Play, pause e velocidade | Preparação, turnos completos e revisão |
 | Relatório de uma simulação | Histórico de comandos e estado da partida |
 
 O laboratório continua disponível com simulações, replays e torneios. Os dois
@@ -64,8 +70,8 @@ recarregue: a preparação, o combate ou o resultado voltam no mesmo ponto.
 O aviso acima do campo informa se o salvamento está disponível.
 
 Use **Salvar partida / relatório** para baixar uma cópia JSON e **Carregar
-partida** para retomá-la em outro navegador. Relatórios interativos da 0.9
-(`tactical-v5`) também funcionam. O Python reproduz as decisões e valida o
+partida** para retomá-la em outro navegador. Na 0.10, relatórios interativos da 0.9
+(`tactical-v5`) também funcionavam; a 0.11 usa regras novas (`tactical-v6`). O Python reproduz as decisões e valida o
 resultado antes de substituir a partida atual. Arquivos de outro modo ou
 outras regras são recusados. Limites: 2 MB e 2000 comandos por arquivo.
 
@@ -114,7 +120,7 @@ números, o método e o que a regra ainda não resolve estão em
 1. **Prepare.** Comece com 10 suprimentos e recrute até 8 unidades. Escolha a
    vanguarda ou a retaguarda, ou mantenha a posição recomendada.
 2. **Dê ordens.** Entre em combate, selecione uma unidade pronta, escolha uma
-   ação e confirme o alvo. O rival responde com uma unidade. Cada peça age
+   ação e confirme o alvo. O rival aguarda você concluir todas as suas ordens. Cada peça age
    uma vez por rodada, inclusive os recrutas recém-chegados.
 3. **Reorganize.** Quando todas as unidades agirem, confira o resultado da
    rodada. Se a partida continuar, ambos recebem 6 suprimentos e o jogo espera
@@ -155,7 +161,8 @@ triagem do Médico trata quem apanhou.
 
 É a formação e o tempo, e não só a ficha da unidade, que decidem a batalha.
 
-A seed define quem abre a primeira rodada; a prioridade alterna nas seguintes.
+Na escaramuça interativa, você começa todas as rodadas, seguido do rival.
+A seed continua definindo as decisões aleatórias do bot.
 Os estilos rivais mudam as compras. Durante o combate, todos usam a mesma
 heurística: unidade mais rápida disponível, golpe que vence a partida, golpe
 final quando possível, cura, proteção contra golpe fatal e ataque ao alvo

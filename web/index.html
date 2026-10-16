@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tactical Auto-Battler · A fronteira</title>
+    <title>Crônicas da Fronteira · Jogo tático</title>
     <meta
       name="description"
       content="Um pequeno jogo tático em turnos. Recrute seu esquadrão, escolha cada ação e defenda seu forte. Feito em Python, jogável no navegador."
@@ -28,9 +28,9 @@
         <a
           class="brand"
           href="index.html"
-          aria-label="Tactical Auto-Battler, início"
+          aria-label="Crônicas da Fronteira, início"
           ><span class="brand-mark" aria-hidden="true">⚑</span
-          ><span>TACTICAL<br /><b>AUTO-BATTLER</b></span></a
+          ><span>CRÔNICAS DA<br /><b>FRONTEIRA</b></span></a
         >
         <nav aria-label="Navegação principal">
           <a href="simulator.html">Laboratório</a
@@ -79,6 +79,9 @@
         >
           O jogo espera por você. Não há limite de tempo.
         </div>
+        <ol id="turn-flow" class="turn-flow" aria-label="Etapas da rodada">
+          <li data-phase="recruit">1 · Preparação</li><li data-phase="combat">2 · Seu turno</li><li data-phase="enemy">3 · Turno rival</li><li data-phase="review">4 · Revisão</li>
+        </ol>
         <div class="game-layout">
           <section
             class="field-panel"
@@ -183,6 +186,14 @@
               <p id="target-hint" class="hint"></p>
               <div id="targets" class="targets"></div>
               <button id="cancel-order" class="text-button" hidden>Cancelar escolha de alvo</button>
+            </section>
+            <section id="enemy-panel" class="panel-body" hidden>
+              <span class="eyebrow">TURNO RIVAL</span><h3>Observe a resposta.</h3>
+              <p id="enemy-progress" class="hint"></p>
+              <p id="enemy-action" class="enemy-action" role="status">O rival prepara suas ordens.</p>
+              <label class="enemy-speed">Velocidade <select id="enemy-speed"><option value="1">1×</option><option value="2">2×</option></select></label>
+              <button id="enemy-skip" type="button">Concluir sem animações</button>
+              <button id="enemy-resume" type="button" hidden>Retomar turno rival</button>
             </section>
             <section id="review-panel" class="panel-body" hidden>
               <span class="eyebrow" id="result-kicker">RELATÓRIO DE CAMPO</span>
@@ -294,11 +305,12 @@
         </li>
         <li>
           <b>Entre no combate.</b> Selecione uma peça pronta, escolha uma ordem
-          e depois o alvo. O rival responde com uma unidade. Cada peça age uma
-          vez.
+          e depois o alvo. Dê uma ordem a cada tropa, na sequência que escolher.
+          O rival espera você terminar. Cada peça age uma vez por rodada.
           A confirmação mostra dano, vida restante, efeitos e o excedente que
-          chega ao forte, calculados com defesa e escudo. A resposta do rival
-          vem depois.
+          chega ao forte, calculados com defesa e escudo. Ao gastar todas as ações,
+          o turno passa automaticamente. “Encerrar meu turno” dispensa as ações
+          restantes. Acompanhe cada jogada rival; use 2× ou conclua sem animações.
         </li>
         <li>
           <b>Abra caminho até o forte.</b> Derrube a vanguarda rival: com a
@@ -357,7 +369,8 @@
         escudo.
       </p>
       <p class="hint">
-        Não há cronômetro. O campo só muda quando você confirma uma ordem. A
+        Não há limite de tempo no seu turno. No turno rival, as jogadas aparecem
+        automaticamente, uma a uma. A
         partida é salva automaticamente neste navegador após cada ordem. Recarregar
         retoma o mesmo ponto. Use “Salvar partida / relatório” para guardar uma
         cópia e “Carregar partida” para retomá-la em outro navegador.

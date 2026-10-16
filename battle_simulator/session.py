@@ -27,10 +27,10 @@ from battle_simulator.tournament import STRATEGIES
 
 
 class TacticalSession:
-    """Recruit, alternate unit actions, review, repeat. Names are stable unit IDs."""
+    """Recruit, command a full turn, watch the enemy turn, review. Names are stable unit IDs."""
 
     roster_limit = 8
-    ruleset = "tactical-v5"
+    ruleset = "tactical-v6"
     max_saved_commands = 2000
 
     def __init__(self, opponent: str = "balanced", seed: int = 11, max_rounds: int = 20):
@@ -131,8 +131,12 @@ class TacticalSession:
                     "Essa ordem não está disponível. Escolha uma unidade pronta e um alvo válido."
                 )
             self._act(Player.ONE, actor, choice)
-            if not self._check_finished():
-                self._enemy_response()
+            if not self._check_finished() and not self._ready(Player.ONE):
+                self._end_player_turn()
+        elif kind == "end_turn" and self.phase == "combat":
+            self._end_player_turn()
+        elif kind == "enemy_step" and self.phase == "enemy":
+            self._enemy_step()
         elif kind == "next" and self.phase == "review":
             self.engine.round_number += 1
             self.acted.clear()
@@ -168,13 +172,14 @@ class TacticalSession:
                     troop.effects.pop(StatusEffect.STUN)
                     self.acted.add(troop.name)
                     self._event("unit_stunned", player, troop.name)
-        if self.opener == Player.TWO or not self._ready(Player.ONE):
-            self._enemy_response()
+        self._event("turn_started", Player.ONE)
+        if not self._ready(Player.ONE):
+            self._end_player_turn()
 
     @property
     def opener(self) -> Player:
-        first = self.engine.opening_initiative
-        return first if self.engine.round_number % 2 else first.opponent
+        # A round is always player turn -> enemy turn; no consecutive double turns.
+        return Player.ONE
 
     def _ready(self, player: Player) -> list[Troop]:
         return [t for t in self.field.living_troops_for(player) if t.name not in self.acted]
@@ -276,20 +281,28 @@ class TacticalSession:
             self._event("unit_waited", player, actor.name)
         self.engine.events.extend(self.field.remove_defeated(self.engine.round_number))
 
-    def _enemy_response(self) -> None:
-        while self.phase == "combat":
-            ready = self._ready(Player.TWO)
-            if ready:
-                actor = max(ready, key=lambda t: (t.speed, t.attack))
-                choice = self._enemy_choice(actor)
-                self._act(Player.TWO, actor, choice)
-                if self._check_finished():
-                    return
-            if self._ready(Player.ONE):
+    def _end_player_turn(self) -> None:
+        # Ending early forfeits each unused action, recorded for save/replay and UI.
+        for troop in self._ready(Player.ONE):
+            self._act(Player.ONE, troop, {"action": "wait"})
+        self._event("turn_ended", Player.ONE)
+        self.phase = "enemy"
+        self._event("turn_started", Player.TWO)
+        if not self._ready(Player.TWO):
+            self._event("turn_ended", Player.TWO)
+            self._end_round()
+
+    def _enemy_step(self) -> None:
+        """Resolve exactly one AI order; reading state never advances the turn."""
+        ready = self._ready(Player.TWO)
+        if ready:
+            actor = max(ready, key=lambda t: (t.speed, t.attack))
+            self._act(Player.TWO, actor, self._enemy_choice(actor))
+            if self._check_finished():
                 return
-            if not self._ready(Player.TWO):
-                self._end_round()
-                return
+        if not self._ready(Player.TWO):
+            self._event("turn_ended", Player.TWO)
+            self._end_round()
 
     def _enemy_choice(self, actor: Troop) -> dict:
         choices = self._choices(Player.TWO, actor)
@@ -316,7 +329,8 @@ class TacticalSession:
         if heals:
             return min(heals, key=lambda c: allies[c["target"]].health / allies[c["target"]].max_hp)
         # A shield is worthwhile when it saves an ally from a pending lethal hit.
-        threats = [t for t in self._ready(Player.ONE) if t.is_loaded(self.engine.round_number)
+        threats = [t for t in self.field.living_troops_for(Player.ONE)
+                   if t.is_loaded(self.engine.round_number + 1)
                    and not t.has_effect(StatusEffect.STUN)]
         for choice in choices:
             if choice["action"] != "guard":
@@ -399,6 +413,11 @@ class TacticalSession:
         snapshot.update(
             {
                 "phase": self.phase,
+                "active_player": 1 if self.phase == "combat" else 2 if self.phase == "enemy" else None,
+                "remaining_actions": {
+                    "player_one": len(self._ready(Player.ONE)),
+                    "player_two": len(self._ready(Player.TWO)),
+                },
                 "max_rounds": self.max_rounds,
                 "opponent": self.opponent,
                 "seed": self.seed,
@@ -463,6 +482,7 @@ class TacticalSession:
             "deploy": {"type", "actor", "lane"},
             "return": {"type", "actor"},
             "begin": {"type"}, "next": {"type"},
+            "end_turn": {"type"}, "enemy_step": {"type"},
             "act": {"type", "actor", "action", "target", "lane"},
         }
         for index, command in enumerate(commands, 1):
