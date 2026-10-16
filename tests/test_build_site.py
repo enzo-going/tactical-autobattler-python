@@ -17,7 +17,8 @@ class BuildSiteTest(unittest.TestCase):
             html = '<script src="game.js?v=old"></script><span data-app-version>v0.3</span>'
             for page in ("index.html", "simulator.html"):
                 (root / "web" / page).write_text(html)
-            (root / "web" / "game.css").write_text('body { background: url("battlefield.svg"); }')
+            (root / "web" / "game.css").write_text('body { background: url("battlefield.svg"); } .troop { background: url("cast.png"); }')
+            (root / "web" / "cast.png").write_bytes(b'first-atlas')
             module = root / "battle_simulator" / "models.py"
             module.write_text("RULE = 1\n")
             build_site.build()
@@ -33,3 +34,9 @@ class BuildSiteTest(unittest.TestCase):
             version = re.search(r'\?v=([a-f0-9]+)', second).group(1)
             self.assertIn(f'battlefield.svg?v={version}', (root / "_site" / "game.css").read_text())
             self.assertEqual((root / "_site" / "battle_simulator" / "models.py").read_text(), "RULE = 2\n")
+            self.assertEqual((root / "_site" / "cast.png").read_bytes(), b"first-atlas")
+            self.assertIn(f'cast.png?v={version}', (root / "_site" / "game.css").read_text())
+            (root / "web" / "cast.png").write_bytes(b"updated-atlas")
+            build_site.build()
+            self.assertNotEqual(second, (root / "_site" / "index.html").read_text())
+            self.assertEqual((root / "_site" / "cast.png").read_bytes(), b"updated-atlas")

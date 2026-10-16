@@ -163,3 +163,67 @@ body.motion-paused *,body.motion-paused *::before,body.motion-paused *::after { 
   .game-tools { flex-direction: row; align-items: center; justify-content: flex-start; gap: 8px; width: 100%; }
   .game-tools > span { flex-basis: 100%; }
 }
+
+/* Full-side turns: readable cadence, actor, target and impact. */
+.turn-flow { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 0 0 14px; font-size: 12px; }
+.turn-flow li { flex: 1 1 130px; padding: 9px 12px; border-bottom: 2px solid var(--line); color: var(--muted); background: var(--surface); }
+.turn-flow .current { color: #fff3cc; border-color: var(--gold); background: #494333; font-weight: 700; }
+.enemy-turn .turn-notice { border-left-color: var(--foe); background: #3c2c30; }
+.enemy-turn .turn-flow .current { border-color: var(--foe); background: #493238; }
+.enemy-action { min-height: 90px; padding: 14px; margin: 16px 0; color: var(--ink); background: #211e26; border-left: 3px solid var(--foe); }
+.enemy-speed { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 0; }
+#enemy-skip, #enemy-resume { width: 100%; margin-top: 8px; }
+.piece.enemy-acting { outline: 2px solid #f4d387; background: #dca65526; z-index: 4; }
+.piece.enemy-acting .piece-state { color: #ffe4a3; }
+.piece.falling { animation: unit-fall .35s forwards; pointer-events: none; }
+.piece.relocating { animation: reposition .65s; }
+.fort { position: relative; }
+.fort.fort-hit { animation: fort-impact .5s; }
+.order-trail { position: fixed; z-index: 20; height: 3px; transform-origin: left center; pointer-events: none; background: linear-gradient(90deg,transparent,#ffe9ac); box-shadow: 0 0 9px #f3b565; animation: order-flight .4s both; }
+.order-trail.healing { background: linear-gradient(90deg,transparent,#a8edb3); box-shadow: 0 0 9px #9beac3; }
+@keyframes order-flight { from { clip-path: inset(0 100% 0 0); opacity: .3; } to { clip-path: inset(0); opacity: 1; } }
+@keyframes unit-fall { to { opacity: 0; transform: translateY(14px) rotate(-9deg); } }
+@keyframes reposition { 50% { transform: translateY(-14px); } }
+@keyframes fort-impact { 40% { background: #975b44; box-shadow: inset 0 0 24px #f5c475; } }
+
+/* Illustrated frontier: original raster cast and scenery; the lab retains its vectors. */
+:root {
+  --bg: #17231f; --surface: #29382f; --surface-2: #344539;
+  --control: #3d5040; --control-hover: #50634c; --ink: #f6eedb;
+  --muted: #ccd0bc; --dim: #b7bea9; --line: #526251; --line-strong: #8b977a;
+  --ally: #a9d7d0; --ally-fill: #6cb8ad; --foe: #f0b08d; --foe-fill: #d38662;
+  --gold: #e1c387; --track: #14231c;
+}
+body { background: radial-gradient(ellipse at 35% 0,#3b4935,transparent 65%),var(--bg); }
+.brand-mark { background: #314536; border-color: var(--gold); }
+.field-panel { background: #26392c; border-color: #a6976d; box-shadow: 0 14px 38px #08140a80,inset 0 0 0 1px #dfc99b66; }
+.field-heading { background: linear-gradient(#46513a,#2d3d2e); border-color: #a6976d; }
+.board { background: #6a8051 url("frontier-field-v1.png") center/cover; padding-top: 160px; }
+.board::before { background: linear-gradient(transparent 20%,#20301918 40%,#1c2d207a); }
+.scene-caption { padding: 4px 8px; background: #263b2eb5; border-left: 2px solid var(--gold); }
+.lane { background: #193c3226; border-top-color: #dce8b97a; }
+.enemy-lane { background: #5b301c26; border-top-color: #efd3a97a; }
+.frontier { top: 158px; }
+.forts, .fort { background: #283d33; }.fort.enemy { background: #49362d; }
+.piece-body { background: #1d352df0; border-color: #8d9d7f; border-top-color: var(--ally); }
+.enemy-piece .piece-body { background: #443027f0; border-color: #b0906d; border-top-color: var(--foe); }
+.piece .portrait.illustrated-character { width: 132px; height: 132px; max-width: 155%; filter: drop-shadow(0 3px 2px #15221588); }
+.piece-art { height: 120px; }
+.illustrated-character { aspect-ratio: 1; }
+.illustrated-character .figure, .illustrated-character .figure-body { display: block; width: 100%; height: 100%; }
+.illustrated-character .figure-body { background-image: url("frontier-troops-v1.png"); background-size: 300% 200%; background-repeat: no-repeat; transform-origin: 50% 90%; }
+.piece-art::after { height: 8px; bottom: 5px; background: color-mix(in srgb, var(--team) 35%, transparent); }
+.command-panel { background: linear-gradient(125deg,#3c4b37,#29382e); border-color: #a6976d; box-shadow: inset 0 0 0 3px #17261c,0 10px 30px #0004; }
+.supplies { background: #243429; }.board-key,.formation-edit { background: #263a30; }
+.recruit { background: #e0d3ac; border-color: #aa9872; color: #25392d; }
+.recruit:hover:not(:disabled) { background: #f0e4c2; border-color: #d4ba75; }
+.recruit .recruit-name { color: #25392d; }.recruit .recruit-desc { color: #4a503d; }
+.recruit .recruit-facts { color: #345d50; }.recruit .recruit-cost { color: #704722; }
+.recruit .portrait.illustrated-character { width: 58px; height: 58px; }
+.unit-heading .portrait.illustrated-character { width: 84px; height: 84px; }
+.enemy-action { background: #2e2d21; }
+@media (max-width: 600px) {
+  .board { padding-top: 120px; }
+  .piece-art { height: 100px; }
+  .piece .portrait.illustrated-character { width: 112px; height: 112px; max-width: 155%; }
+}

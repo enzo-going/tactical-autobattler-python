@@ -76,14 +76,14 @@ class TacticalSessionTest(unittest.TestCase):
         game.command({"type": "begin"})
         self.assertLessEqual(len(game.field.troops_two), 8)
 
-    def test_recruits_are_ready_this_round_and_bot_replies_once(self):
+    def test_recruits_are_ready_and_bot_waits_for_the_full_turn(self):
         game = TacticalSession(seed=0)
         for _ in range(2):
             game.command({"type": "recruit", "kind": "soldier", "lane": "front"})
         game.command({"type": "begin"})
         self.assertEqual(len(game.state()["legal_actions"]), 2)
         self.act(game, "Soldier 1", "guard", target="Soldier 1")
-        self.assertEqual(sum(t.name in game.acted for t in game.field.troops_two), 1)
+        self.assertEqual(sum(t.name in game.acted for t in game.field.troops_two), 0)
         self.assertNotIn("Soldier 1", game.state()["legal_actions"])
 
     def test_frontline_blocks_melee_but_not_archers(self):
@@ -132,6 +132,8 @@ class TacticalSessionTest(unittest.TestCase):
             if pronta is None:
                 break
             self.act(game, pronta, "wait")
+        while game.phase == "enemy":
+            game.command({"type": "enemy_step"})
         game.command({"type": "next"})
         if game.phase == "recruit":
             game.command({"type": "begin"})
@@ -280,6 +282,7 @@ class TacticalSessionTest(unittest.TestCase):
         if "Archer 1" in game.state()["legal_actions"]:
             self.act(game, "Archer 1", "wait")
 
+        game.command({"type": "enemy_step"})
         self.assertTrue(game.state()["open_lines"]["player_one"])
         self.assertEqual(game.field.base_one.health, 26)
 
@@ -295,17 +298,19 @@ class TacticalSessionTest(unittest.TestCase):
             )
         )
 
-    def test_stun_on_spent_unit_consumes_next_round_action(self):
-        enemy = Guardian("Guardian 2")
-        game = self.combat([Tank("Tank 1"), Guardian("Guardian 1")], [enemy])
-        self.act(game, "Guardian 1", "wait")
-        self.act(game, "Tank 1", "attack", target=enemy.name)
-        self.assertTrue(enemy.has_effect(StatusEffect.STUN))
+    def test_enemy_stun_on_spent_player_unit_consumes_next_round_action(self):
+        ally = Guardian("Guardian 1")
+        enemy = Tank("Tank 2")
+        game = self.combat([ally], [enemy])
+        game.field.base_two.resource_income = 0
+        self.act(game, ally.name, "wait")
+        game.command({"type": "enemy_step"})
+        self.assertTrue(ally.has_effect(StatusEffect.STUN))
         game.command({"type": "next"})
-        game.field.base_two.resources = 0
         game.command({"type": "begin"})
-        self.assertIn(enemy.name, game.acted)
-        self.assertFalse(enemy.has_effect(StatusEffect.STUN))
+        self.assertIn(ally.name, game.acted)
+        self.assertFalse(ally.has_effect(StatusEffect.STUN))
+        self.assertEqual(game.phase, "enemy")
 
     def test_bleed_ticks_only_on_next_round_and_can_kill(self):
         ally = Soldier("Soldier 1")
@@ -334,12 +339,17 @@ class TacticalSessionTest(unittest.TestCase):
 
     def test_remaining_enemy_actions_finish_when_player_is_done(self):
         game = self.combat([], [Soldier("Soldier 1"), Soldier("Soldier 2")])
+        self.assertEqual(game.phase, "enemy")
+        self.assertEqual(game.field.base_one.health, 28)
+        game.command({"type": "enemy_step"})
+        self.assertEqual(game.field.base_one.health, 26)
+        game.command({"type": "enemy_step"})
         self.assertEqual(game.phase, "review")
         self.assertEqual(game.field.base_one.health, 24)
 
-    def test_seed_and_round_alternate_opening_side(self):
+    def test_player_opens_each_round_without_double_turns(self):
         game = TacticalSession(seed=11)
-        self.assertEqual(game.opener, Player.TWO)
+        self.assertEqual(game.opener, Player.ONE)
         game.field.base_two.resources = 0
         game.command({"type": "begin"})
         game.command({"type": "next"})
@@ -373,6 +383,8 @@ class TacticalSessionTest(unittest.TestCase):
                         game.command({"type": "recruit", "kind": "archer", "lane": "back"})
                     else:
                         game.command({"type": "begin"})
+                elif game.phase == "enemy":
+                    game.command({"type": "enemy_step"})
                 elif game.phase == "review":
                     game.command({"type": "next"})
                 else:

@@ -40,6 +40,8 @@ class PreparationTest(unittest.TestCase):
         game.command({"type": "recruit", "kind": "guardian", "lane": "front"})
         game.command({"type": "begin"})
         game.command({"type": "act", "actor": "Guardian 1", "action": "wait"})
+        while game.phase == "enemy":
+            game.command({"type": "enemy_step"})
         game.command({"type": "next"})
         self.assertEqual(game.state()["refundable"], [])
         with self.assertRaises(ValueError):
@@ -132,6 +134,8 @@ class TacticalDecisionTest(unittest.TestCase):
         game = self.game([Guardian("Guardian 1")], [Guardian("Guardian 2"), rear])
         self.assertEqual(game._enemy_choice(rear), {"action": "move", "lane": "front"})
         game.command({"type": "act", "actor": "Guardian 1", "action": "wait"})
+        while game.phase == "enemy":
+            game.command({"type": "enemy_step"})
         self.assertEqual(rear.lane, Lane.FRONT)
 
     def test_reloading_enemy_guards_instead_of_wasting_exposed_action(self):

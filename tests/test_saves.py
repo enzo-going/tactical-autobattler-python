@@ -25,13 +25,15 @@ class SaveTests(unittest.TestCase):
                         command = {"type": "recruit", "kind": "guardian", "lane": "front"}
                     else:
                         command = {"type": "begin"}
+                elif game.phase == "enemy":
+                    command = {"type": "enemy_step"}
                 elif game.phase == "review":
                     command = {"type": "next"}
                 else:
                     actor, choices = next(iter(state["legal_actions"].items()))
                     command = {"type": "act", "actor": actor, **choices[0]}
                 self.assertEqual(game.command(command), restored.command(command))
-            self.assertEqual(phases, {"recruit", "combat", "review", "finished"})
+            self.assertEqual(phases, {"recruit", "combat", "enemy", "review", "finished"})
 
     def test_refunds_and_factory_ids_survive_resume(self):
         game = TacticalSession()
@@ -55,7 +57,7 @@ class SaveTests(unittest.TestCase):
     def test_rejects_wrong_format_rules_and_config(self):
         valid = TacticalSession().checkpoint()
         invalid = [None, [], {}, {**valid, "schema_version": True},
-                   {**valid, "schema_version": 2}, {**valid, "ruleset": "tactical-v4"},
+                   {**valid, "schema_version": 2}, {**valid, "ruleset": "tactical-v5"},
                    {**valid, "mode": "auto"}, {**valid, "config": []},
                    {**valid, "config": {**valid["config"], "opponent": []}},
                    {**valid, "config": {**valid["config"], "seed": True}},

@@ -64,7 +64,12 @@ const esc = (text) =>
         v
       ],
   );
-const portrait = (kind, enemy = false) => BattleArt.portrait(kind, enemy);
+const portrait = (kind, enemy = false) => {
+  const index = Object.keys(NAMES).indexOf(kind);
+  if (index < 0) return BattleArt.portrait(kind, enemy);
+  const x = (index % 3) * 50, y = Math.floor(index / 3) * 100;
+  return '<span class="portrait character illustrated-character' + (enemy ? ' enemy-character' : '') + '" aria-hidden="true"><span class="figure"><span class="figure-body" style="background-position:' + x + '% ' + y + '%"></span></span></span>';
+};
 function node(tag, className, text) {
   const n = document.createElement(tag);
   if (className) n.className = className;
@@ -112,6 +117,7 @@ async function boot() {
     $("game").setAttribute("aria-busy", "false");
     $("new").disabled = false;
     $("export").disabled = false;
+    if (state.phase === "enemy") void runEnemyTurn();
   } catch (error) {
     $("boot").classList.add("error");
     $("boot-text").textContent =
@@ -248,6 +254,87 @@ function command(payload) {
   } finally {
     busy = false;
   }
+  if (state.phase === "enemy") void runEnemyTurn();
+}
+let enemyPlaying = false;
+let skipEnemyAnimation = false;
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+function lockEnemyControls() {
+  const locked = enemyPlaying || state.phase === "enemy";
+  for (const id of ["new", "import", "export"]) $(id).disabled = locked;
+  $("advance").disabled = locked;
+  $("enemy-resume").hidden = enemyPlaying || state.phase !== "enemy";
+}
+async function animateEnemyOrder(events) {
+  const orders = events.filter(e => e.player === 2 && [
+    "unit_attack", "base_attack", "heal", "shield", "unit_moved", "unit_waited",
+  ].includes(e.type));
+  const message = orders.map(eventText).join(" ");
+  $("enemy-action").textContent = message || "O rival concluiu suas ações.";
+  $("announcement").textContent = message;
+  // Even without motion, present each authoritative state in sequence.
+  const animated = !skipEnemyAnimation && motionEnabled && !motionQuery.matches;
+  const speed = Number($("enemy-speed").value) || 1;
+  if (!animated) { await delay(skipEnemyAnimation ? 0 : 160 / speed); return; }
+  const pieces = new Map([...document.querySelectorAll(".piece")].map(p => [p.dataset.unit, p]));
+  const order = orders[0];
+  const actor = pieces.get(order?.actor);
+  actor?.classList.add("enemy-acting");
+  if (order?.type === "unit_moved") actor?.classList.add("relocating");
+  if (order?.type === "shield") pieces.get(order.target)?.classList.add("restored");
+  showCombatFeedback(events);
+  // Keep the pre-hit figures on screen until impact, including a defeated target.
+  const target = order?.type === "base_attack"
+    ? document.querySelector(".fort.ally") : pieces.get(order?.target);
+  let trail;
+  if (actor && target && actor !== target && ["unit_attack", "base_attack", "heal"].includes(order.type)) {
+    const from = actor.getBoundingClientRect(), to = target.getBoundingClientRect();
+    const x = from.left + from.width / 2, y = from.top + Math.min(55, from.height / 2);
+    const dx = to.left + to.width / 2 - x, dy = to.top + Math.min(55, to.height / 2) - y;
+    trail = node("span", "order-trail" + (order.type === "heal" ? " healing" : ""));
+    trail.setAttribute("aria-hidden", "true");
+    Object.assign(trail.style, { left: x + "px", top: y + "px", width: Math.hypot(dx, dy) + "px", transform: `rotate(${Math.atan2(dy, dx)}rad)` });
+    document.body.append(trail);
+  }
+  if (order?.type === "base_attack") {
+    target?.classList.add("fort-hit");
+    const damage = node("span", "combat-float", "−" + order.amount);
+    target?.append(damage);
+    setTimeout(() => damage.remove(), 1000);
+  }
+  try {
+    await delay(450 / speed);
+    for (const e of events.filter(e => e.type === "unit_defeated")) pieces.get(e.actor)?.classList.add("falling");
+    await delay(400 / speed);
+  } finally {
+    trail?.remove();
+    target?.classList.remove("fort-hit");
+  }
+}
+async function runEnemyTurn() {
+  if (busy || enemyPlaying || state.phase !== "enemy") return;
+  busy = enemyPlaying = true;
+  skipEnemyAnimation = false;
+  lockEnemyControls();
+  try {
+    await delay(motionEnabled && !motionQuery.matches ? 500 : 0);
+    while (state.phase === "enemy") {
+      const count = state.events.length;
+      const nextState = JSON.parse(bridge.game_command('{"type":"enemy_step"}'));
+      // Persist the accepted Python command before showing it; reload cannot duplicate it.
+      saveGame();
+      try { await animateEnemyOrder(nextState.events.slice(count)); }
+      finally { state = nextState; }
+      render();
+    }
+  } catch (error) {
+    $("announcement").textContent = errorMessage(error) + " Use Retomar turno rival.";
+    $("announcement").classList.add("error");
+  } finally {
+    busy = enemyPlaying = false;
+    lockEnemyControls();
+    if (state.phase !== "enemy") $("advance").focus({ preventScroll: true });
+  }
 }
 function showCombatFeedback(events) {
   if (document.body.classList.contains("motion-paused") ||
@@ -277,9 +364,11 @@ function showCombatFeedback(events) {
 }
 function phaseHint() {
   if (state.phase === "recruit")
-    return `Recrute e ajuste sua formação. ${state.opener === 1 ? "Você abre" : "O rival abre"} o combate nesta rodada.${lineHint()}`;
+    return `Recrute e ajuste sua formação. Você joga seu turno completo antes do rival.${lineHint()}`;
   if (state.phase === "combat")
-    return `Sua vez. Escolha uma unidade pronta e dê uma ordem.${lineHint()}`;
+    return `Seu turno · ${Object.keys(state.legal_actions).length} ações restantes. Combine suas ordens; o rival aguarda.${lineHint()}`;
+  if (state.phase === "enemy")
+    return `Turno rival · ${state.remaining_actions.player_two} ações restantes. Acompanhe as jogadas no campo.`;
   if (state.phase === "review")
     return "Rodada encerrada. Confira o campo e prepare seus próximos reforços.";
   return state.winner === 1
@@ -316,6 +405,7 @@ function render() {
   $("phase-title").textContent = {
     recruit: "Prepare seu esquadrão.",
     combat: "O próximo movimento é seu.",
+    enemy: "O rival está jogando.",
     review: "Uma pausa entre as batalhas.",
     finished: "Fim da expedição.",
   }[state.phase];
@@ -335,10 +425,18 @@ function render() {
   $("roster-count").textContent =
     `${state.troops.player_one.length} / ${state.roster_limit} unidades`;
   $("ready-count").textContent =
-    state.phase === "recruit" ? `${state.troops.player_one.length} em formação` : `${Object.keys(state.legal_actions).length} prontas`;
-  $("board-hint").textContent = state.phase === "recruit" ? "Selecione uma tropa para ajustar sua formação." : "Selecione uma tropa pronta para dar uma ordem.";
+    state.phase === "recruit" ? `${state.troops.player_one.length} em formação` : state.phase === "enemy" ? "Aguardando o rival" : `${Object.keys(state.legal_actions).length} prontas`;
+  $("board-hint").textContent = state.phase === "recruit" ? "Selecione uma tropa para ajustar sua formação." : state.phase === "enemy" ? "Acompanhe a unidade destacada e o alvo de sua ordem." : "Selecione uma tropa pronta para dar uma ordem.";
   $("recruit-panel").hidden = state.phase !== "recruit";
   $("orders-panel").hidden = state.phase !== "combat";
+  $("enemy-panel").hidden = state.phase !== "enemy";
+  $("enemy-progress").textContent = `${state.remaining_actions.player_two} ações restantes`;
+  document.body.classList.toggle("enemy-turn", state.phase === "enemy");
+  $("turn-flow").querySelectorAll("[data-phase]").forEach(n => {
+    n.classList.toggle("current", n.dataset.phase === state.phase);
+    if (n.dataset.phase === state.phase) n.setAttribute("aria-current", "step");
+    else n.removeAttribute("aria-current");
+  });
   $("review-panel").hidden = !["review", "finished"].includes(state.phase);
   renderBoard();
   renderShop();
@@ -348,14 +446,16 @@ function render() {
   renderLog();
   $("advance").textContent = {
     recruit: "Entrar em combate →",
-    combat: "Escolha uma ordem acima",
+    combat: "Encerrar meu turno →",
+    enemy: "Turno do rival…",
     review: "Preparar próxima rodada →",
     finished: "Jogar outra partida →",
   }[state.phase];
-  $("advance").disabled = state.phase === "combat";
+  lockEnemyControls();
   $("advance-hint").textContent = {
     recruit: "Recrutas podem agir já nesta rodada.",
-    combat: "Uma ordem sua. Uma resposta do rival.",
+    combat: `Encerrar agora dispensa as ${Object.keys(state.legal_actions).length} ações restantes. Ao usar todas, o turno passa automaticamente.`,
+    enemy: "Cada tropa rival age uma vez. Você volta a jogar na próxima rodada.",
     review: "+6 suprimentos recebidos. Avance quando quiser.",
     finished: "Uma nova partida substitui o campo atual.",
   }[state.phase];
@@ -598,6 +698,10 @@ function eventText(e) {
   switch (e.type) {
     case "round_started":
       return `Rodada ${e.round}: preparar o esquadrão.`;
+    case "turn_started":
+      return e.player === 1 ? "Seu turno começou." : "O rival iniciou seu turno.";
+    case "turn_ended":
+      return e.player === 1 ? "Você encerrou seu turno." : "O rival encerrou seu turno.";
     case "unit_recruited":
       return `${a} chegou à ${e.metadata.lane === "front" ? "vanguarda" : "retaguarda"}.`;
     case "unit_attack":
@@ -667,9 +771,12 @@ function renderLog() {
   }
 }
 $("advance").addEventListener("click", () => {
+  if (busy) return;
   if (state.phase === "finished") $("setup-dialog").showModal();
-  else command({ type: state.phase === "recruit" ? "begin" : "next" });
+  else command({ type: state.phase === "recruit" ? "begin" : state.phase === "combat" ? "end_turn" : "next" });
 });
+$("enemy-skip").addEventListener("click", () => { skipEnemyAnimation = true; });
+$("enemy-resume").addEventListener("click", () => { void runEnemyTurn(); });
 $("new").addEventListener("click", () => $("setup-dialog").showModal());
 $("cancel-new").addEventListener("click", () => $("setup-dialog").close());
 $("setup-form").addEventListener("submit", (e) => {
@@ -724,6 +831,7 @@ $("import-form").addEventListener("submit", async e => {
     saveGame();
     $("import-dialog").close();
     $("announcement").textContent = "Partida carregada. " + phaseHint();
+    if (state.phase === "enemy") void runEnemyTurn();
     (state.phase === "combat" ? document.querySelector("#ready-units button") : $("advance"))?.focus();
   } catch (error) {
     $("import-error").textContent = errorMessage(error);
